@@ -36,6 +36,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 #define NO_EDGE      0
 #define RISING_EDGE  1
 #define FALLING_EDGE 2
@@ -53,6 +58,7 @@ SOFTWARE.
 #define PUD_OFF  0
 #define PUD_DOWN 1
 #define PUD_UP   2
+
 
 int gpio_export(int gpio);
 int gpio_unexport(int gpio);
@@ -78,3 +84,7 @@ int gpio_is_evented(int gpio);
 int event_initialise(void);
 void event_cleanup(void);
 int blocking_wait_for_edge(int gpio, unsigned int edge);
+
+#ifdef __cplusplus
+}
+#endif

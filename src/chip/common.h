@@ -36,6 +36,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#ifndef _COMMON_H
+#define _COMMON_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define ARRAY_SIZE(a)  (sizeof(a) / sizeof(a[0]))
 
 // See http://blog.geeky-boy.com/2016/06/of-compiler-warnings-and-asserts-in.html
@@ -82,8 +89,10 @@ typedef struct dyn_int_array_s dyn_int_array_t;
 
 #define FILENAME_BUFFER_SIZE 128
 
+    /*
 int setup_error;
 int module_setup;
+    */
 
 int get_xio_base(void);
 int gpio_number(pins_t *pin);
@@ -108,3 +117,9 @@ void dyn_int_array_delete(dyn_int_array_t **in_array);
 void clear_error_msg(void);
 char *get_error_msg(void);
 void add_error_msg(char *msg);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* _COMMON_H */

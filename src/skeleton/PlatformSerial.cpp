@@ -5,30 +5,17 @@
 
 #include "PlatformSerial.h"
 
-void PlatformSerial::log(std::string msg)
+PlatformSerial::PlatformSerial()
 {
-    struct timeval tv;
-    if (gettimeofday(&tv, NULL) < 0) {
-        return;
+}
+
+void PlatformSerial::send_bytes(size_t len, unsigned char *byte)
+{
+    int i;
+    for (i = 0; i < len; i++) {
+        printf("%d ", byte[i]);
     }
-
-    printf("%ld.%ld %s\n", tv.tv_sec, tv.tv_usec, msg.c_str());
-}
-
-
-PlatformSerial::PlatformSerial(void)
-{
-}
-
-bool PlatformSerial::init(const std::string& gpio_clk_str,
-                          const std::string& gpio_dat_str)
-{
-    return true;
-}
-
-
-void PlatformSerial::send_bytes(size_t len, unsigned char byte[])
-{
+    printf("\n");
 }
 
 
