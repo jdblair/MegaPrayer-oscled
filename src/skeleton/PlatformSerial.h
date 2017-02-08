@@ -11,7 +11,6 @@ class PlatformSerial : public IPlatformSerial
     PlatformSerial(void);
 
     void send_bytes(size_t len, unsigned char byte[]);
-    void log(std::string msg);
 
     int iface_num;
 

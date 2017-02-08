@@ -8,6 +8,11 @@
 #include <sys/time.h>
 #include <stdio.h>
 
+#ifdef DEBUG
+#define log(msg) _log(msg)
+#else
+#define log(msg)
+#endif
 
 class IPlatformSerial
 {
@@ -16,7 +21,7 @@ class IPlatformSerial
     virtual void send_bytes(size_t len, unsigned char *byte) = 0;
 
     // general purpose logging function for debugging
-    void log(std::string msg) {
+    void _log(std::string msg) {
         struct timeval tv;
         if (gettimeofday(&tv, NULL) < 0) {
             return;
