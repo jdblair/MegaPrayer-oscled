@@ -15,9 +15,8 @@ class PlatformSerial : public IPlatformSerial
     bool init(const std::string& gpio_clk,
               const std::string& gpio_dat);
 
-    void send_bytes(size_t len, unsigned char byte[]);
-    void log(std::string msg);
-
+    void send(unsigned char *buf, size_t len);
+    
     int gpio_clk;
     int gpio_dat;
 

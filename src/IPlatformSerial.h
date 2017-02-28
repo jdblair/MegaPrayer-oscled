@@ -18,7 +18,7 @@ class IPlatformSerial
 {
  public:
     IPlatformSerial() {};
-    virtual void send_bytes(size_t len, unsigned char *byte) = 0;
+    virtual void send(unsigned char *buf, size_t len) = 0;
 
     // general purpose logging function for debugging
     void _log(std::string msg) {

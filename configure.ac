@@ -34,12 +34,15 @@ if test x"$enable_debug" = "xyes"; then
 	CXXFLAGS="$CF -O0 -g -Wall -Werror -DDEBUG"
 fi
 
+AC_CHECK_LIB(lo,lo_server_thread_new,[],
+        [AC_MSG_ERROR([unable to find liblo osc server library (see http://liblo.sourceforge.net/)])],[-lpthread])
 
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([
  Makefile
  src/Makefile
  src/chip/Makefile
+ src/rpi/Makefile
  src/skeleton/Makefile
 ])
 AC_OUTPUT

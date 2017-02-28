@@ -21,7 +21,7 @@ int main(int argc, char **argv)
         led_array[i - 1] = atoi(argv[i]);
     }
 
-    ser->send_bytes(argc - 1, led_array);
-
+    printf("argc: %d, led_array = %p\n", argc, led_array);
+    ser->send(led_array, argc - 1);
 }
 
