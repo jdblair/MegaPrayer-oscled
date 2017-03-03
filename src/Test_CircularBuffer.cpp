@@ -27,7 +27,12 @@ void Test_CircularBuffer::test_readwrite(void)
 
     size_t rc;
 
-    /* test writing more than buffer size */
+    /* test read of empty buffer */
+    memset(buf, 0, 128);    
+    rc = c.read(buf, 128);
+    CPPUNIT_ASSERT_EQUAL((size_t)0, rc);
+
+    /* test writing more than buffer size (aligned at start of m_buf)*/
     memset(buf, 0, 128);
     rc = c.write((uint8_t*)s, 26);
     CPPUNIT_ASSERT_EQUAL((size_t)16, rc);
@@ -58,10 +63,30 @@ void Test_CircularBuffer::test_readwrite(void)
     rc = c.read(buf, 16);
     CPPUNIT_ASSERT_EQUAL((size_t)8, rc);
     CPPUNIT_ASSERT_EQUAL(string("abcdefgh"), string((char*)buf));
+
+    /* test writing more than buffer size again (make sure wrapping works)*/
+    memset(buf, 0, 128);
+    rc = c.write((uint8_t*)s, 26);
+    CPPUNIT_ASSERT_EQUAL((size_t)16, rc);
+    rc = c.read(buf, 128);
+    CPPUNIT_ASSERT_EQUAL((size_t)16, rc);
+    CPPUNIT_ASSERT_EQUAL(string("abcdefghijklmnop"), string((char*)buf));
+
+    /* write something, try zero length read */
+    memset(buf, 0, 128);
+    rc = c.write((uint8_t*)s, 4);
+    CPPUNIT_ASSERT_EQUAL((size_t)4, rc);
+    rc = c.read(buf, 0);
+    CPPUNIT_ASSERT_EQUAL((size_t)0, rc);
+
+    /* now empty the buffer again */
+    memset(buf, 0, 128);
+    rc = c.read(buf, 128);
+    CPPUNIT_ASSERT_EQUAL((size_t)4, rc);
 }
 
 
-#define STRESS_TEST_COUNT 1024 * 1024
+#define STRESS_TEST_COUNT 1024 * 512
 void stress_test_write(CircularBuffer &c)
 {
     int i;
@@ -82,7 +107,7 @@ void stress_test_read(CircularBuffer &c)
         }
     }
 
-    CPPUNIT_ASSERT_EQUAL(STRESS_TEST_COUNT * 4 + 1, count);
+    CPPUNIT_ASSERT_EQUAL(STRESS_TEST_COUNT * 2 + 1, count);
     
 }
 
@@ -98,14 +123,14 @@ void Test_CircularBuffer::stress_test(void)
     
     thread t_write(stress_test_write, ref(c));
     thread t_write2(stress_test_write, ref(c));
-    thread t_write3(stress_test_write, ref(c));
-    thread t_write4(stress_test_write, ref(c));
+    //thread t_write3(stress_test_write, ref(c));
+    //thread t_write4(stress_test_write, ref(c));
     thread t_read(stress_test_read, ref(c));
 
     t_write.join();
     t_write2.join();
-    t_write3.join();
-    t_write4.join();
+    //t_write3.join();
+    //t_write4.join();
 
     // send -1 to signal to the read thread that we are done
     int i = -1;
