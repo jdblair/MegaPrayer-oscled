@@ -8,6 +8,8 @@
 #include <fcntl.h>
 #include <err.h>
 
+#include <iostream>
+
 #include "PiGPIOSerial.h"
 
 
@@ -26,6 +28,7 @@ PiGPIOSerial::PiGPIOSerial(int clk_pin, int dat_pin) : m_clk_pin(clk_pin), m_dat
 {
 }
 
+using namespace std;
 
 int PiGPIOSerial::init()
 {
@@ -68,12 +71,17 @@ void PiGPIOSerial::send(unsigned char *buf, size_t len)
     int b;
     int delay;
     unsigned char bit_mask;
+
+    //cout << "send(): " << len << endl;
     
     *gpio_clr = clk_mask | dat_mask;
+
+    //cout << "here" << endl;
 
     for (i = 0; i < len; i++) {
         bit_mask = 0x80;
         for (b = 0; b < 8; b++) {
+            //cout << i << ":" << b << endl;
             *gpio_clr = clk_mask;  /* clk = 0 */
             if (buf[i] & bit_mask) {
                 *gpio_set = dat_mask;  /* dat = 1 */

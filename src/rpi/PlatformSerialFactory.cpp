@@ -11,8 +11,17 @@
 
 std::shared_ptr<IPlatformSerial> PlatformSerialFactory::create_platform_serial(int iface_num)
 {
-    std::shared_ptr<PiGPIOSerial> ser(new PiGPIOSerial(2, 3));
-    ser->iface_num = iface_num;
+    std::shared_ptr<PiGPIOSerial> ser;
+
+    switch (iface_num) {
+    case 0:
+        ser.reset(new PiGPIOSerial(2, 3));
+        break;
+    case 1:
+        ser.reset(new PiGPIOSerial(5, 6));
+        break;
+    }
+
     if (ser->init() < 0) {
         err(1, "PiGPIOSerial->init() failed");
         return NULL;
