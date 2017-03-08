@@ -1,0 +1,41 @@
+/*
+ * rpi/PlatformSerialFactory.cpp
+ *
+ * Creates a Raspberry Pi PlatformSerial object.
+ *
+ */
+
+#include <PlatformSerialFactory.h>
+//#include <PiGPIOSerialMUX.h>
+#include <PiGPIOSerial.h>
+#include <err.h>
+
+using namespace std;
+
+shared_ptr<IPlatformSerial> PlatformSerialFactory::create_platform_serial(int iface_num)
+{
+    // initialize the gpio interface
+    // this can be called multiple times safely
+    // PiGPIOSerialMUXMain& mux = PiGPIOSerialMUXMain::getInstance();
+    // if (mux.init() < 0) {
+    //     err(1, "PiGPIOSerialMUXMain->init() failed");
+    //     return NULL;
+    // }
+    
+    // shared_ptr<PiGPIOSerialMUX> ser;
+
+    shared_ptr<PiGPIOSerial> ser;
+
+    switch (iface_num) {
+    case 0:
+        ser.reset(new PiGPIOSerial(2, 3));
+        break;
+    case 1:
+        ser.reset(new PiGPIOSerial(5, 6));
+        break;
+    }
+ 
+    return ser;
+}
+    
+
