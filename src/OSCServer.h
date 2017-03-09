@@ -36,7 +36,9 @@ class OSCServer {
 
     int bind(std::shared_ptr<IPlatformSerial> ser, int base, int len, bool reverse);
     int start() { m_st->start(); };
-    int method_led(lo_arg **argv);
+    int osc_method_led(lo_arg **argv);
+    int osc_method_bead(lo_arg **argv);
+    void set_led(int n, led_t led);
 
     class led_interface {
     public:
@@ -68,6 +70,11 @@ class OSCServer {
 
         void set_led(int offset, led_t led);
     };
+
+    int m_leds_per_bead;
+    int m_base_bead;
+    void set_leds_per_bead(int leds_per_bead) { m_leds_per_bead = leds_per_bead; };
+    void set_base_bead(int base_bead) { m_base_bead = base_bead; };
 
  private:
     int m_port;

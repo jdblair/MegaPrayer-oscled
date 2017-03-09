@@ -28,9 +28,11 @@ on_delete_event (GtkWidget *window,
 
 GtkSim::GtkSim() {
     m_gtk_ready = false;
-    
+
+    m_leds_per_bead = 1;
+
     // initialize m_leds
-    for (int i = 0; i < BEAD_COUNT; i++) {
+    for (int i = 0; i < BEAD_COUNT * m_leds_per_bead; i++) {
         led_t led(0,0,0);
         m_leds.push_back(led);
     }
@@ -41,6 +43,14 @@ GtkSim::GtkSim() {
     }
     thread t_gtkmain = thread(&GtkSim::main, this);
     t_gtkmain.detach();
+};
+
+void GtkSim::set_leds_per_bead(int leds_per_bead) {
+    m_leds_per_bead = leds_per_bead;
+    m_leds.erase(m_leds.begin(), m_leds.end());
+    for (int i = 0; i < BEAD_COUNT * m_leds_per_bead; i++) {
+        m_leds.push_back(led_t(0,0,0));
+    }
 };
 
 
@@ -92,7 +102,8 @@ void GtkSimSerial::send(unsigned char *buf, size_t len) {
     int led_num = m_led_reversed ? m_led_high : m_led_low;
 
     for (i = 0; i < buf_len; i+=3) {
-        cout << "led_num: " << led_num << endl;
+        // cout << "i: " << i << ", " << int(buf[i]) << endl;
+        // cout << "led_num: " << led_num << endl;
         m_sim->m_leds.at(led_num) = led_t(buf[i], buf[i+1], buf[i+2]);
         led_num = m_led_reversed ? led_num - 1 : led_num + 1;
     }
@@ -119,11 +130,12 @@ void GtkSim::update_beads()
     char color[16];
     for (int i = 0; i < GtkSim::BEAD_COUNT; i++) {
         sprintf(color, "#%02x%02x%02x",
-                static_cast<unsigned int>(m_leds.at(i).r),
-                static_cast<unsigned int>(m_leds.at(i).g),
-                static_cast<unsigned int>(m_leds.at(i).b));
+                static_cast<unsigned int>(m_leds.at(i*m_leds_per_bead).r),
+                static_cast<unsigned int>(m_leds.at(i*m_leds_per_bead).g),
+                static_cast<unsigned int>(m_leds.at(i*m_leds_per_bead).b));
         g_value_set_string(&m_bead_values[i], color);
         g_object_set_property(G_OBJECT(g_beads[i]), "fill-color", &m_bead_values[i]);
+        // cout << "bead " << i << " = " << string(color) << endl;
     }
 }
 

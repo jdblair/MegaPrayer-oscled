@@ -42,6 +42,8 @@ public:
 
     GooCanvasItem *g_beads[BEAD_COUNT];
     GValue m_bead_values[BEAD_COUNT];
+    int m_leds_per_bead;
+    void set_leds_per_bead(int leds_per_bead);
     
     void update_beads();
 
@@ -63,19 +65,22 @@ private:
     std::shared_ptr<GtkSim> m_sim;
 
 public:
-    GtkSimSerial(int low, int high, bool reversed) :
-        m_led_low(low), m_led_high(high), m_led_reversed(reversed)
+    GtkSimSerial(int base, int len, bool reversed) :
+        m_led_low(base), m_len(len), m_led_reversed(reversed)
     {
+        m_led_high = m_led_low + m_len;
         m_sim.reset(&GtkSim::getInstance());
         m_last_buf = NULL;
         m_last_buf_len = 0;
     };
+
     void send(unsigned char *buf, size_t len);
     ~GtkSimSerial() {
         free(m_last_buf);
     };
 
 private:
+    int m_len;
     int m_led_low;
     int m_led_high;
     bool m_led_reversed;

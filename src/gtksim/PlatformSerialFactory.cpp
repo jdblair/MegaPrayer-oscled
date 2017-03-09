@@ -17,13 +17,14 @@ std::shared_ptr<IPlatformSerial> PlatformSerialFactory::create_platform_serial(i
 {
     std::shared_ptr<GtkSimSerial> ser;
     GtkSim &sim = GtkSim::getInstance();
+    sim.set_leds_per_bead(8);
 
     switch (iface_num) {
     case 0:
-        ser.reset(new GtkSimSerial(0, 29, true));
+        ser.reset(new GtkSimSerial(0, 239, true));
         break;
     case 1:
-        ser.reset(new GtkSimSerial(30, 59, false));
+        ser.reset(new GtkSimSerial(240, 479, false));
         break;
     }
 

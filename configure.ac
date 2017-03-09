@@ -37,6 +37,16 @@ fi
 AC_CHECK_LIB(lo,lo_server_thread_new,[],
         [AC_MSG_ERROR([unable to find liblo osc server library (see http://liblo.sourceforge.net/)])],[-lpthread])
 
+AC_ARG_WITH([gtk], AS_HELP_STRING([--with-gtk], [Build with the GTK+ interface (required for gtksim)]))
+
+AS_IF([test "x$with_gtk" = "xyes"], [
+   PKG_CHECK_MODULES([GTK], [gtk+-2.0])
+   PKG_CHECK_MODULES([GOOCANVAS], [goocanvas])
+])
+
+PKG_CHECK_MODULES([GLIB], [glib-2.0])
+PKG_CHECK_MODULES([JSONCPP], [jsoncpp])
+
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([
  Makefile
@@ -44,5 +54,6 @@ AC_CONFIG_FILES([
  src/chip/Makefile
  src/rpi/Makefile
  src/skeleton/Makefile
+ src/gtksim/Makefile
 ])
 AC_OUTPUT

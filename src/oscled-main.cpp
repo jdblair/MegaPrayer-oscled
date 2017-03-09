@@ -19,8 +19,10 @@ int main(int argc, char **argv)
     std::shared_ptr<IPlatformSerial> ser1 = ser_factory.create_platform_serial(1);
 
     OSCServer server(5005);
-    server.bind(ser0, 0, 20, false);
-    server.bind(ser1, 20, 20, true);
+    server.set_base_bead(0);
+    server.set_leds_per_bead(8);
+    server.bind(ser0, 0, 240, true);
+    server.bind(ser1, 240, 240, false);
 
     server.start();
 
