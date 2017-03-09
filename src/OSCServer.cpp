@@ -29,8 +29,12 @@ OSCServer::OSCServer(int port) : m_port(port)
 
     m_st->add_method("/led", "iiii", 
                     [this](lo_arg **argv, int)  {this->osc_method_led(argv);});
+    m_st->add_method("/ledf", "ifff", 
+                    [this](lo_arg **argv, int)  {this->osc_method_led_float(argv);});
     m_st->add_method("/bead", "iiii", 
                     [this](lo_arg **argv, int)  {this->osc_method_bead(argv);});
+    m_st->add_method("/beadf", "ifff", 
+                     [this](lo_arg **argv, int)  {this->osc_method_bead_float(argv);});
 
     m_base_bead = 0;
     m_leds_per_bead = 1;
@@ -70,6 +74,23 @@ int OSCServer::osc_method_led(lo_arg **argv)
 }
 
 
+int OSCServer::osc_method_led_float(lo_arg **argv)
+{
+    cout << "/ledf (" << ++received << "): "
+         << argv[0]->i << ", " 
+         << argv[1]->f << ", " 
+         << argv[2]->f << ", "
+         << argv[3]->f << endl;
+    
+    auto n = argv[0]->i;
+    set_led(n, led_t(argv[1]->f * 255,
+                     argv[2]->f * 255,
+                     argv[3]->f * 255));
+
+    return 0;
+}
+
+
 int OSCServer::osc_method_bead(lo_arg **argv)
 {
     cout << "/bead (" << ++received << "): "
@@ -81,6 +102,23 @@ int OSCServer::osc_method_bead(lo_arg **argv)
     auto n = argv[0]->i * m_leds_per_bead;
     for (int offset = 0; offset < m_leds_per_bead; offset++) {
         set_led(n + offset, led_t(argv[1]->i, argv[2]->i, argv[3]->i));
+    }        
+
+    return 0;
+}
+
+
+int OSCServer::osc_method_bead_float(lo_arg **argv)
+{
+    cout << "/beadf (" << ++received << "): "
+         << argv[0]->i << ", " 
+         << argv[1]->f << ", " 
+         << argv[2]->f << ", "
+         << argv[3]->f << endl;
+    
+    auto n = argv[0]->i * m_leds_per_bead;
+    for (int offset = 0; offset < m_leds_per_bead; offset++) {
+        set_led(n + offset, led_t(argv[1]->f * 255, argv[2]->f * 255, argv[3]->f * 255));
     }        
 
     return 0;
