@@ -104,6 +104,10 @@ int OSCServer::osc_method_bead(lo_arg **argv)
         set_led(n + offset, led_t(argv[1]->i, argv[2]->i, argv[3]->i));
     }        
 
+    // for (auto it = m_led_ifaces.begin(); it != m_led_ifaces.end(); ++it) {
+    //     (*it)->update_led_buf();
+    // }
+
     return 0;
 }
 
@@ -156,28 +160,27 @@ void OSCServer::led_interface::set_led(int offset, led_t led)
 }
 
 
+void OSCServer::led_interface::update_led_buf()
+{
+    size_t i = 0;
+    for (auto it = leds.begin(); it != leds.end(); ++it) {
+        //cout << "update:" << ": " << int(it->r) << ", " << int(it->g) << ", " << int(it->b) << endl;
+        led_buf[i] = it->r;
+        led_buf[i+1] = it->g;
+        led_buf[i+2] = it->b;
+        i += 3;
+    }
+    m_ser->send(led_buf, m_len * 3);
+}
+
+
 //void OSCServer::led_interface::update_thread(OSCServer::led_interface *iface)
 void OSCServer::led_interface::update_thread()
 {
     run_update_thread = true;
 
     while (run_update_thread) {
-        //cout << "here\n";
-        size_t i = 0;
-        {
-            //lock_guard<mutex> lock(update_mutex);
-
-            for (auto it = leds.begin(); it != leds.end(); ++it) {
-                //cout << "update:" << ": " << int(it->r) << ", " << int(it->g) << ", " << int(it->b) << endl;
-                led_buf[i] = it->r;
-                led_buf[i+1] = it->g;
-                led_buf[i+2] = it->b;
-                i += 3;
-            }
-        }
-
-        m_ser->send(led_buf, m_len * 3);
-        usleep(100000);
-        //usleep(1000000);
+        update_led_buf();
+        usleep(50000);
     }        
 }

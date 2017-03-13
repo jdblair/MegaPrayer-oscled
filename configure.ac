@@ -18,7 +18,7 @@ AC_SUBST(PLATFORM_SERIAL)
 
 AC_ARG_ENABLE(debug, [  --enable-debug          Enable debug compiler flags])
 if test x"$enable_debug" = "xyes"; then
-    CF=""
+
     for i in $CFLAGS; do
         if ! ((test x"$i" = x-g) || (test x"$i" = x-O2)); then
             CF="$CF $i"

@@ -58,6 +58,8 @@ class OSCServer {
             delete led_buf;
         }
 
+        void update_led_buf();
+
         //int iface;
         std::shared_ptr<IPlatformSerial> m_ser;
         int m_base;

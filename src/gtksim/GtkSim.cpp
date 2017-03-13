@@ -37,7 +37,6 @@ GtkSim::GtkSim() {
         m_leds.push_back(led);
     }
 
-    //m_bead_values = g_value_array_new(BEAD_COUNT);
     for (int i = 0; i < BEAD_COUNT; i++) {
         g_value_init(&m_bead_values[i], G_TYPE_STRING);
     }
@@ -112,7 +111,7 @@ void GtkSimSerial::send(unsigned char *buf, size_t len) {
         gtk_idle_add_priority(G_PRIORITY_DEFAULT_IDLE, gtksim_update_beads, m_sim.get());
 }
 
-
+// this is a c-style wrapper around GtkSim::update_beads()
 gboolean gtksim_update_beads(gpointer user_data)
 {
     GtkSim *sim = static_cast<GtkSim*>(user_data);
@@ -121,7 +120,8 @@ gboolean gtksim_update_beads(gpointer user_data)
     return false;
 }
 
-//gboolean gtksim_update_beads(gpointer user_data)
+// perform one whole-rosary color update by transferring color data
+// from m_leds[] to the fill-color attribute of the on-screen circles
 void GtkSim::update_beads()
 {
     if (! m_gtk_ready)
@@ -143,6 +143,7 @@ void GtkSim::start()
 {
 }
 
+// this is the "main" function of the gtk app
 void GtkSim::main()
 {
     GtkWidget *window, *scrolled_win, *canvas;
@@ -155,7 +156,7 @@ void GtkSim::main()
 
     /* Create the window and widgets. */
     window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_default_size (GTK_WINDOW (window), 640, 600);
+    gtk_window_set_default_size (GTK_WINDOW (window), 900, 700);
     gtk_widget_show (window);
     g_signal_connect (window, "delete_event", (GtkSignalFunc) on_delete_event,
                       NULL);
@@ -166,13 +167,19 @@ void GtkSim::main()
     gtk_widget_show (scrolled_win);
     gtk_container_add (GTK_CONTAINER (window), scrolled_win);
 
+    // g_value_init(&val, G_TYPE_STRING);
+    // g_value_set_string(&val, "black");
     canvas = goo_canvas_new ();
     gtk_widget_set_size_request (canvas, 900, 700);
-    goo_canvas_set_bounds (GOO_CANVAS (canvas), 0, 0, 1000, 1000);
+    goo_canvas_set_bounds (GOO_CANVAS (canvas), 0, 0, 900, 700);
     gtk_widget_show (canvas);
     gtk_container_add (GTK_CONTAINER (scrolled_win), canvas);
 
     root = goo_canvas_get_root_item (GOO_CANVAS (canvas));
+
+    rect_item = goo_canvas_rect_new (root, 0, 0, 900, 700,
+                                     "fill-color", "#090909",
+                                     NULL);
 
     int i;
     const gdouble radius = 300;
@@ -184,7 +191,9 @@ void GtkSim::main()
         gdouble x = (x_offset - radius - stem_spacing * 4) + (stem_spacing * i);
         gdouble y = y_offset;
         g_beads[i] = goo_canvas_ellipse_new(root, x, y, bead_radius, bead_radius,
-                                          "fill-color", "#000000", NULL);
+                                            "line-width", 0,
+                                            //"stroke-color", "#000000",
+                                            "fill-color", "#000000", NULL);
     }
 
     for (i = 4; i < 60; i++) {

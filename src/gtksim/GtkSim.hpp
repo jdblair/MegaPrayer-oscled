@@ -25,6 +25,9 @@ typedef struct led {
 } led_t;
 
 
+// GtkSim is a singleton class that owns the on-screen GTK simulation.
+// There is only one of these even though there are an arbitrary number
+// of GtkSimSerial interfaces.
 class GtkSim
 {
 public:
@@ -58,7 +61,10 @@ private:
 
 };
 
-
+// GtkSimSerial implements the IPlatformSerial interface, simulating a physical
+// serial interface. The bytes received in send() are assumed to be a single
+// LED string update and are converted back to an array of bead colors based on 
+// GtkSim::m_leds_per_bead.
 class GtkSimSerial : public IPlatformSerial
 {
 private:
