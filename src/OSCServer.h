@@ -45,9 +45,6 @@ class OSCServer {
     class led_interface {
     public:
         void update_thread();
-        void start_update_thread() {
-            t_update = std::thread(&OSCServer::led_interface::update_thread, this);
-        }
 
         led_interface(std::shared_ptr<IPlatformSerial> ser, int base, int len, bool reverse);
 
