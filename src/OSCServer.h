@@ -35,7 +35,7 @@ class OSCServer {
     OSCServer(int port);
 
     int bind(std::shared_ptr<IPlatformSerial> ser, int base, int len, bool reverse);
-    int start() { m_st->start(); };
+    void start() { m_st->start(); };
     int osc_method_led(lo_arg **argv);
     int osc_method_led_float(lo_arg **argv);
     int osc_method_bead(lo_arg **argv);
@@ -46,17 +46,9 @@ class OSCServer {
     public:
         void update_thread();
 
-    led_interface(std::shared_ptr<IPlatformSerial> ser, int base, int len, bool reverse) :
-        m_ser(ser), m_base(base), m_len(len), m_reverse(reverse) {
-            led_buf = new uint8_t[m_len * 3];
-            t_update = std::thread(&OSCServer::led_interface::update_thread, this);
-        };
-        
-        ~led_interface() {
-            run_update_thread = false;
-            t_update.join();
-            delete led_buf;
-        }
+        led_interface(std::shared_ptr<IPlatformSerial> ser, int base, int len, bool reverse);
+
+        ~led_interface();
 
         void update_led_buf();
 
@@ -68,9 +60,13 @@ class OSCServer {
 
         std::vector<led_t> leds;
         uint8_t *led_buf;
-        std::mutex update_mutex;
         std::thread t_update;
         bool run_update_thread;
+
+        std::mutex led_buf_mutex;
+
+        std::mutex update_mutex;
+        std::condition_variable update_cv;
 
         void set_led(int offset, led_t led);
     };

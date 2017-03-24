@@ -1,4 +1,4 @@
-AC_INIT([led], [1.0], [jdb@moship.net])
+AC_INIT([oscled], [1.0], [jdb@moship.net])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_PROG_CC
 AC_PROG_CXX
@@ -42,9 +42,9 @@ AC_ARG_WITH([gtk], AS_HELP_STRING([--with-gtk], [Build with the GTK+ interface (
 AS_IF([test "x$with_gtk" = "xyes"], [
    PKG_CHECK_MODULES([GTK], [gtk+-2.0])
    PKG_CHECK_MODULES([GOOCANVAS], [goocanvas])
+   PKG_CHECK_MODULES([GLIB], [glib-2.0])
 ])
 
-PKG_CHECK_MODULES([GLIB], [glib-2.0])
 PKG_CHECK_MODULES([JSONCPP], [jsoncpp])
 
 AC_CONFIG_HEADERS([config.h])

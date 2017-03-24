@@ -13,6 +13,20 @@
 
 using namespace std;
 
+OSCServer::led_interface::led_interface(std::shared_ptr<IPlatformSerial> ser, int base, int len, bool reverse) :
+    m_ser(ser), m_base(base), m_len(len), m_reverse(reverse) {
+    led_buf = new uint8_t[(m_len * 3) + 64];
+    t_update = std::thread(&OSCServer::led_interface::update_thread, this);
+};
+
+
+OSCServer::led_interface::~led_interface() {
+    run_update_thread = false;
+    t_update.join();
+    delete led_buf;
+}
+
+
 OSCServer::OSCServer(int port) : m_port(port)
 {
     cout << "starting server on port " << port << endl;
@@ -20,6 +34,7 @@ OSCServer::OSCServer(int port) : m_port(port)
     received = 0;
     m_iface_count = 0;
 
+    //m_st.reset(new lo::ServerThread("225.0.0.37", port));
     m_st.reset(new lo::ServerThread(port));
 
     if (!m_st->is_valid()) {
@@ -47,7 +62,7 @@ void OSCServer::set_led(int n, led_t led)
 {
     // search for correct led_interface, set leds
     for (auto it = m_led_ifaces.begin(); it != m_led_ifaces.end(); ++it) {
-        shared_ptr<led_interface> iface = *it;
+        auto iface = *it;
         if ((n >= iface->m_base) & (n < (iface->m_base + iface->m_len))) {
             n -= iface->m_base;  // normalize to vector offset
             if (iface->m_reverse) {
@@ -134,28 +149,25 @@ int OSCServer::bind(shared_ptr<IPlatformSerial> ser, int base, int len, bool rev
     shared_ptr<led_interface> led_iface(new led_interface(ser, base, len, reverse));
     
     // initialize leds with zero-value leds
-    led_t led(0, 0, 0);
-    for (auto i = 0; i < len; i++) {
-        led_iface->leds.push_back(led);
-    }
+    // led_t led(0, 0, 0);
+
+    // for (auto i = 0; i < len; i++) {
+    //     led_iface->leds.push_back(led);
+    // }
 
     m_led_ifaces.push_back(led_iface);
 
     m_iface_count++;
-
-    // cout << "bind " << led_iface->iface << ":" 
-    //      << " base: " << led_iface->base 
-    //      << " len: " << led_iface->len 
-    //      << " reverse: " << led_iface->reverse << endl;
-
+    
     return m_iface_count;
 }
 
 
 void OSCServer::led_interface::set_led(int offset, led_t led)
 {
-    lock_guard<mutex> lock(update_mutex);
     //cout << "set_led(" << offset << "," << int(led.r)  << "," << int(led.g)  << "," << int(led.b)  << ")" << endl;
+
+    lock_guard<mutex> lock(led_buf_mutex);
     leds.at(offset) = led;
 }
 
@@ -163,6 +175,7 @@ void OSCServer::led_interface::set_led(int offset, led_t led)
 void OSCServer::led_interface::update_led_buf()
 {
     size_t i = 0;
+    lock_guard<mutex> lock(led_buf_mutex);
     for (auto it = leds.begin(); it != leds.end(); ++it) {
         //cout << "update:" << ": " << int(it->r) << ", " << int(it->g) << ", " << int(it->b) << endl;
         led_buf[i] = it->r;
@@ -174,13 +187,13 @@ void OSCServer::led_interface::update_led_buf()
 }
 
 
-//void OSCServer::led_interface::update_thread(OSCServer::led_interface *iface)
 void OSCServer::led_interface::update_thread()
 {
     run_update_thread = true;
 
+    // this should update 10 to 20 times / second
     while (run_update_thread) {
         update_led_buf();
         usleep(50000);
-    }        
+    }
 }

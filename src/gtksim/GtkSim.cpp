@@ -191,8 +191,6 @@ void GtkSim::main()
         gdouble x = (x_offset - radius - stem_spacing * 4) + (stem_spacing * i);
         gdouble y = y_offset;
         g_beads[i] = goo_canvas_ellipse_new(root, x, y, bead_radius, bead_radius,
-                                            "line-width", 0,
-                                            //"stroke-color", "#000000",
                                             "fill-color", "#000000", NULL);
     }
 
@@ -202,7 +200,7 @@ void GtkSim::main()
         gdouble y = y_offset + radius * sin(angle);
         //printf("(%f, %f)\n", x, y);
         g_beads[i] = goo_canvas_ellipse_new(root, x, y, bead_radius, bead_radius,
-                                          "fill-color", "#000000", NULL);
+                                            "fill-color", "#000000", NULL);
     }
 
     //gtk_idle_add_priority(G_PRIORITY_LOW, gtksim_update_beads, this);

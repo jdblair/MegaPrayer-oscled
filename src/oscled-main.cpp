@@ -11,7 +11,6 @@
 
 #include "config.h"
 
-
 int main(int argc, char **argv)
 {
     PlatformSerialFactory ser_factory;
