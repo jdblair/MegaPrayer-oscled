@@ -1,0 +1,28 @@
+{
+    "defaults": {
+        "ip": "239.0.0.1",
+        "port": 5005,
+        "leds_per_bead": 8,
+        "bead_count": 10
+    },
+    "station": [
+        {
+            "id": 0,
+            "bead_base": 0,
+            "interface": [
+                {
+                    "id": 0,
+                    "led_base" : 0,
+                    "led_count" : 240,
+                    "reversed" : true
+                },
+                {
+                    "id": 1,
+                    "led_base" : 240,
+                    "led_count" : 240,
+                    "reversed" : false
+                }
+            ]
+        }
+    ]
+}
