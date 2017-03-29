@@ -49,7 +49,7 @@ class Rosary:
         self.effect_id = 0;
         self.BEAD_COUNT=60
         self.run_mainloop = False
-        self.mainloop_sleep = 0.1
+        self.mainloop_delay = 0.03
         self.effect_registry = {}
 
         self.osc_client = udp_client.UDPClient(self.osc_ip, self.osc_port)
@@ -98,18 +98,32 @@ class Rosary:
         e = effect(self.Set_None)
         self.effect_registry[e.name] = effect
         
-    def add_effect(self, effect):
+    def add_effect_by_object(self, effect):
         self.effect_id = self.effect_id + 1
         effect.id = self.effect_id
         effect.rosary = self
         self.effects.append(effect)
         return self.effect_id
 
-    def add_effect_by_name(self, name, bead_set, color=Color(1,1,1)):
-        return self.add_effect(self.effect_registry[name](bead_set, color))
+    def add_effect(self, name, bead_set, color=Color(1,1,1)):
+        return self.add_effect_by_object(self.effect_registry[name](bead_set, color))
 
     def clear_effects(self):
         self.effects = []
+
+    def del_effect(self, id):
+        i=0
+        for e in self.effects:
+            if e.id == id:
+                del(self.effects[i])
+                return
+            i += 1
+
+    def effect(self, id):
+        for e in self.effects:
+            if e.id == id:
+                return e
+        return 0
 
     def update(self):
         bundle = osc_bundle_builder.OscBundleBuilder(osc_bundle_builder.IMMEDIATELY)
@@ -125,7 +139,11 @@ class Rosary:
             msg = msg.build()
             bundle.add_content(msg)
             i = i + 1
-        
+            
+        msg = osc_message_builder.OscMessageBuilder(address = "/update")
+        msg = msg.build()
+        bundle.add_content(msg)
+            
         bundle = bundle.build()
         self.osc_client.send(bundle)
 
@@ -135,7 +153,7 @@ class Rosary:
                 #print("effect: {}".format(effect.name))
                 effect.next(self)
                 self.update()
-            time.sleep(self.mainloop_sleep)
+            time.sleep(self.mainloop_delay)
 
     def start(self):
         r = self
@@ -143,7 +161,9 @@ class Rosary:
             r.run_mainloop = True
             self.t_mainloop = threading.Thread(name='rosary_mainloop', target=self.mainloop)
             self.t_mainloop.start()
+
             code.interact(local=locals())
+
             self.t_mainloop.join()
 
     def stop(self):
@@ -162,6 +182,10 @@ class Effect:
         self.color = Color()
         self.color.set(color)
         self.duration = 0
+        self.id = -1
+
+    def __eq__(self, other):
+        return (self.id == other)
 
     """convenience function for converting sets to lists"""
     def set_bead_set(self, set):
@@ -280,7 +304,13 @@ class Effect_Throb(Effect):
         self.x += 0.05
     
 if __name__ == "__main__":
-    r = Rosary("192.168.100.114", 5005)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--ip", default="127.0.0.1", help="OSC server address")
+    parser.add_argument("--port", default=5005, help="OSC server port")
+    args = parser.parse_args()
+
+    r = Rosary(args.ip, args.port)
 
     r.register_effect(Effect_SineWave)
     r.register_effect(Effect_ThreePhaseSineWave)
@@ -288,16 +318,18 @@ if __name__ == "__main__":
     r.register_effect(Effect_Throb)
     r.register_effect(Effect_Bounce)
 
-    # r.add_effect(Effect_Snake(Color(0, 1, 0), length=2, direction=-1))
-    # r.add_effect(Effect_Snake(Color(0, 1, 1), length=3))
-    #r.add_effect(Effect_SineWave(Color(0, 0, 1), period=3, direction=1))
+#    r.add_effect(Effect_ThreePhaseSineWave(r.Set_All, Color(1, 1, 1), period=3, direction=1))
+            
+    r.start()
+
+    
     #r.add_effect(Effect_SineWave(r.Set_Half01, color=Color(1, 1, 0), period=2, direction=-1))
     #r.add_effect(Effect_SineWave(r.Set_Half23, color=Color(0, 1, 1), period=2, direction=1))
 
 #    r.add_effect(Effect_Bounce(r.Set_Ring, color=r.Color_Violet))
 #    r.add_effect(Effect_Bounce(r.Set_Ring, color=r.Color_Yellow, direction=-1))
 #    r.add_effect(Effect_Bounce(r.Set_Ring, color=r.Color_Violet))
-#    r.add_effect(Effect_Bounce(r.Set_Ring, color=r.Color_Violet))
+#    r.add_effect(Effect_Bounce(r.Set_Ring, color=r.Color_Violet))x
 
 #    r.add_effect(Effect_Bounce(r.Set_Eighth0, color=r.Color_Red))
 #    r.add_effect(Effect_Bounce(r.Set_Eighth1, color=r.Color_Red))
@@ -309,7 +341,6 @@ if __name__ == "__main__":
 #    r.add_effect(Effect_Bounce(r.Set_Eighth7, color=r.Color_Blue, direction=-1))
 
 #    r.add_effect(Effect_ThreePhaseSineWave(r.Set_Stem | r.Set_Eighth7 | r.Set_Eighth0, Color(1, 1, 1), period=1, direction=1))
-    r.add_effect(Effect_ThreePhaseSineWave(r.Set_Odd_All, Color(1, 1, 1), period=1, direction=1))
-    r.add_effect(Effect_ThreePhaseSineWave(r.Set_Even_All, Color(1, 1, 1), period=1, direction=-1))
-            
-    r.start()
+#    r.add_effect(Effect_ThreePhaseSineWave(r.Set_Odd_All, Color(1, 1, 1), period=3, direction=1))
+#    r.add_effect(Effect_ThreePhaseSineWave(r.Set_Even_All, Color(1, 1, 1), period=3, direction=-1))
+#    r.add_effect(Effect_ThreePhaseSineWave(r.Set_All, Color(1, 1, 1), period=3, direction=-1))

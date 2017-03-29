@@ -35,13 +35,17 @@ class OSCServer {
     OSCServer(int port);
 
     int bind(std::shared_ptr<IPlatformSerial> ser, int base, int len, bool reverse);
+    int drop_interfaces();
     void start() { m_st->start(); };
     int osc_method_led(lo_arg **argv);
     int osc_method_led_float(lo_arg **argv);
     int osc_method_bead(lo_arg **argv);
     int osc_method_bead_float(lo_arg **argv);
+    int osc_method_update(lo_arg **argv);
     void set_led(int n, led_t led);
 
+    // led_interface encapsulates the physical serial interface and the state
+    // of all connected LED modules.
     class led_interface {
     public:
         void update_thread();
@@ -69,6 +73,7 @@ class OSCServer {
         std::condition_variable update_cv;
 
         void set_led(int offset, led_t led);
+        void notify_update_thread();
     };
 
     int m_leds_per_bead;

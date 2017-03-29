@@ -49,13 +49,15 @@ OSCServer::OSCServer(int port) : m_port(port)
     }
 
     m_st->add_method("/led", "iiii", 
-                    [this](lo_arg **argv, int)  {this->osc_method_led(argv);});
+                     [this](lo_arg **argv, int)  {this->osc_method_led(argv);});
     m_st->add_method("/ledf", "ifff", 
-                    [this](lo_arg **argv, int)  {this->osc_method_led_float(argv);});
+                     [this](lo_arg **argv, int)  {this->osc_method_led_float(argv);});
     m_st->add_method("/bead", "iiii", 
-                    [this](lo_arg **argv, int)  {this->osc_method_bead(argv);});
+                     [this](lo_arg **argv, int)  {this->osc_method_bead(argv);});
     m_st->add_method("/beadf", "ifff", 
                      [this](lo_arg **argv, int)  {this->osc_method_bead_float(argv);});
+    m_st->add_method("/update", "",
+                     [this](lo_arg **argv, int)  {this->osc_method_update(argv);});
 
     m_base_bead = 0;
     m_leds_per_bead = 1;
@@ -125,10 +127,6 @@ int OSCServer::osc_method_bead(lo_arg **argv)
         set_led(n + offset, led_t(argv[1]->i, argv[2]->i, argv[3]->i));
     }        
 
-    // for (auto it = m_led_ifaces.begin(); it != m_led_ifaces.end(); ++it) {
-    //     (*it)->update_led_buf();
-    // }
-
     return 0;
 }
 
@@ -150,6 +148,14 @@ int OSCServer::osc_method_bead_float(lo_arg **argv)
 }
 
 
+int OSCServer::osc_method_update(lo_arg **argv)
+{
+    for (auto it = m_led_ifaces.begin(); it != m_led_ifaces.end(); ++it) {
+        // (*it)->update_led_buf();
+        (*it)->notify_update_thread();
+    }
+}
+
 // create an led_interface and added to m_led_ifaces
 int OSCServer::bind(shared_ptr<IPlatformSerial> ser, int base, int len, bool reverse)
 {
@@ -160,6 +166,15 @@ int OSCServer::bind(shared_ptr<IPlatformSerial> ser, int base, int len, bool rev
     m_iface_count++;
     
     return m_iface_count;
+}
+
+
+// remove all active LED interfaces
+// this is provided to allow for the config to be reloaded w/o restarting the process
+int OSCServer::drop_interfaces()
+{
+    m_led_ifaces.clear();
+    m_iface_count=0;
 }
 
 
@@ -175,13 +190,15 @@ void OSCServer::led_interface::set_led(int offset, led_t led)
 void OSCServer::led_interface::update_led_buf()
 {
     size_t i = 0;
-    lock_guard<mutex> lock(led_buf_mutex);
-    for (auto it = leds.begin(); it != leds.end(); ++it) {
-        //cout << "update:" << ": " << int(it->r) << ", " << int(it->g) << ", " << int(it->b) << endl;
-        led_buf[i] = it->r;
-        led_buf[i+1] = it->g;
-        led_buf[i+2] = it->b;
-        i += 3;
+    {
+        lock_guard<mutex> lock(led_buf_mutex);
+        for (auto it = leds.begin(); it != leds.end(); ++it) {
+            //cout << "update:" << ": " << int(it->r) << ", " << int(it->g) << ", " << int(it->b) << endl;
+            led_buf[i] = it->r;
+            led_buf[i+1] = it->g;
+            led_buf[i+2] = it->b;
+            i += 3;
+        }
     }
     m_ser->send(led_buf, m_len * 3);
 }
@@ -191,9 +208,20 @@ void OSCServer::led_interface::update_thread()
 {
     run_update_thread = true;
 
-    // this should update 10 to 20 times / second
     while (run_update_thread) {
-        update_led_buf();
-        usleep(50000);
+        // I don't care about spurious wakeups, so I won't implement
+        // a "ready" variable
+        {
+            unique_lock<mutex> lock(update_mutex);
+            update_cv.wait(lock);
+            update_led_buf();
+        }
     }
+}
+
+
+void OSCServer::led_interface::notify_update_thread()
+{
+    unique_lock<mutex> lock(update_mutex);
+    update_cv.notify_all();
 }

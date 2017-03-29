@@ -3,17 +3,16 @@
 #ifndef PLATFORMSERIAL_H
 #define PLATFORMSERIAL_H
 
-#define CLK_WIDTH 5
+#define CLK_WIDTH 120
 
 #include <IPlatformSerial.h>
 
 class PlatformSerial : public IPlatformSerial
 {
  public:
-    PlatformSerial(void);
+    PlatformSerial(int clk_pin, int dat_pin);
 
-    bool init(const std::string& gpio_clk,
-              const std::string& gpio_dat);
+    bool init(void);
 
     void send(unsigned char *buf, size_t len);
     

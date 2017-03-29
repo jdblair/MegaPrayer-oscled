@@ -6,17 +6,24 @@
  *
  */
 
-#include <PlatformSerialFactory.h>
-#include <GtkSim.hpp>
+#include "PlatformSerialFactory.h"
+#include "OscLedConfig.hpp"
+#include "GtkSim.hpp"
 
 #include <iostream>
 
 using namespace std;
 
+// GTKSim version of PlatformSerialFactory
 std::shared_ptr<IPlatformSerial> PlatformSerialFactory::create_platform_serial(int iface_num)
 {
     std::shared_ptr<GtkSimSerial> ser;
+
     GtkSim &sim = GtkSim::getInstance();
+
+    //OSCLedConfig &c = OSCLedConfig::getInstance();
+    //sim.set_leds_per_bead(c.get_station_config().leds_per_bead);
+
     sim.set_leds_per_bead(8);
 
     switch (iface_num) {
@@ -24,7 +31,7 @@ std::shared_ptr<IPlatformSerial> PlatformSerialFactory::create_platform_serial(i
         ser.reset(new GtkSimSerial(0, 239, true));
         break;
     case 1:
-        ser.reset(new GtkSimSerial(240, 479, false));
+        ser.reset(new GtkSimSerial(240, 240, false));
         break;
     }
 
