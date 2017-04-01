@@ -2,5 +2,6 @@
 
 To configure to cross-compile for arm:
 
-CC=arm-linux-gnueabihf-gcc ./configure --host arm-linux-gnueabihf
+. env.sh
+./configure --host arm-linux-gnueabihf
 
