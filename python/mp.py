@@ -6,6 +6,7 @@ import time
 import math
 import threading
 import code
+import copy
 
 from pythonosc import osc_bundle_builder
 from pythonosc import osc_message_builder
@@ -13,7 +14,7 @@ from pythonosc import udp_client
 
 
 class Color:
-    """Data structure for holding individual Bead color data"""
+    """Represents individual Bead color data"""
     
     def __init__(self, r=0, g=0, b=0, a=0):
         self.r = r
@@ -22,14 +23,61 @@ class Color:
         self.a = a
 
     def __repr__(self):
-         return "Color({}, {}, {}, {})".format(self.r, self.g, self.b, self.a)
+        return "Color({}, {}, {}, {})".format(self.r, self.g, self.b, self.a)
 
+    def set_intensity(self, intensity):
+        self.r *= intensity
+        self.g *= intensity
+        self.b *= intensity
+        
     def set(self, color, intensity=1):
         self.r = color.r * intensity
         self.g = color.g * intensity
         self.b = color.b * intensity
         self.a = color.a
 
+    def next(self):
+        pass
+
+class ColorFade(Color):
+    """Represents a dynamic Color that changes over time"""
+
+    def __init__(self, start=Color(0,0,0), finish=Color(1,1,1), time=30):
+        super().__init__(r=start.r, g=start.g, b=start.b, a=start.a)
+        self.start = start
+        self.finish = finish
+        self.delta_t = time
+        self.delta_r = (finish.r - start.r) / time
+        self.delta_g = (finish.g - start.g) / time
+        self.delta_b = (finish.b - start.b) / time
+
+    def __repr__(self):
+        return "ColorFade(start={}, finish={})".format(self.start, self.finish)
+
+    def next(self):
+        self.r += self.delta_r
+        self.g += self.delta_g
+        self.b += self.delta_b
+        
+        # correct for rounding errors that may cause us to exceed bounds
+        if (self.r <= 0):
+            self.r = 0
+            self.delta_r *= -1
+        if (self.r >= 1):
+            self.r = 1
+            self.delta_r *= -1
+        if (self.g <= 0):
+            self.g = 0
+            self.delta_g *= -1
+        if (self.g >= 1):
+            self.g = 1
+            self.delta_g *= -1
+        if (self.b <= 0):
+            self.b = 0
+            self.delta_b *= -1
+        if (self.b >= 1):
+            self.b = 1
+            self.delta_b *= -1
 
 class Bead:
     def __init__(self, index=0):
@@ -38,6 +86,9 @@ class Bead:
         
     def __repr__(self):
         return "Bead(index={}, color={})".format(self.index, self.color)
+
+    def copy_color(self, color):
+        self.color = copy.copy(color)
 
 class Rosary:
     def __init__(self, ip="127.0.0.1", port=5005):
@@ -92,13 +143,14 @@ class Rosary:
         self.Color_Blue = Color(0,0,1)
         self.Color_Violet = Color(1,0,1)
         self.Color_Cyan = Color(0,1,1)
+        self.Color_Black = Color(0,0,0)
 
     def register_effect(self, effect):
         # instantiate the object so we get get the name
         e = effect(self.Set_None)
         self.effect_registry[e.name] = effect
         
-    def add_effect_by_object(self, effect):
+    def add_effect_object(self, effect):
         self.effect_id = self.effect_id + 1
         effect.id = self.effect_id
         effect.rosary = self
@@ -106,18 +158,13 @@ class Rosary:
         return self.effect_id
 
     def add_effect(self, name, bead_set, color=Color(1,1,1)):
-        return self.add_effect_by_object(self.effect_registry[name](bead_set, color))
+        return self.add_effect_object(self.effect_registry[name](bead_set, color))
 
     def clear_effects(self):
         self.effects = []
 
     def del_effect(self, id):
-        i=0
-        for e in self.effects:
-            if e.id == id:
-                del(self.effects[i])
-                return
-            i += 1
+        self.effects.remove(self.effect(id))
 
     def effect(self, id):
         for e in self.effects:
@@ -152,6 +199,8 @@ class Rosary:
             for effect in self.effects:
                 #print("effect: {}".format(effect.name))
                 effect.next(self)
+                if (effect.finished):
+                    self.del_effect(effect.id)
                 self.update()
             time.sleep(self.mainloop_delay)
 
@@ -162,7 +211,7 @@ class Rosary:
             self.t_mainloop = threading.Thread(name='rosary_mainloop', target=self.mainloop)
             self.t_mainloop.start()
 
-            code.interact(local=locals())
+            code.interact(local=globals())
 
             self.t_mainloop.join()
 
@@ -179,14 +228,17 @@ class Effect:
     def __init__(self, name, set, color=Color(1,1,1)):
         self.name = name
         self.bead_set = self.set_bead_set(set)
-        self.color = Color()
-        self.color.set(color)
+        self.color = copy.copy(color)
         self.duration = 0
         self.id = -1
+        self.finished = False # remove from effect list if true
 
     def __eq__(self, other):
         return (self.id == other)
 
+    def __repr__(self):
+        return "<Effect:{}: id={}>".format(self.name, self.id)
+        
     """convenience function for converting sets to lists"""
     def set_bead_set(self, set):
         beads = []
@@ -197,6 +249,9 @@ class Effect:
 
     def get_name(self):
         return self.name
+
+    def next(self):
+        self.color.next()
 
 class Effect_Snake(Effect):
 
@@ -209,6 +264,8 @@ class Effect_Snake(Effect):
         self.direction = direction
 
     def next(self, rosary):
+        super().next()
+        
         rosary.beads[self.rear] = rosary.bgcolor
 
         if (self.direction > 0):
@@ -235,10 +292,12 @@ class Effect_SineWave(Effect):
         self.direction = direction
 
     def next(self, rosary):
+        super().next()
+        
         for b in (self.bead_list):
             intensity = (math.sin((2 * math.pi / len(self.bead_list) * self.period) * (b.index + self.offset)) + 1) / 2
-            b.color.set(self.color, intensity)            
-        self.offset = (self.offset) + self.direction % 56
+            b.color.set(self.color, intensity)
+        self.offset = (self.offset) + self.direction % len(self.bead_list)
             
 
 class Effect_ThreePhaseSineWave(Effect):
@@ -253,6 +312,8 @@ class Effect_ThreePhaseSineWave(Effect):
         self.phase_b = .5
 
     def next(self, rosary):
+        super().next()
+
         bead_count = len(self.bead_list)
         phase_r = self.phase_r * bead_count
         phase_g = self.phase_g * bead_count
@@ -270,8 +331,13 @@ class Effect_SetColor(Effect):
         super().__init__("set_color", bead_set, color=color)
 
     def next(self, rosary):
+        super().next()
+
         for bead in (self.bead_list):
-            bead.color.set(self.color)
+            bead.copy_color(self.color)
+
+        self.finished = True
+        
 
 class Effect_Bounce(Effect):
     def __init__(self, bead_set, color=Color(), direction=1):
@@ -284,6 +350,8 @@ class Effect_Bounce(Effect):
         self.last = self.current
 
     def next(self, rosary):
+        super().next()
+
         self.bead_list[self.last].color.set(rosary.bgcolor)
         self.current += self.direction
         self.last = self.current
@@ -296,9 +364,12 @@ class Effect_Throb(Effect):
     def __init__(self, bead_set, color=Color()):
         super().__init__("throb", bead_set, color=color)
         self.x = 0.0
+        self.period = 1
 
     def next(self, rosary):
-        intensity = (math.sin(self.x * math.pi) + 1) / 2
+        super().next()
+
+        intensity = (math.sin(self.x * math.pi * self.period) + 1) / 2
         for bead in (self.bead_list):
             bead.color.set(self.color, intensity=intensity)
         self.x += 0.05
@@ -318,9 +389,17 @@ if __name__ == "__main__":
     r.register_effect(Effect_Throb)
     r.register_effect(Effect_Bounce)
 
-#    r.add_effect(Effect_ThreePhaseSineWave(r.Set_All, Color(1, 1, 1), period=3, direction=1))
-            
+    #r.add_effect_object(Effect_Bounce(r.Set_All, color=ColorFade(start=r.Color_Green, finish=r.Color_Violet)))
+
+    id = r.add_effect('sine_wave', r.Set_Ring);
+    r.effect(id).color = ColorFade(start=r.Color_Red, finish=r.Color_Blue)
     r.start()
+    
+
+    
+#    r.add_effect(Effect_ThreePhaseSineWave(r.Set_All, color=Color(1, 1, 1), period=3, direction=1))
+            
+
 
     
     #r.add_effect(Effect_SineWave(r.Set_Half01, color=Color(1, 1, 0), period=2, direction=-1))
@@ -344,3 +423,5 @@ if __name__ == "__main__":
 #    r.add_effect(Effect_ThreePhaseSineWave(r.Set_Odd_All, Color(1, 1, 1), period=3, direction=1))
 #    r.add_effect(Effect_ThreePhaseSineWave(r.Set_Even_All, Color(1, 1, 1), period=3, direction=-1))
 #    r.add_effect(Effect_ThreePhaseSineWave(r.Set_All, Color(1, 1, 1), period=3, direction=-1))
+
+
