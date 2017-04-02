@@ -34,9 +34,9 @@ FIXME: fill this in
 
 At the top level, run:
 
------
+```
 autoreconf --install
------
+```
 
 This will generate the configure script.
 
@@ -48,18 +48,18 @@ Here are some easy recipes:
 
 *From the top-level directory:*
 
------
+```
 mkdir build-gtksim-x86
 cd build-gtksim-x86
 ../configure --enable-serial=gtksim
 make
------
+```
 
 ### Orange Pi
 
 To configure to cross-compile for arm (set VERSION to the version of gcc you have installed):
 
------
+```
 export VERSION=-4.9
 export HOST=arm-linux-gnueabihf
 export CC=${HOST}-gcc${VERSION}
@@ -67,17 +67,17 @@ export CXX=${HOST}-g++${VERSION}
 export CFLAGS="-L$(pwd)/lib/${HOST}/lib -I$(pwd)/lib/arm-linux-gnueabihf/include"
 export CXXFLAGS="-L$(pwd)/lib/${HOST}/lib -I$(pwd)/lib/arm-linux-gnueabihf/include"
 export PREFIX=$(pwd)/lib/${HOST}
------
+```
 
 This is provided in the `env.sh` script at the top level of the repo.
 
 To cross-compile for the pi:
 
------
+```
 mkdir build-opi-arm
 ../configure --enable-serial=opi --host $HOST
 make
------
+```
 
 
 # python/mp.py
@@ -98,6 +98,6 @@ file permissions for ` /usr/local/lib/python3.4/dist-packages/pythonosc/`.
 
 If, after installing the library, python tells you the library is not found, add world read permissions:
 
------
+```
 chmod a+r -R /usr/local/lib/python3.4/dist-packages/pythonosc/
------
+```
