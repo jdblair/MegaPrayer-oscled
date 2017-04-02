@@ -10,6 +10,7 @@
 #include <unistd.h>
 
 #include "json/json.h"
+#include "config.h"
 
 #include "OSCLedConfig.hpp"
 
@@ -183,6 +184,7 @@ bool OSCLedConfig::getopt(int argc, char * const argv[])
     while (1) {
         int option_index = 0;
         static struct option long_options[] = {
+            {"version", no_argument, 0, 'v'},
             {"config", required_argument, 0, 'c'},
             {"id", required_argument, 0, 'i'},
             {"daemonize", no_argument, 0, 'd'},
@@ -191,7 +193,7 @@ bool OSCLedConfig::getopt(int argc, char * const argv[])
             {0, 0, 0}
         };
         
-        c = getopt_long(argc, argv, "c:i:d", long_options, &option_index);
+        c = getopt_long(argc, argv, "vc:i:d", long_options, &option_index);
         if (c == -1)
             break;
         
@@ -228,6 +230,11 @@ bool OSCLedConfig::getopt(int argc, char * const argv[])
                 return false;  // err() doesn't return
             }
             m_cmd_line_config.port_set = true;
+
+        case 'v':
+            cout << PACKAGE_STRING << " " << USE_PLATFORM_SERIAL << " " << GIT_HASH << endl;
+            exit(0);
+            break;
 
         case '?':
             break;

@@ -1,4 +1,4 @@
-AC_INIT([oscled], [1.0], [jdb@moship.net])
+AC_INIT([oscled], [0.7], [jdb@moship.net])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_PROG_CC
 AC_PROG_CXX
@@ -6,6 +6,9 @@ AC_PROG_RANLIB
 AM_PROG_AR
 
 AC_SUBST([AM_CXXFLAGS], [-std=c++11])
+
+git_hash=m4_esyscmd_s([git describe --always])
+AC_DEFINE_UNQUOTED([GIT_HASH], "$git_hash", [Git hash prefix])
 
 AC_ARG_ENABLE([serial],
         [AS_HELP_STRING([--enable-serial],
@@ -37,7 +40,7 @@ if test x"$enable_debug" = "xyes"; then
             CF="$CF $i"
         fi
     done
-    CXXFLAGS="$CF -O0 -g -Wall -Werror -DDEBUG"
+CXXFLAGS="$CF -O0 -g -Wall -Werror -DDEBUG"
 fi
 
 AC_CHECK_LIB(lo,lo_server_thread_new,[],

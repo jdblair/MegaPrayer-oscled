@@ -9,7 +9,7 @@
 ** DONE change update threads to use condition variable
 ** TODO make "ip" config field work, make sure works with multicast works
 ** TODO make oscled blink version number on startup
-** TODO write documentation
+** TODO write documentation / doxygen markup
 ** TODO test with multiple separate strings of LEDs
 ** TODO create debian package of oscled
 ** TODO create debian package of liblo
