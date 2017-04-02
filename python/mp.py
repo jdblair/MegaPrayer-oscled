@@ -391,19 +391,12 @@ if __name__ == "__main__":
 
     #r.add_effect_object(Effect_Bounce(r.Set_All, color=ColorFade(start=r.Color_Green, finish=r.Color_Violet)))
 
-    id = r.add_effect('sine_wave', r.Set_Ring);
-    r.effect(id).color = ColorFade(start=r.Color_Red, finish=r.Color_Blue)
+    #id = r.add_effect('sine_wave', r.Set_Ring);
+    #r.effect(id).color = ColorFade(start=r.Color_Red, finish=r.Color_Blue)
     r.start()
-    
 
-    
-#    r.add_effect(Effect_ThreePhaseSineWave(r.Set_All, color=Color(1, 1, 1), period=3, direction=1))
-            
-
-
-    
-    #r.add_effect(Effect_SineWave(r.Set_Half01, color=Color(1, 1, 0), period=2, direction=-1))
-    #r.add_effect(Effect_SineWave(r.Set_Half23, color=Color(0, 1, 1), period=2, direction=1))
+#    r.add_effect(Effect_SineWave(r.Set_Half01, color=Color(1, 1, 0), period=2, direction=-1))
+#    r.add_effect(Effect_SineWave(r.Set_Half23, color=Color(0, 1, 1), period=2, direction=1))
 
 #    r.add_effect(Effect_Bounce(r.Set_Ring, color=r.Color_Violet))
 #    r.add_effect(Effect_Bounce(r.Set_Ring, color=r.Color_Yellow, direction=-1))

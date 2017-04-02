@@ -1,0 +1,77 @@
+
+* meta
+** TODO create github project
+** TODO create slack channel
+
+* oscled 
+** DONE make LED update explicit using /update method, eliminate continuous update threads
+** DONE create command line option and config file parser
+** DONE change update threads to use condition variable
+** TODO make "ip" config field work, make sure works with multicast works
+** TODO make oscled blink version number on startup
+** TODO write documentation
+** TODO test with multiple separate strings of LEDs
+** TODO create debian package of oscled
+** TODO create debian package of liblo
+** TODO implement syslog logging
+** TODO implement debug macros
+** TODO make run on raspberry pi (find/fix thread ABI issue)
+** TODO extend config system to remove hard-coded values in PlatformSerial drivers
+** TODO create a configurable mode that removes the requirement for /update method
+** TODO make gtksim run on MacOS natively
+** TODO make run on chip computer (maybe already works)
+
+* mp.py
+** TODO organize the script into a python module, with effects in individual files
+** TODO implement dynamic Color object (e.g., color fade)
+** TODO implement dynamic bead sets (create BeadSet object)
+** TODO create sequence of effects (Seq object)
+** TODO implement Trigger object to formalize means of triggering effects and sequences
+** TODO implement OSC server in mp.py
+** TODO implement REST API to mp.py
+*** TODO create a way for the fundamental objects (Colors, Beads, Effects) to have their state manipulated over a REST API   
+** TODO create way to remove effects
+** TODO create way to change the order of effects
+
+** TODO add the concept of a "clean shutdown" for an effect:
+   + the idea is that an effect would come to a clean finish, by, for
+     example, fading to black or to a requested color.
+** TODO create the concept of a finite effect lifetime, so we can say "run this effect for 2 seconds"
+** TODO create a way to synchronize the clocks or state of effects
+** effects to implement
+*** TODO water drops
+*** TODO random flash
+*** TODO strobe
+*** TODO flame
+*** TODO clock
+
+* hardware
+** TODO design interface board in Eagle CAD
+** TODO get design reviewed
+** TODO order board from OSH Park
+** TODO design mounting system for LED modules (styrofoam disks?)
+** TODO assemble 10 beads (w/o the papier mache part)
+** TODO design/prototype orange pi housing
+** TODO design input hardware for nails
+** TODO design input hardware for Jerry's hidden control panel
+
+* cross lighting
+** TODO sync with Ian
+** TODO implement DMX interface
+** TODO implement OSC interface to DMX interface
+** TODO tie into mp.py somehow
+** TODO add the cross lighting to the gtksim app
+
+* production
+** TODO assemble daughter boards
+** TODO aseemble all the cables and connectors
+*** TODO ethernet
+*** TODO 48V+
+*** TODO GND
+*** TODO LED serial (3-wires)
+** TODO assemble 60 LED mounts for the beads
+** TODO assemble the opi's in their boxes ready for mount
+*** TODO drill and thread mounting holes, screw in standoffs
+*** TODO mount boards
+*** TODO mount connectors
+*** TODO label and close it up

@@ -1,7 +1,0 @@
-
-
-To configure to cross-compile for arm:
-
-. env.sh
-./configure --host arm-linux-gnueabihf
-
