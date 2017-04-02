@@ -7,7 +7,7 @@
  */
 
 #include "PlatformSerialFactory.h"
-#include "OscLedConfig.hpp"
+//#include "OSCLedConfig.hpp"
 #include "GtkSim.hpp"
 
 #include <iostream>
