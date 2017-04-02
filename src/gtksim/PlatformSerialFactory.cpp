@@ -7,7 +7,6 @@
  */
 
 #include "PlatformSerialFactory.h"
-//#include "OSCLedConfig.hpp"
 #include "GtkSim.hpp"
 
 #include <iostream>
@@ -20,9 +19,6 @@ std::shared_ptr<IPlatformSerial> PlatformSerialFactory::create_platform_serial(i
     std::shared_ptr<GtkSimSerial> ser;
 
     GtkSim &sim = GtkSim::getInstance();
-
-    //OSCLedConfig &c = OSCLedConfig::getInstance();
-    //sim.set_leds_per_bead(c.get_station_config().leds_per_bead);
 
     sim.set_leds_per_bead(8);
 
