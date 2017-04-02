@@ -1,7 +1,7 @@
 
 * meta
-** TODO create github project
-** TODO create slack channel
+** DONE create github project
+** DONE create slack channel
 
 * oscled 
 ** DONE make LED update explicit using /update method, eliminate continuous update threads

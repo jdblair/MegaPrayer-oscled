@@ -44,6 +44,9 @@ OSCLedConfig::OSCLedConfig()
     m_default.bead_count = 10;
     m_default.bead_base = 0;
 
+    m_config.ip = string("127.0.0.1");
+    m_config.port = 5005;
+
     m_cmd_line_config.config_file = string("/etc/mp/config.json");
     m_cmd_line_config.id = 0;
     m_cmd_line_config.daemonize = false;
@@ -190,10 +193,11 @@ bool OSCLedConfig::getopt(int argc, char * const argv[])
             {"daemonize", no_argument, 0, 'd'},
             {"ip", required_argument, 0, 'I'},
             {"port", required_argument, 0, 'p'},
+            {"help", no_argument, 0, 'h'},
             {0, 0, 0}
         };
         
-        c = getopt_long(argc, argv, "vc:i:d", long_options, &option_index);
+        c = getopt_long(argc, argv, "vc:i:dh", long_options, &option_index);
         if (c == -1)
             break;
         
@@ -232,7 +236,22 @@ bool OSCLedConfig::getopt(int argc, char * const argv[])
             m_cmd_line_config.port_set = true;
 
         case 'v':
+            // these macros are defined in config.h
             cout << PACKAGE_STRING << " " << USE_PLATFORM_SERIAL << " " << GIT_HASH << endl;
+            exit(0);
+            break;
+
+        case 'h':
+            cout << PACKAGE_STRING << " " << USE_PLATFORM_SERIAL << " " << GIT_HASH << endl
+                 << "usage: " << string(argv[0]) << " -v -c <config.json> -i <ip address> -p <port> -d -h: " << endl
+                 << "   --version    version string" << endl
+                 << "   --config     json configuration file (" << m_cmd_line_config.config_file << ")" << endl
+                 << "   --id         station id (" << m_config.id << ")" << endl
+                 << "   --daemonize  detach process from terminal (" << (m_config.daemonize ? "true" : "false") << ")" << endl
+                 << "   --ip         ip address to bind to (" << m_config.ip << ")" << endl
+                 << "   --port       port to bind to (" << m_config.port << ")" << endl
+                 << "   --help       this help message" << endl
+                 << endl;
             exit(0);
             break;
 

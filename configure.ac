@@ -1,4 +1,4 @@
-AC_INIT([oscled], [0.7], [jdb@moship.net])
+AC_INIT([oscled], [0.7], [jdb@moship.net], [oscled.tar.gz], [https://github.com/jdblair/MegaPrayer-oscled])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_PROG_CC
 AC_PROG_CXX
