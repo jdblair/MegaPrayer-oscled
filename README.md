@@ -71,10 +71,11 @@ export PREFIX=$(pwd)/lib/${HOST}
 
 This is provided in the `env.sh` script at the top level of the repo.
 
-To cross-compile for the pi:
+To cross-compile for the orange pi:
 
 ```
 mkdir build-opi-arm
+cd build-opi-arm
 ../configure --enable-serial=opi --host $HOST
 make
 ```
