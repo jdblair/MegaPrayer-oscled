@@ -5,8 +5,7 @@
 
 # License
 
-The oscled portion is released under GPL V2. I've pulled code in from
-other GPL V2 projects and this license is required.
+oscled is licensed for use under the GNU Public License V2.
 
 # Building
 
