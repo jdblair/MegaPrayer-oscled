@@ -19,7 +19,7 @@ oscled is a C++ project that is configured using autotools.
 * make
 * autoconf
 * automake 
-* [liblo](http://liblo.sourceforge.net/)
+* [liblo](https://github.com/radarsat1/liblo/)
 * gtk+ and goocanvas
 
 This should install everything necessary on Ubuntu, with the exception of liblo:
