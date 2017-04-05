@@ -27,7 +27,16 @@ This should install everything necessary on Ubuntu, with the exception of liblo:
 
 ### Building liblo
 
-FIXME: fill this in
+Download liblo from github at 
+https://github.com/radarsat1/liblo
+Extract the files and cd into the directory
+
+'''
+./configure
+make
+make check
+sudo make install
+'''
 
 ## Generate the configure script
 
