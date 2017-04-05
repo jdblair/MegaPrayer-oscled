@@ -5,8 +5,7 @@
 
 # License
 
-The oscled portion is released under GPL V2. I've pulled code in from
-other GPL V2 projects and this license is required.
+oscled is licensed for use under the GNU Public License V2.
 
 # Building
 
@@ -19,7 +18,7 @@ oscled is a C++ project that is configured using autotools.
 * make
 * autoconf
 * automake 
-* [liblo](http://liblo.sourceforge.net/)
+* [liblo](https://github.com/radarsat1/liblo/)
 * gtk+ and goocanvas
 
 This should install everything necessary on Ubuntu, with the exception of liblo:
@@ -71,10 +70,11 @@ export PREFIX=$(pwd)/lib/${HOST}
 
 This is provided in the `env.sh` script at the top level of the repo.
 
-To cross-compile for the pi:
+To cross-compile for the orange pi:
 
 ```
 mkdir build-opi-arm
+cd build-opi-arm
 ../configure --enable-serial=opi --host $HOST
 make
 ```
