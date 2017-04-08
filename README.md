@@ -29,6 +29,7 @@ This should install everything necessary on Ubuntu, with the exception of liblo:
 
 Download liblo from github at 
 https://github.com/radarsat1/liblo
+
 Extract the files and cd into the directory
 
 ```
