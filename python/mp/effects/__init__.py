@@ -1,4 +1,7 @@
 #subpackage 'effects' for mp module (Mega Prayer)
-import sine_wave
-import throb
-__all__ = ['sine_wave', 'throb']
+from mp.effects import effect
+from mp.effects import sine_wave
+from mp.effects import throb
+from mp.effects import bounce
+
+__all__ = ['effect', 'sine_wave', 'throb', 'bounce']

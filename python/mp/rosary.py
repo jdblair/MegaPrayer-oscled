@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 import copy
 
-from color import *
-from effects import *
+from .color import *
+#from effects import *
 from pythonosc import udp_client
 
 class Bead:
@@ -16,8 +16,6 @@ class Bead:
     def copy_color(self, color):
         self.color = copy.copy(color)
 
-    def testBead():
-        print("Hello from Bead")
 
 class Rosary:
     def __init__(self, ip="127.0.0.1", port=5005):
@@ -151,7 +149,4 @@ class Rosary:
     def pause(self):
         if (self.run_mainloop):
             self.run_mainloop = False
-
-    def testRosary(self):
-        print("Hello from rosary")
 

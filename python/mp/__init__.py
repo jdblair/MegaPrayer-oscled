@@ -1,4 +1,5 @@
-#init for mp module
-import color
-import rosary
-__all__ = ['effects', 'rosary', 'color']
+#init for mp package
+from mp import color
+from mp import rosary
+from .effects import *
+__all__ = ['color', 'rosary', 'effects']
