@@ -1,15 +1,14 @@
 #!/usr/bin/python3
 import code
 import copy
-import math
 import threading
 import time
 
 from mp import color
 from .effects import *
 from pythonosc import udp_client
-
-print(color.Color(1,1,1))
+from pythonosc import osc_bundle_builder
+from pythonosc import osc_message_builder
 
 class Bead:
     def __init__(self, index=0):
