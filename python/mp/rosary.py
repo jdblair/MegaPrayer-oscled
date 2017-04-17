@@ -1,14 +1,20 @@
 #!/usr/bin/python3
+import code
 import copy
+import math
+import threading
+import time
 
-from .color import *
-#from effects import *
+from mp import color
+from .effects import *
 from pythonosc import udp_client
+
+print(color.Color(1,1,1))
 
 class Bead:
     def __init__(self, index=0):
         self.index = index
-        self.color = Color()
+        self.color = color.Color()
         
     def __repr__(self):
         return "Bead(index={}, color={})".format(self.index, self.color)
@@ -20,7 +26,7 @@ class Bead:
 class Rosary:
     def __init__(self, ip="127.0.0.1", port=5005):
         self.beads = []
-        self.bgcolor = Color(0,0,0)
+        self.bgcolor = color.Color(0,0,0)
         self.effects = []
         self.osc_ip = ip
         self.osc_port = port
@@ -63,14 +69,14 @@ class Rosary:
         self.Set_Odd_Ring = frozenset(self.beads[5:60:2])
 
         # some useful predefined colors
-        self.Color_White = Color(1,1,1)
-        self.Color_Red = Color(1,0,0)
-        self.Color_Yellow = Color(1,1,0)
-        self.Color_Green = Color(0,1,0)
-        self.Color_Blue = Color(0,0,1)
-        self.Color_Violet = Color(1,0,1)
-        self.Color_Cyan = Color(0,1,1)
-        self.Color_Black = Color(0,0,0)
+        self.Color_White = color.Color(1,1,1)
+        self.Color_Red = color.Color(1,0,0)
+        self.Color_Yellow = color.Color(1,1,0)
+        self.Color_Green = color.Color(0,1,0)
+        self.Color_Blue = color.Color(0,0,1)
+        self.Color_Violet = color.Color(1,0,1)
+        self.Color_Cyan = color.Color(0,1,1)
+        self.Color_Black = color.Color(0,0,0)
 
     def register_effect(self, effect):
         # instantiate the object so we get get the name
@@ -84,7 +90,7 @@ class Rosary:
         self.effects.append(effect)
         return self.effect_id
 
-    def add_effect(self, name, bead_set, color=Color(1,1,1)):
+    def add_effect(self, name, bead_set, color=color.Color(1,1,1)):
         return self.add_effect_object(self.effect_registry[name](bead_set, color))
 
     def clear_effects(self):

@@ -1,3 +1,4 @@
+import copy
 from mp import color
 
 class Effect:

@@ -1,10 +1,10 @@
-import effect
+from mp.effects import effect
 from mp import color
 
 class SineWave(effect.Effect):
 
     def __init__(self, bead_set, color=color.Color(1,1,1), period=1, direction=1):
-        super()__init__("sine_wave", bead_set, color=color)
+        super().__init__("sine_wave", bead_set, color=color)
         self.offset = 0
         self.period = period
         self.direction = direction

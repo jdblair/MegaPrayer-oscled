@@ -1,4 +1,4 @@
-import effect
+from mp.effects import effect
 from mp import color
 
 class Bounce(effect.Effect):
