@@ -41,10 +41,13 @@ class Effect:
         self.bead_list = beads
 
     def get_name(self):
-        """Returns the name of the Effect."
+        """Returns the name of the Effect."""
         return self.name
 
     def next(self):
-        """Invoked for every mainloop cycle. This method _must_ be invoked by every Effect's next() method."""
+        """
+        Invoked for every mainloop cycle.
+        This method _must_ be invoked by every Effect's next() method.
+        """
         self.color.next()
 

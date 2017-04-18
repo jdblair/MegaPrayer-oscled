@@ -1,6 +1,7 @@
 import math
 
 from mp.effects import effect
+
 from mp import color
 
 class Throb(effect.Effect):

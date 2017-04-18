@@ -1,7 +1,8 @@
+
 from mp.effects import effect
 from mp import color
 
-class SetColor(Effect):
+class SetColor(effect.Effect):
     """
     SetColor is a one-shot effect that sets all beads in a set to a given color.
     It removes itself from the mainloop after one invocation of next()

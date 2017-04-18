@@ -13,7 +13,7 @@ if __name__ == "__main__":
 
     r.register_effect(effects.sine_wave.SineWave)
     r.register_effect(effects.sine_wave.ThreePhaseSineWave)
-    r.register_effect(effects.effect.SetColor)
+    r.register_effect(effects.set_color.SetColor)
     r.register_effect(effects.throb.Throb)
     r.register_effect(effects.bounce.Bounce)
 
