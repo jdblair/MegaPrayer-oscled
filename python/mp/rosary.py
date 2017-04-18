@@ -144,7 +144,7 @@ class Rosary:
             self.t_mainloop = threading.Thread(name='rosary_mainloop', target=self.mainloop)
             self.t_mainloop.start()
 
-            code.interact(local=globals())
+            code.interact(local=locals())
 
             self.t_mainloop.join()
 
