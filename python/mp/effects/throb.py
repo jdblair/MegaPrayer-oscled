@@ -1,3 +1,5 @@
+import math
+
 from mp.effects import effect
 from mp import color
 

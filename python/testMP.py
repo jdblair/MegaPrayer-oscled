@@ -17,7 +17,20 @@ if __name__ == "__main__":
     r.register_effect(effects.throb.Throb)
     r.register_effect(effects.bounce.Bounce)
 
+    # create a bounce effect on all beads
     r.add_effect('bounce', r.Set_All)
+
+    # change color to red
+    r.effect(1).color.set(r.Color_Red)
+
+    # add another throb on the odd beads
+    r.add_effect('throb', r.Set_Odd_Ring, color=r.Color_Blue)
+
+    # add bounce
+    r.add_effect('bounce', r.Set_All, color=r.Color_Green)
 
 
     r.start()
+    
+
+    

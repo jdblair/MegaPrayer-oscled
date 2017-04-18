@@ -3,6 +3,7 @@ import code
 import copy
 import threading
 import time
+import math
 
 from mp import color
 from .effects import *
