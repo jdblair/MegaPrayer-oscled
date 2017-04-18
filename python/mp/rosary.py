@@ -12,6 +12,7 @@ from pythonosc import osc_bundle_builder
 from pythonosc import osc_message_builder
 
 class Bead:
+    """Bead represents a single rosary bead."""
     def __init__(self, index=0):
         self.index = index
         self.color = color.Color()
@@ -20,10 +21,17 @@ class Bead:
         return "Bead(index={}, color={})".format(self.index, self.color)
 
     def copy_color(self, color):
+        """Helper function that sets the Bead color by copying a Color object."""
         self.color = copy.copy(color)
 
 
 class Rosary:
+    """Rosary represents the whole rosary and the set of effects currently
+    running.  It is in charge of animating the rosary by calling
+    next() in each running active Effect and transmitting the OSC
+    commands set the colors of beads.
+
+    """
     def __init__(self, ip="127.0.0.1", port=5005):
         self.beads = []
         self.bgcolor = color.Color(0,0,0)
@@ -79,11 +87,20 @@ class Rosary:
         self.Color_Black = color.Color(0,0,0)
 
     def register_effect(self, effect):
+        """Register the name of an effect in our effect registry.  This allows
+        us to access the effect without having access to the python
+        object name itself.
+
+        """
         # instantiate the object so we get get the name
         e = effect(self.Set_None)
         self.effect_registry[e.name] = effect
         
     def add_effect_object(self, effect):
+        """Adds an Effect object to the active Effect list.  Returns the id of
+        the active effect.
+
+        """
         self.effect_id = self.effect_id + 1
         effect.id = self.effect_id
         effect.rosary = self
@@ -91,21 +108,29 @@ class Rosary:
         return self.effect_id
 
     def add_effect(self, name, bead_set, color=color.Color(1,1,1)):
+        """Adds an Effect to the active Effect list by using the Effect
+        name. Returns the id of the active effect.
+
+        """
         return self.add_effect_object(self.effect_registry[name](bead_set, color))
 
     def clear_effects(self):
+        """Remove all active effects. This stops all activity on the rosary."""
         self.effects = []
 
     def del_effect(self, id):
+        """Delete an active effect by id."""
         self.effects.remove(self.effect(id))
 
     def effect(self, id):
+        """Return the Effect object of an active effect by specifying the Effect id."""
         for e in self.effects:
             if e.id == id:
                 return e
         return 0
 
     def update(self):
+        """Transmit the OSC message to update all beads on the rosary."""
         bundle = osc_bundle_builder.OscBundleBuilder(osc_bundle_builder.IMMEDIATELY)
 
         i = 0
@@ -128,6 +153,13 @@ class Rosary:
         self.osc_client.send(bundle)
 
     def mainloop(self):
+        """This is the animiation loop. It cycles through all active effects
+        and invokes next() on each effect.
+
+        knobs:
+        * mainloop_delay: how long to wait, in seconds, at the bottom of each loop
+
+        """
         while (self.run_mainloop):
             for effect in self.effects:
                 #print("effect: {}".format(effect.name))
@@ -138,6 +170,7 @@ class Rosary:
             time.sleep(self.mainloop_delay)
 
     def start(self):
+        """Start the animation loop (aka, mainloop()) and create a shell for live interaction."""
         r = self
         if (r.run_mainloop == False):
             r.run_mainloop = True
@@ -149,10 +182,12 @@ class Rosary:
             self.t_mainloop.join()
 
     def stop(self):
+        """Stop the mainloop and exit the application."""
         self.run_mainloop = False
         exit(0)
 
     def pause(self):
+        """Stop the animation loop without exiting."""
         if (self.run_mainloop):
             self.run_mainloop = False
 
