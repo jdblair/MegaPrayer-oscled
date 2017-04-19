@@ -1,35 +1,38 @@
 class Color:
-    """Represents individual Bead color data"""
+    """Color represents the color of an individual bead."""
     
-    def __init__(self, r=0, g=0, b=0, a=0):
-        self.r = r
-        self.g = g
-        self.b = b
-        self.a = a
+    def __init__(self, r=0, g=0, b=0, a=0, name='color'):
+        self.r = r  # red
+        self.g = g  # green
+        self.b = b  # blue
+        self.a = a  # alpha channel (not yet used)
 
     def __repr__(self):
         return "Color({}, {}, {}, {})".format(self.r, self.g, self.b, self.a)
 
-    def set_intensity(self, intensity):
-        self.r *= intensity
-        self.g *= intensity
-        self.b *= intensity
-        
     def set(self, color, intensity=1):
+        """copy the r, g, b and a values into a Color object.
+        intensity is an optional argument."""
         self.r = color.r * intensity
         self.g = color.g * intensity
         self.b = color.b * intensity
         self.a = color.a
 
     def next(self):
+        """No-op in most cases. This is used by child objects that implement
+        dynamic color features."""
         pass
 
 
 class ColorFade(Color):
-    """Represents a dynamic Color that changes over time"""
+    """Represents a dynamic Color that fades linearly over time between to specificed colors.
+
+    knobs:
+    time: number of steps to complete one color fade
+    """
 
     def __init__(self, start=Color(0,0,0), finish=Color(1,1,1), time=30):
-        super().__init__(r=start.r, g=start.g, b=start.b, a=start.a)
+        super().__init__(r=start.r, g=start.g, b=start.b, a=start.a, name='color_fade')
         self.start = start
         self.finish = finish
         self.delta_t = time

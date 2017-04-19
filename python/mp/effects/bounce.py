@@ -2,6 +2,14 @@ from mp.effects import effect
 from mp import color
 
 class Bounce(effect.Effect):
+    """
+    Bounce colors a single bead, one at a time, from the lowest bead to
+    the highest bead. Once the high bead is reached the direction
+    reverses until the low bead is reached.
+
+    self.direction is a positive or negative integer.
+    """
+
     def __init__(self, bead_set, color=color.Color(), direction=1):
         super().__init__("bounce", bead_set, color=color)
         self.direction = direction
