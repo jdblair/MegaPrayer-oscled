@@ -11,23 +11,17 @@ if __name__ == "__main__":
 
     r = rosary.Rosary(args.ip, args.port)
 
-    r.register_effect(effects.sine_wave.SineWave)
-    r.register_effect(effects.sine_wave.ThreePhaseSineWave)
-    r.register_effect(effects.set_color.SetColor)
-    r.register_effect(effects.throb.Throb)
-    r.register_effect(effects.bounce.Bounce)
-
     # create a bounce effect on all beads
-    r.add_effect('bounce', r.Set_All)
+    r.add_effect('bounce', r.set_registry['All'])
 
     # change color to red
-    r.effect(1).color.set(r.Color_Red)
+    r.effect(1).color.set(r.color_registry['Red'])
 
     # add another throb on the odd beads
-    r.add_effect('throb', r.Set_Odd_Ring, color=r.Color_Blue)
+    r.add_effect('throb', r.set_registry['Odd_Ring'], color=r.color_registry['Blue'])
 
     # add bounce
-    r.add_effect('bounce', r.Set_All, color=r.Color_Green)
+    r.add_effect('bounce', r.set_registry['All'], color=r.color_registry['Green'])
 
 
     r.start()

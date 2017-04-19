@@ -4,12 +4,13 @@ import copy
 import threading
 import time
 import math
+import inspect
 
-from mp import color
-from .effects import *
 from pythonosc import udp_client
 from pythonosc import osc_bundle_builder
 from pythonosc import osc_message_builder
+
+from mp import color, effects
 
 class Bead:
     """Bead represents a single rosary bead."""
@@ -50,41 +51,51 @@ class Rosary:
             self.beads.append(Bead(i))
 
         # some useful predefined sets of beads
-        
-        self.Set_None = frozenset()
-        self.Set_All = frozenset(self.beads)
-        self.Set_Stem = frozenset(self.beads[0:4])
-        self.Set_Ring = frozenset(self.beads[4:60])
-        self.Set_Eighth0 = frozenset(self.beads[4:11])
-        self.Set_Eighth1 = frozenset(self.beads[11:18])
-        self.Set_Eighth2 = frozenset(self.beads[18:25])
-        self.Set_Eighth3 = frozenset(self.beads[25:32])
-        self.Set_Eighth4 = frozenset(self.beads[32:39])
-        self.Set_Eighth5 = frozenset(self.beads[39:46])
-        self.Set_Eighth6 = frozenset(self.beads[46:53])
-        self.Set_Eighth7 = frozenset(self.beads[53:60])
-        self.Set_Quadrent0 = frozenset(self.beads[4:18])
-        self.Set_Quadrent1 = frozenset(self.beads[18:32])
-        self.Set_Quadrent2 = frozenset(self.beads[32:46])
-        self.Set_Quadrent3 = frozenset(self.beads[46:60])
-        self.Set_Half01 = frozenset(self.Set_Quadrent0.union(self.Set_Quadrent1))
-        self.Set_Half12 = frozenset(self.Set_Quadrent1.union(self.Set_Quadrent2))
-        self.Set_Half23 = frozenset(self.Set_Quadrent2.union(self.Set_Quadrent3))
-        self.Set_Half30 = frozenset(self.Set_Quadrent3.union(self.Set_Quadrent0))
-        self.Set_Even_All = frozenset(self.beads[0:60:2])
-        self.Set_Even_Ring = frozenset(self.beads[4:60:2])
-        self.Set_Odd_All = frozenset(self.beads[1:60:2])
-        self.Set_Odd_Ring = frozenset(self.beads[5:60:2])
+        self.set_registry = {
+            'None': frozenset(),
+            'All': frozenset(self.beads),
+            'Stem': frozenset(self.beads[0:4]),
+            'Ring': frozenset(self.beads[4:60]),
+            'Eighth0': frozenset(self.beads[4:11]),
+            'Eighth1': frozenset(self.beads[11:18]),
+            'Eighth2': frozenset(self.beads[18:25]),
+            'Eighth3': frozenset(self.beads[25:32]),
+            'Eighth4': frozenset(self.beads[32:39]),
+            'Eighth5': frozenset(self.beads[39:46]),
+            'Eighth6': frozenset(self.beads[46:53]),
+            'Eighth7': frozenset(self.beads[53:60]),
+            'Quadrent0': frozenset(self.beads[4:18]),
+            'Quadrent1': frozenset(self.beads[18:32]),
+            'Quadrent2': frozenset(self.beads[32:46]),
+            'Quadrent3': frozenset(self.beads[46:60]),
+            'Even_All': frozenset(self.beads[0:60:2]),
+            'Even_Ring': frozenset(self.beads[4:60:2]),
+            'Odd_All': frozenset(self.beads[1:60:2]),
+            'Odd_Ring': frozenset(self.beads[5:60:2])
+        }
+        self.set_registry['Half01'] = self.set_registry['Quadrent0'].\
+                                           union(self.set_registry['Quadrent1'])
+        self.set_registry['Half12'] = self.set_registry['Quadrent1'].\
+                                           union(self.set_registry['Quadrent2'])
+        self.set_registry['Half23'] = self.set_registry['Quadrent2'].\
+                                           union(self.set_registry['Quadrent3'])
+        self.set_registry['Half30'] = self.set_registry['Quadrent3'].\
+                                           union(self.set_registry['Quadrent0'])
 
         # some useful predefined colors
-        self.Color_White = color.Color(1,1,1)
-        self.Color_Red = color.Color(1,0,0)
-        self.Color_Yellow = color.Color(1,1,0)
-        self.Color_Green = color.Color(0,1,0)
-        self.Color_Blue = color.Color(0,0,1)
-        self.Color_Violet = color.Color(1,0,1)
-        self.Color_Cyan = color.Color(0,1,1)
-        self.Color_Black = color.Color(0,0,0)
+        self.color_registry = {
+            'White': color.Color(1,1,1),
+            'Red': color.Color(1,0,0),
+            'Yellow': color.Color(1,1,0),
+            'Green': color.Color(0,1,0),
+            'Blue': color.Color(0,0,1),
+            'Violet': color.Color(1,0,1),
+            'Cyan': color.Color(0,1,1),
+            'Black': color.Color(0,0,0)
+        }
+
+        # Automagically register effects
+        self.register_defined_effects()
 
     def register_effect(self, effect):
         """Register the name of an effect in our effect registry.  This allows
@@ -93,9 +104,37 @@ class Rosary:
 
         """
         # instantiate the object so we get get the name
-        e = effect(self.Set_None)
+        e = effect(self.set_registry['None'])
         self.effect_registry[e.name] = effect
+
+    def find_defined_effects(self, module_or_class):
+
+        classes = set()
+
+        # A little imperfect, as we'll first process imports and
+        # we end up trying to add mp.effects.effect.Effect many times
+        # We're circumventing this by using a set
+        # Inspired by:
+        #   http://stackoverflow.com/a/408465
+        #   http://stackoverflow.com/a/22578562
+        for name, obj in inspect.getmembers(module_or_class):
+            if inspect.ismodule(obj) and obj.__package__ == 'mp.effects':
+                classes = classes.union(self.find_defined_effects(obj))
+            elif inspect.isclass(obj):
+                classes.add(obj)
+
+        return classes
         
+    def register_defined_effects(self):
+        defined_effects = self.find_defined_effects(effects)
+        for eff in defined_effects:
+            # I a little bit wanted to make Effect an abstract class
+            # and check for isinstance(eff, ABC) or something, but
+            # maybe we intend for Effect to be instantiable later?
+            # This is simpler at least
+            if eff != effects.effect.Effect:
+                self.register_effect(eff)
+
     def add_effect_object(self, effect):
         """Adds an Effect object to the active Effect list.  Returns the id of
         the active effect.
