@@ -33,7 +33,7 @@ class Rosary:
     commands set the colors of beads.
 
     """
-    def __init__(self, ip="127.0.0.1", port=5005):
+    def __init__(self, dispatcher, ip="127.0.0.1", port=5005):
         self.beads = []
         self.bgcolor = color.Color(0,0,0)
         self.effects = []
@@ -44,6 +44,8 @@ class Rosary:
         self.run_mainloop = False
         self.mainloop_delay = 0.03
         self.effect_registry = {}
+        self.name = "rosary"
+        self.dispatcher = dispatcher
 
         self.osc_client = udp_client.UDPClient(self.osc_ip, self.osc_port)
 
@@ -109,6 +111,8 @@ class Rosary:
 
     def find_defined_effects(self, module_or_class):
 
+        #print("FIND DEFINED EFFECTS!")
+
         classes = set()
 
         # A little imperfect, as we'll first process imports and
@@ -123,26 +127,29 @@ class Rosary:
             elif inspect.isclass(obj):
                 classes.add(obj)
 
+        #print(classes)
         return classes
         
     def register_defined_effects(self):
         defined_effects = self.find_defined_effects(effects)
         for eff in defined_effects:
-            # I a little bit wanted to make Effect an abstract class
-            # and check for isinstance(eff, ABC) or something, but
-            # maybe we intend for Effect to be instantiable later?
-            # This is simpler at least
-            if eff != effects.effect.Effect:
+            # Don't register abstract classes, e.g. effects.effect.Effect
+            if not inspect.isabstract(eff) and issubclass(eff, effects.effect.Effect):
                 self.register_effect(eff)
+
+        #print("REGISTERED EFFECTS")
+        #print(self.effect_registry)
 
     def add_effect_object(self, effect):
         """Adds an Effect object to the active Effect list.  Returns the id of
         the active effect.
 
         """
+        print("OH SHIT")
         self.effect_id = self.effect_id + 1
         effect.id = self.effect_id
         effect.rosary = self
+        #effect.register_methods()
         self.effects.append(effect)
         return self.effect_id
 
@@ -151,6 +158,7 @@ class Rosary:
         name. Returns the id of the active effect.
 
         """
+        print("ADD THIS EFFECT: {}".format(name))
         return self.add_effect_object(self.effect_registry[name](bead_set, color))
 
     def clear_effects(self):
@@ -167,6 +175,11 @@ class Rosary:
             if e.id == id:
                 return e
         return 0
+
+    def get_running_effects(self):
+        """Return all running effects"""
+        print(self.effects)
+        return self.effects
 
     def update(self):
         """Transmit the OSC message to update all beads on the rosary."""
@@ -191,6 +204,12 @@ class Rosary:
         bundle = bundle.build()
         self.osc_client.send(bundle)
 
+    def deck(self):
+        def decorator(f):
+            print("DECORATION!")
+            return f
+        return decorator
+
     def mainloop(self):
         """This is the animiation loop. It cycles through all active effects
         and invokes next() on each effect.
@@ -201,6 +220,11 @@ class Rosary:
         """
         while (self.run_mainloop):
             for effect in self.effects:
+
+                # HACKY SHIT FOR NOW
+                if not effect.registered:
+                    effect.register_methods()
+
                 #print("effect: {}".format(effect.name))
                 effect.next(self)
                 if (effect.finished):
@@ -208,7 +232,7 @@ class Rosary:
                 self.update()
             time.sleep(self.mainloop_delay)
 
-    def start(self):
+    def start(self, interactive=True):
         """Start the animation loop (aka, mainloop()) and create a shell for live interaction."""
         r = self
         if (r.run_mainloop == False):
@@ -216,9 +240,12 @@ class Rosary:
             self.t_mainloop = threading.Thread(name='rosary_mainloop', target=self.mainloop)
             self.t_mainloop.start()
 
-            code.interact(local=locals())
+            # Don't join the thread if being called from server
+            if interactive:
 
-            self.t_mainloop.join()
+                code.interact(local=locals())
+
+                self.t_mainloop.join()
 
     def stop(self):
         """Stop the mainloop and exit the application."""
