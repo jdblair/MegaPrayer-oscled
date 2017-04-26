@@ -3,48 +3,27 @@ import copy
 
 from mp import color
 
-class Registerer:
+class DispatcherMapper:
 
     def __init__(self):
         self.registered_methods = {}
 
-    def decorated(self):
-        print("DECORATED")
+    def expose(self):
         def decorator(fn):
-            print("DECORATOR")
-            print(fn)
-
-            #def newfn(unused_addr, blargs, *args, **kwargs):
-            #    fn(*args, **kwargs)
-
-            #self.registered_methods[fn.__name__] = newfn
             self.registered_methods[fn.__name__] = fn
-
             return fn
         return decorator
 
-    def soldier(self, unused_addr, blargs, *args, **kwargs):
-        print("UNUSED ADDR: {}".format(unused_addr))
-        name = blargs[0]
-        print("NAME: {}".format(name))
-        print("*ARGS: {}".format(args))
-        self.registered_methods[name](*args)
+    def invoke_exposed(self, unused_addr, hacked_variables, *args, **kwargs):
 
-def christmas(dispatcher):
-    print("CHRISTMAS")
-    def decorated_fn(fn, *args, **kwargs):
-        print("DECORATOR")
-        print(dispatcher)
-        print(fn)
-        #jself.rosary.dispatcher.map("/effect/{}/{}/{}".format(
-        #j                               self.rosary.name,
-        #j                               self.id,
-        #j                               k),
-        #j                           fn)
-        #jfn(*args, **kwargs)
-        return fn
+        print("Handling endpoint: {}".format(unused_addr))
+        print("Function definitions: {}".format(hacked_variables))
+        print("Arguments from OSC: {}".format(args))
 
-    return decorated_fn
+        fn_name = hacked_variables[0]
+        effect_obj = hacked_variables[1]
+        self.registered_methods[fn_name](effect_obj, *args, **kwargs)
+
 
 class Effect(abc.ABC):
     """
@@ -57,6 +36,9 @@ class Effect(abc.ABC):
     * next(): called every mainloop cycle and should be invoked by every Effect's
       own next() method.
     """
+
+    # Can't decorate with @self.r, so need this here
+    dm = DispatcherMapper()
 
     def __init__(self, name, set, color=color.Color(1,1,1)):
         # the name is used when the Effect is registered
@@ -101,44 +83,33 @@ class Effect(abc.ABC):
         """
         self.color.next()
 
-
-    r = Registerer()
-
-    #@christmas(dispatcher)
-    @r.decorated()
-    #def set_color(self, unused_addr, args, r, g, b):
+    @dm.expose()
     def set_color(self, r, g, b):
-        print("SELF? {}, {}".format(self, type(self)))
-        print("SET COLOR TO: {}, {}, {}".format(r, g, b))
-        print("TYPES: {}, {}, {}".format(type(r), type(g), type(b)))
+        #print("SELF? {}, {}".format(self, type(self)))
+        #print("SET COLOR TO: {}, {}, {}".format(r, g, b))
+        #print("TYPES: {}, {}, {}".format(type(r), type(g), type(b)))
         self.color = color.Color(r, g, b)
 
-    def register_methods(self):
+    @dm.expose()
+    def set_duration(self, sec):
+        self.duration = sec
+
+    def register_with_dispatcher(self):
         """
         Make some paths, son
         """
-        print("REGISTER METHODS!")
-        print(self.r.registered_methods)
+        print("Effect {} registering following with dispatcher".format(self))
+        print(self.dm.registered_methods)
 
         if self.rosary is not None:
-            for k, v in self.r.registered_methods.items():
-                print("/effect/{}/{}/{}".format(self.rosary.name, self.id, k))
-                print(k)
-                print(v)
+            for fn_name in self.dm.registered_methods.keys():
+
+                print("/effect/{}/{}/{}".format(self.rosary.name,
+                                                self.id, fn_name))
+
                 self.rosary.dispatcher.map("/effect/{}/{}/{}".format(
                                                self.rosary.name,
                                                self.id,
-                                               k),
-                                           #v)
-                                           self.r.soldier, k)
-            self.registered = True
-        
-
-    def test_register_methods(self):
-        if self.rosary is not None:
-            print("/effect/{}/{}/color".format(self.rosary.name, self.id))
-            self.rosary.dispatcher.map("/effect/{}/{}/color".format(
-                                           self.rosary.name,
-                                           self.id),
-                                       self.set_color, "Red", "Green", "Blue")
+                                               fn_name),
+                                           self.dm.invoke_exposed, fn_name, self)
             self.registered = True

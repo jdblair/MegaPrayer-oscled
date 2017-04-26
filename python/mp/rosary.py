@@ -33,7 +33,7 @@ class Rosary:
     commands set the colors of beads.
 
     """
-    def __init__(self, dispatcher, ip="127.0.0.1", port=5005):
+    def __init__(self, ip="127.0.0.1", port=5005, dispatcher=None, name="rosary"):
         self.beads = []
         self.bgcolor = color.Color(0,0,0)
         self.effects = []
@@ -44,7 +44,8 @@ class Rosary:
         self.run_mainloop = False
         self.mainloop_delay = 0.03
         self.effect_registry = {}
-        self.name = "rosary"
+        # Reasonable defaults
+        self.name = name
         self.dispatcher = dispatcher
 
         self.osc_client = udp_client.UDPClient(self.osc_ip, self.osc_port)
@@ -111,8 +112,6 @@ class Rosary:
 
     def find_defined_effects(self, module_or_class):
 
-        #print("FIND DEFINED EFFECTS!")
-
         classes = set()
 
         # A little imperfect, as we'll first process imports and
@@ -127,7 +126,6 @@ class Rosary:
             elif inspect.isclass(obj):
                 classes.add(obj)
 
-        #print(classes)
         return classes
         
     def register_defined_effects(self):
@@ -137,19 +135,17 @@ class Rosary:
             if not inspect.isabstract(eff) and issubclass(eff, effects.effect.Effect):
                 self.register_effect(eff)
 
-        #print("REGISTERED EFFECTS")
-        #print(self.effect_registry)
 
     def add_effect_object(self, effect):
         """Adds an Effect object to the active Effect list.  Returns the id of
         the active effect.
 
         """
-        print("OH SHIT")
         self.effect_id = self.effect_id + 1
         effect.id = self.effect_id
+        # Since rosary holds the dispatcher and the effect doesn't
+        # know about rosary on init, we can't map to dispatcher yet either
         effect.rosary = self
-        #effect.register_methods()
         self.effects.append(effect)
         return self.effect_id
 
@@ -176,6 +172,7 @@ class Rosary:
                 return e
         return 0
 
+    # Helper while developing the OSC server
     def get_running_effects(self):
         """Return all running effects"""
         print(self.effects)
@@ -204,12 +201,6 @@ class Rosary:
         bundle = bundle.build()
         self.osc_client.send(bundle)
 
-    def deck(self):
-        def decorator(f):
-            print("DECORATION!")
-            return f
-        return decorator
-
     def mainloop(self):
         """This is the animiation loop. It cycles through all active effects
         and invokes next() on each effect.
@@ -221,11 +212,15 @@ class Rosary:
         while (self.run_mainloop):
             for effect in self.effects:
 
-                # HACKY SHIT FOR NOW
+                # I didn't want to pass the dispatcher through to the effect
+                # in its initialization because it feels silly to force
+                # Effect writers to always take a dispatcher.
+                # Since we're attaching the rosary after initialization anyway
+                # I'll just hook onto the first iteration of mainloop to
+                # register effects "endpoints" with the dispatcher
                 if not effect.registered:
-                    effect.register_methods()
+                    effect.register_with_dispatcher()
 
-                #print("effect: {}".format(effect.name))
                 effect.next(self)
                 if (effect.finished):
                     self.del_effect(effect.id)
