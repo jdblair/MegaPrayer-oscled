@@ -2,27 +2,7 @@ import abc
 import copy
 
 from mp import color
-
-class DispatcherMapper:
-
-    def __init__(self):
-        self.registered_methods = {}
-
-    def expose(self):
-        def decorator(fn):
-            self.registered_methods[fn.__name__] = fn
-            return fn
-        return decorator
-
-    def invoke_exposed(self, unused_addr, hacked_variables, *args, **kwargs):
-
-        print("Handling endpoint: {}".format(unused_addr))
-        print("Function definitions: {}".format(hacked_variables))
-        print("Arguments from OSC: {}".format(args))
-
-        fn_name = hacked_variables[0]
-        effect_obj = hacked_variables[1]
-        self.registered_methods[fn_name](effect_obj, *args, **kwargs)
+from mp.dispatcher_mapper import DispatcherMapper
 
 
 class Effect(abc.ABC):
@@ -52,9 +32,13 @@ class Effect(abc.ABC):
         self.id = -1
         # the Effect will be removed from effect list if self.finished is true
         self.finished = False
-        # Magically make paths OH BABY
+        # Want to be sure that self.rosary exists, even if it's none, see
+        # the "register_with_dispatcher" method
         self.rosary = None
-        #self.register_methods()
+        # Since we're not guaranteed a rosary object on init, we will rely
+        # on the rosary to call our "register_with_dispatcher" method on every
+        # update loop and signal back to the rosary that we did it
+        # (p.s. I do like rosary attaching itself to the effect after init)
         self.registered = False
 
     def __eq__(self, other):
@@ -85,14 +69,20 @@ class Effect(abc.ABC):
 
     @dm.expose()
     def set_color(self, r, g, b):
-        #print("SELF? {}, {}".format(self, type(self)))
-        #print("SET COLOR TO: {}, {}, {}".format(r, g, b))
-        #print("TYPES: {}, {}, {}".format(type(r), type(g), type(b)))
         self.color = color.Color(r, g, b)
 
     @dm.expose()
     def set_duration(self, sec):
         self.duration = sec
+
+    def generate_osc_path(self, fn_name):
+        """
+        Centralize the dispatcher path name creation
+        """
+
+        return "/effect/{}/{}/{}".format(self.rosary.name,
+                                         self.id,
+                                         fn_name)
 
     def register_with_dispatcher(self):
         """
@@ -101,15 +91,16 @@ class Effect(abc.ABC):
         print("Effect {} registering following with dispatcher".format(self))
         print(self.dm.registered_methods)
 
+        # If we instantiate an Effect anywhere but in Rosary's add_effect
+        # method and then call this, just exit gracefully
         if self.rosary is not None:
             for fn_name in self.dm.registered_methods.keys():
 
-                print("/effect/{}/{}/{}".format(self.rosary.name,
-                                                self.id, fn_name))
+                osc_path = self.generate_osc_path(fn_name)
+                print(osc_path)
 
-                self.rosary.dispatcher.map("/effect/{}/{}/{}".format(
-                                               self.rosary.name,
-                                               self.id,
-                                               fn_name),
-                                           self.dm.invoke_exposed, fn_name, self)
+                self.rosary.dispatcher.map(osc_path,
+                                           self.dm.invoke_exposed,
+                                           fn_name,
+                                           self)
             self.registered = True

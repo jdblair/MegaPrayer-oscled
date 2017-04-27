@@ -10,51 +10,23 @@ import math
 from pythonosc import dispatcher
 from pythonosc import osc_server
 
-#from . import rosary
 from mp import rosary
-#import rosary
 
-def print_volume_handler(unused_addr, args, volume):
-    print("UNUSED ADDR: {}".format(unused_addr))
-    print("ARGS: {}".format(args))
-    print("VOLUME: {}".format(volume))
-    print("[{0}] ~ {1}".format(args[0], volume))
+def print_dispatcher_paths(unused_addr, d):
+    """
+    This is so weird. I'm mapping a function to the dispatcher that
+    takes an instance of...itself as an argument.
+    """
 
-def print_compute_handler(unused_addr, args, volume):
-    try:
-        print("[{0}] ~ {1}".format(args[0], args[1](volume)))
-    except ValueError: pass
+    print("* DISPATCHER PATHS *")
+    for k in sorted(d[0]._map.keys()):
+        print(k)
 
-r = None
-d = None
-
-def add_effect_wrapper(unused_addr, args, effect_name):
-    print(args)
-    r.add_effect(effect_name, r.set_registry['All'])
-
-def get_effects_wrapper(unused_addr):
-    print(args)
-    r.get_running_effects()
-
-def trigger_some_shit(unused_addr):
+def trigger_something(unused_addr):
     print(unused_addr)
-
-def set_sleep_wrapper(unused_addr, sleep_sec):
-    print("NEW SLEEP: {}".format(sleep_sec))
-    r.mainloop_delay = sleep_sec
-
-def clear_effects_wrapper(unused_addr):
-    r.clear_effects()
-
-
-class Test:
-    def foo(self, unused_addr, args, stuff):
-        print("Hello, {}".format(stuff))
 
 
 if __name__ == "__main__":
-
-    global r
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--ip",
@@ -63,47 +35,25 @@ if __name__ == "__main__":
         type=int, default=5005, help="The port to listen on")
     args = parser.parse_args()
 
-    t = Test()
-
     d = dispatcher.Dispatcher()
-    d.map('/test', t.foo)
-    d.map("/filter", print)
-    d.map("/volume", print_volume_handler, "Volume")
-    d.map("/logvolume", print_compute_handler, "Log volume", math.log)
-    #dispatcher.map("/add_effect", r.add_effect, 'bounce', r.set_registry['All'])
-
-    d.map("/set_sleep", set_sleep_wrapper)
-
-    d.map("/add_effect", add_effect_wrapper, "name", "bead_set")
-
-    #d.map("/effects", r.get_running_effects)
-    d.map("/effects", get_effects_wrapper)
-
-    d.map('/clear_effects', clear_effects_wrapper)
+    # Since basically all the paths will be dynamically generated,
+    # this will be useful for developing
+    # (Especially for checking that paths for cleared effects are removed)
+    d.map("/paths", print_dispatcher_paths, d)
 
     # TODO: /trigger/<name> to trigger object
     # Examples:
     #   /trigger/rosary/5 i 1
     #   /trigger/rosary/5 i 0
     #   /trigger/nail/left i 1
-    d.map("/trigger", trigger_some_shit)
+    d.map("/trigger", trigger_something)
 
-    # ROSARY STUFF
-    #r = rosary.Rosary(args.ip, args.port)
+    # Since the Rosary itself won't be instantiated often, I don't feel
+    # bad about requiring that the dispatcher be passed
     r = rosary.Rosary(args.ip, 5005, d)
     r.start(interactive=False)
-
-    # CLEAN THIS UP
-    #r.dispatcher = d
-
-    # TODO: /effect/<id> directly affect a running effect
 
     server = osc_server.ThreadingOSCUDPServer(
         (args.ip, args.port), d)
     print("Serving on {}".format(server.server_address))
     server.serve_forever()
-
-    print("OH NO")
-    # If we exit the server, then have the rosary exit too
-    # Err...no worky?
-    r.t_mainloop.join()
