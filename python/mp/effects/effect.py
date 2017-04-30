@@ -80,7 +80,7 @@ class Effect(abc.ABC):
         Centralize the dispatcher path name creation
         """
 
-        return "/effect/{}/{}/{}".format(self.rosary.name,
+        return "/{}/effect/{}/{}".format(self.rosary.name,
                                          self.id,
                                          fn_name)
 

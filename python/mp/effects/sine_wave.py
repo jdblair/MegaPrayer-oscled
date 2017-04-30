@@ -1,7 +1,8 @@
+import copy
 import math
 
-from mp.effects import effect
 from mp import color
+from mp.effects import effect
 
 class SineWave(effect.Effect):
     """Sets the intensity of a set of beads by mapping a unit circle to
@@ -12,6 +13,10 @@ class SineWave(effect.Effect):
     * period: the number of sine wave periods in the unit circle (can be float)
     * direction: the distance (positive or negative float) to advance around the unit circle in one mainloop step
     """
+
+    # Wish there were a better way than requiring this every time
+    dm = copy.deepcopy(effect.Effect.dm)
+
     def __init__(self, bead_set, color=color.Color(1,1,1), period=1, direction=1):
         super().__init__("sine_wave", bead_set, color=color)
         self.offset = 0
@@ -26,6 +31,18 @@ class SineWave(effect.Effect):
             b.color.set(self.color, intensity)
         self.offset = (self.offset) + self.direction % len(self.bead_list)
 
+    @dm.expose()
+    def set_offset(self, offset):
+        self.offset = offset
+
+    @dm.expose()
+    def set_period(self, period):
+        self.period = period
+
+    @dm.expose()
+    def set_direction(self, direction):
+        self.direction = direction
+
 class ThreePhaseSineWave(effect.Effect):
     """Sets the color of a set of beads by mapping a unit circle
     separately to each of r, g and b in the the beads in the bead_list
@@ -39,6 +56,11 @@ class ThreePhaseSineWave(effect.Effect):
     * phase_g: phase offset for green
     * phase_b: phase offset for blue
     """
+
+    # Wish there were a better way than requiring this every time
+    #dm = DispatcherMapper()
+    dm = copy.deepcopy(effect.Effect.dm)
+
     def __init__(self, bead_set, color=color.Color(1,1,1), period=1, direction=1):
         super().__init__("3phase_sine_wave", bead_set, color=color)
         self.offset = 0
@@ -61,3 +83,27 @@ class ThreePhaseSineWave(effect.Effect):
             bead.color.g = ((math.sin((2 * math.pi / bead_count * self.period) * (bead.index + self.offset + phase_g)) + 1) / 2) * self.color.g
             bead.color.b = ((math.sin((2 * math.pi / bead_count * self.period) * (bead.index + self.offset + phase_b)) + 1) / 2) * self.color.b
         self.offset = (self.offset) + self.direction % bead_count
+
+    @dm.expose()
+    def set_offset(self, offset):
+        self.offset = offset
+
+    @dm.expose()
+    def set_period(self, period):
+        self.period = period
+
+    @dm.expose()
+    def set_direction(self, direction):
+        self.direction = direction
+
+    @dm.expose()
+    def set_phase_r(self, phase_r):
+        self.phase_r = phase_r
+
+    @dm.expose()
+    def set_phase_g(self, phase_g):
+        self.phase_g = phase_g
+
+    @dm.expose()
+    def set_phase_b(self, phase_b):
+        self.phase_b = phase_b
