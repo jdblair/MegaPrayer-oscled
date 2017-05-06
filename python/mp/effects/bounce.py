@@ -14,8 +14,8 @@ class Bounce(effect.Effect):
     # Wish there were a better way than requiring this every time
     dm = copy.deepcopy(effect.Effect.dm)
 
-    def __init__(self, bead_set, color=color.Color(), direction=1):
-        super().__init__("bounce", bead_set, color=color)
+    def __init__(self, bead_set, color=color.Color(), direction=1, duration=None):
+        super().__init__("bounce", bead_set, color=color, duration=duration)
         self.direction = direction
         if (self.direction < 0):
             self.current = len(self.bead_list) - 1
