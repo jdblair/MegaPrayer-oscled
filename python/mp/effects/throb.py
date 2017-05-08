@@ -1,8 +1,8 @@
+import copy
 import math
 
-from mp.effects import effect
-
 from mp import color
+from mp.effects import effect
 
 class Throb(effect.Effect):
     """
@@ -14,6 +14,10 @@ class Throb(effect.Effect):
     * offset: angle to advance in the sine wave per step, in units of step * pi
 
     """
+
+    # Wish there were a better way than requiring this every time
+    dm = copy.deepcopy(effect.Effect.dm)
+
     def __init__(self, bead_set, color=color.Color()):
         super().__init__("throb", bead_set, color=color)
         self.x = 0.0
@@ -27,5 +31,13 @@ class Throb(effect.Effect):
         for bead in (self.bead_list):
             bead.color.set(self.color, intensity=intensity)
         self.x += self.step
+
+    @dm.expose()
+    def set_period(self, period):
+        self.period = period
+
+    @dm.expose()
+    def set_step(self, step):
+        self.step = step
 
 

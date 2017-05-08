@@ -206,6 +206,11 @@ class Rosary:
             effect = self.effects[0]
             self.del_effect(effect.id)
 
+        # I know on the real rosary this is unneccessary, but it's
+        # annoying on the sim: @jdblair is sending 0,0,0 in the real
+        # thing wonky?
+        self.add_effect('set_color', 'all', 'black')
+
     @dm.expose()
     def del_effect(self, id):
         """Delete an active effect by id."""
