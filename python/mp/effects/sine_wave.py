@@ -17,7 +17,6 @@ class SineWave(effect.Effect):
     # Wish there were a better way than requiring this every time
     dm = copy.deepcopy(effect.Effect.dm)
 
-    #def __init__(self, bead_set, color=color.Color(1,1,1), period=1, direction=1, duration=None):
     def __init__(self, bead_set, color=color.Color(1,1,1), duration=None, period=1, direction=1):
         super().__init__("sine_wave", bead_set, color=color, duration=duration)
         self.offset = 0
@@ -62,7 +61,7 @@ class ThreePhaseSineWave(effect.Effect):
     #dm = DispatcherMapper()
     dm = copy.deepcopy(effect.Effect.dm)
 
-    def __init__(self, bead_set, color=color.Color(1,1,1), period=1, direction=1, duration=None):
+    def __init__(self, bead_set, color=color.Color(1,1,1), duration=None, period=1, direction=1):
         super().__init__("3phase_sine_wave", bead_set, color=color, duration=duration)
         self.offset = 0
         self.period = period

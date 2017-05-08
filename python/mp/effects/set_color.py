@@ -8,7 +8,7 @@ class SetColor(effect.Effect):
     It removes itself from the mainloop after one invocation of next()
     """
 
-    def __init__(self, bead_set, color=color.Color()):
+    def __init__(self, bead_set, color=color.Color(), duration=None):
         super().__init__("set_color", bead_set, color=color)
 
     def next(self, rosary):

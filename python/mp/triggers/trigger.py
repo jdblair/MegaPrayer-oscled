@@ -2,7 +2,6 @@ import abc
 import copy
 
 from mp import color
-from mp.dispatcher_mapper import DispatcherMapper
 
 
 class Trigger(abc.ABC):
@@ -16,43 +15,36 @@ class Trigger(abc.ABC):
                          should 
     """
 
-    # Can't decorate with @self.r, so need this here
-    dm = DispatcherMapper()
-
-    #def __init__(self, name, set, color=color.Color(1,1,1)):
     def __init__(self, name):
-        # the name is used when the Effect is registered
-        self.name = name
-        # id will be assigned when the effect is attached to the mainloop
-        self.id = -1
-        # the Effect will be removed from effect list if self.finished is true
-        self.finished = False
-        # Want to be sure that self.rosary exists, even if it's none, see
-        # the "register_with_dispatcher" method
-        self.rosary = None
-        # Since we're not guaranteed a rosary object on init, we will rely
-        # on the rosary to call our "register_with_dispatcher" method on every
-        # update loop and signal back to the rosary that we did it
-        # (p.s. I do like rosary attaching itself to the effect after init)
-        self.registered = False
 
-        # Fake time
+        # Informs the OSC path naming, otherwise not very useful here
+        self.name = name
+
+        # Technically used to compare one trigger to another
+        self.id = -1
+
+        # Used to indirectly access effects
+        self.rosary = None
+
+        # The trigger() method will reset this to 0 every time we
+        # go through the sequence
         self.time = 0
 
         # This should follow self.time until we stop triggering
         self.last_trigger = 0
 
-        # How many ticks before we decide we've lost the signal
+        # How many ticks are allowed to pass between last_trigger and time
+        # before we decide we've lost the signal
         self.fade_out_threshold = 30.0
+
         # How many "ticks" between losing the trigger and killng the effects
         self.fade_out_duration = 30.0
 
-        # Effects come and go, but a trigger is forever
-        # FOR EV ER
+        # Effects come and go, but a trigger is forever. FOR EV ER.
+        # The only difference is if we're currently running or not
         self.running = False
 
         # A list of effects
-        #self.effect_sequence = []
         self.effect_sequence = self.set_effect_sequence()
 
 
@@ -79,7 +71,6 @@ class Trigger(abc.ABC):
         Furthermore, the rosary will instantiate one of every trigger on its
         own init, so we're not responsible for it here
         """
-
         return "/input/{}".format(self.name)
 
     def trigger_wrapper(self, unused_addr, hacked_variables, *args, **kwargs):
@@ -112,11 +103,19 @@ class Trigger(abc.ABC):
         e.g. We'll have to call next() a few times during the fade out
         """
 
-        print("SELFTIME: {}, LAST TRIGGER: {}".format(self.time, self.last_trigger))
+        # If we either:
+        #   1) Have reached the end of the sequence
+        #   2) Are done fading out
+        # Then tell all the effects to remove themselves
+        max_effect_time = max(eff['time'] for eff in self.effect_sequence)
+        last_effect = next(e for e in self.effect_sequence if e['time'] == \
+                           max_effect_time)
 
         # If we lost the signal, tell all currently running effects to
-        # start fading out
-        if self.time - self.last_trigger > self.fade_out_threshold:
+        # start fading out (ONLY DO THIS ONCE!)
+        if (self.time - self.last_trigger == self.fade_out_threshold) or \
+           (last_effect['time'] + last_effect['kwargs']['duration'] - \
+            self.time == self.fade_out_threshold):
 
             for es in self.effect_sequence:
                 # If we hadn't added the effect yet, this wouldn't exist
@@ -127,17 +126,7 @@ class Trigger(abc.ABC):
                 if effect_id is not None:
                     eff = self.rosary.effect(effect_id)
                     if eff is not None:
-                        eff.fade_out(self.fade_out_duration - 15)
-
-            print("eh?")
-
-        # If we either:
-        #   1) Have reached the end of the sequence
-        #   2) Are done fading out
-        # Then tell all the effects to remove themselves
-        max_effect_time = max(eff['time'] for eff in self.effect_sequence)
-        last_effect = next(e for e in self.effect_sequence if e['time'] == \
-                           max_effect_time)
+                        eff.fade_out(self.fade_out_duration)
 
         if (self.time > last_effect['time'] + last_effect['kwargs']['duration']) or \
            (self.time > self.last_trigger + self.fade_out_threshold + self.fade_out_duration):
@@ -157,9 +146,11 @@ class Trigger(abc.ABC):
                     self.rosary.del_effect(effect_id)
 
 
-        for es in self.effect_sequence:
-            if es['time'] == self.time:
-                eff = self.rosary.add_effect(es['name'], **es['kwargs'])
-                es['effect_id'] = eff
+        # Don't add any new effects if we're fading out
+        if self.time - self.last_trigger < self.fade_out_threshold:
+            for es in self.effect_sequence:
+                if es['time'] == self.time:
+                    eff = self.rosary.add_effect(es['name'], **es['kwargs'])
+                    es['effect_id'] = eff
 
         self.time += 1

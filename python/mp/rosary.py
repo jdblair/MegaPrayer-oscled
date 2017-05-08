@@ -46,7 +46,8 @@ class Rosary:
         self.triggers = {}
         self.osc_ip = ip
         self.osc_port = port
-        self.effect_id = 0;
+        self.effect_id = 0
+        self.trigger_id = 0
         self.BEAD_COUNT=60
         self.run_mainloop = False
         self.mainloop_delay = 0.03
@@ -103,7 +104,9 @@ class Rosary:
             'blue': color.Color(0,0,1),
             'violet': color.Color(1,0,1),
             'cyan': color.Color(0,1,1),
-            'black': color.Color(0,0,0)
+            # It's annoying when the sim picks black and I can't see anything
+            # NOTE YUNFAN: Take this out (maybe) going into prod?
+            #'black': color.Color(0,0,0)
         }
 
         # Automagically register effects so that they're callable by name
@@ -159,10 +162,10 @@ class Rosary:
         print(trigger_class)
 
         # Instantiate
+        self.trigger_id += 1
         trigger = trigger_class()
-
         trigger.rosary = self
-
+        trigger.id = self.trigger_id
         self.triggers[trigger.name] = trigger
 
         print("WHAT ARE MY TRIGGERS")
@@ -179,20 +182,13 @@ class Rosary:
         to register with the rosary
         """
 
-        print("FIND DEFINED TRIGGERS")
-
         classes = set()
         for name, obj in inspect.getmembers(module_or_class):
             if inspect.ismodule(obj) and obj.__package__ == 'mp.triggers':
-                print("WE HAVE TO GO DEEPER")
                 classes = classes.union(self.find_defined_triggers(obj))
             elif inspect.isclass(obj):
-                print("IS AN OBJECT!")
-                print(name, obj)
                 classes.add(obj)
 
-        print("OKAY TEAM")
-        print(classes)
         return classes
         
 
@@ -201,14 +197,10 @@ class Rosary:
         Figure out which triggers are defined in .py files, and register them
         """
 
-        print("REGISTER DEFINED TRIGGERS")
-
         defined_triggers = self.find_defined_triggers(triggers)
         for tr in defined_triggers:
             # Don't register abstract classes, e.g. effects.effect.Effect
             if not inspect.isabstract(tr) and issubclass(tr, triggers.trigger.Trigger):
-                print("HEY THIS ONE!")
-                print(tr)
                 self.register_trigger(tr)
 
 
@@ -253,8 +245,9 @@ class Rosary:
                 effect_color = color.Color(color_name_or_r, g, b)
 
         # If all else fails, just pick a random color from the registry
-        if effect_color is None:
+        while effect_color in (None, color.Color(0,0,0)):
             effect_color = random.choice(list(self.color_registry.values()))
+
         print("USING COLOR: {}".format(effect_color))
 
         return self.add_effect_object(self.effect_registry[name](bead_set,
@@ -274,7 +267,7 @@ class Rosary:
         # I know on the real rosary this is unneccessary, but it's
         # annoying on the sim: @jdblair is sending 0,0,0 in the real
         # thing wonky?
-        self.add_effect('set_color', 'all', 'black')
+        self.add_effect('set_color', 'all', 0, 0, 0)
 
     @dm.expose()
     def del_effect(self, id):
