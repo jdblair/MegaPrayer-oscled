@@ -68,7 +68,7 @@ class Effect(abc.ABC):
         """
         self.color.next()
 
-        print("DURATION: {}, TIME: {}".format(self.duration, self.time))
+        #print("DURATION: {}, TIME: {}".format(self.duration, self.time))
         if self.duration is not None and self.time >= self.duration:
             print("I MUST GO NOW MY PEOPLE NEED ME")
             # Is this redundant?
@@ -85,6 +85,10 @@ class Effect(abc.ABC):
     @dm.expose()
     def set_duration(self, sec):
         self.duration = sec
+
+    @dm.expose()
+    def fade_out(self, fade_duration):
+        self.color = color.ColorFade(self.color, color.Color(0,0,0), fade_duration)
 
     def generate_osc_path(self, fn_name):
         """

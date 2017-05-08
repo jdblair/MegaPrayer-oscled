@@ -156,9 +156,10 @@ class Rosary:
     def register_trigger(self, trigger_class):
 
         print("REGISTER A TRIGGER")
+        print(trigger_class)
 
         # Instantiate
-        trigger = trigger_class() 
+        trigger = trigger_class()
 
         trigger.rosary = self
 
@@ -280,17 +281,20 @@ class Rosary:
         """Delete an active effect by id."""
 
         effect = self.effect(id)
-        effect_paths = [effect.generate_osc_path(fn) for fn in\
-                        effect.dm.registered_methods.keys()]
-        self.effect_paths_to_unregister.extend(effect_paths)
-        self.effects.remove(effect)
+
+        if effect is not None:
+            effect_paths = [effect.generate_osc_path(fn) for fn in\
+                            effect.dm.registered_methods.keys()]
+            self.effect_paths_to_unregister.extend(effect_paths)
+            self.effects.remove(effect)
+
 
     def effect(self, id):
         """Return the Effect object of an active effect by specifying the Effect id."""
         for e in self.effects:
             if e.id == id:
                 return e
-        return 0
+        return None
 
     # Helper while developing the OSC server
     @dm.expose()

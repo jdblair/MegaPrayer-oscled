@@ -7,14 +7,13 @@ from mp.dispatcher_mapper import DispatcherMapper
 
 class Trigger(abc.ABC):
     """
-    Effect is the base class for all effects. It provides properties and methods
-    that are common to all Effects.
+    Trigger is the base class for all triggers.
 
-    The most important of these methods are:
+    Triggers by their nature have less customizing than effects.
+    You're really only expected to define the effect_sequence in any subclass.
 
-    * set_bead_set(): stores a sorted list in bead_set
-    * next(): called every mainloop cycle and should be invoked by every Effect's
-      own next() method.
+    * effect_sequence[]: a list of dictionary objects defining what effects
+                         should 
     """
 
     # Can't decorate with @self.r, so need this here
@@ -37,14 +36,24 @@ class Trigger(abc.ABC):
         # (p.s. I do like rosary attaching itself to the effect after init)
         self.registered = False
 
-        # A list of effects
-        self.effect_sequence = []
         # Fake time
         self.time = 0
+
+        # This should follow self.time until we stop triggering
+        self.last_trigger = 0
+
+        # How many ticks before we decide we've lost the signal
+        self.fade_out_threshold = 30.0
+        # How many "ticks" between losing the trigger and killng the effects
+        self.fade_out_duration = 30.0
 
         # Effects come and go, but a trigger is forever
         # FOR EV ER
         self.running = False
+
+        # A list of effects
+        #self.effect_sequence = []
+        self.effect_sequence = self.set_effect_sequence()
 
 
     def __eq__(self, other):
@@ -54,21 +63,38 @@ class Trigger(abc.ABC):
         return "<Trigger:{}: id={}>".format(self.name, self.id)
 
     def get_name(self):
-        """Returns the name of the Effect."""
+        """Returns the name of the Trigger. (Does anybody care?)"""
         return self.name
+
+    @abc.abstractmethod
+    def set_effect_sequence(self):
+        pass
 
     @property
     def osc_path(self):
+        """
+        Unlike effects, which might have a variable number of "knobs" any
+        trigger will only have one endpoint.
+
+        Furthermore, the rosary will instantiate one of every trigger on its
+        own init, so we're not responsible for it here
+        """
+
         return "/input/{}".format(self.name)
 
     def trigger_wrapper(self, unused_addr, hacked_variables, *args, **kwargs):
+        """
+        Give this method to the dispatcher to map to the endpoint.
+
+        There's a bunch of stuff that pythonosc.dispatcher.Dispatcher will
+        pass back to us that we won't care about
+        """
         return self.trigger()
 
-    @abc.abstractmethod
+    #@abc.abstractmethod
     def trigger(self):
         """
-        Invoked for every mainloop cycle.
-        This method _must_ be invoked by every Effect's next() method.
+        Every call to trigger() is a call to next()...
         """
 
         # If we've been inactive for a while, reset our time
@@ -76,49 +102,64 @@ class Trigger(abc.ABC):
             self.running = True
             self.time = 0
 
+        self.last_trigger = self.time
+
+
     def next(self):
         """
-        If we're "running", increment time by 1, check for effects
+        ...But not every call to next() is a call to trigger().
+
+        e.g. We'll have to call next() a few times during the fade out
         """
 
-        print("SELFTIME: {}".format(self.time))
+        print("SELFTIME: {}, LAST TRIGGER: {}".format(self.time, self.last_trigger))
 
-        # Like tears in rain. Time to die.
-        if self.running:
-            if self.time > max(eff['time'] for eff in self.effect_sequence):
-                self.running = False
+        # If we lost the signal, tell all currently running effects to
+        # start fading out
+        if self.time - self.last_trigger > self.fade_out_threshold:
+
+            for es in self.effect_sequence:
+                # If we hadn't added the effect yet, this wouldn't exist
+                effect_id = es.get('effect_id')
+
+                # Sneakily replace the effect's color property with
+                # a color.ColorFade object
+                if effect_id is not None:
+                    eff = self.rosary.effect(effect_id)
+                    if eff is not None:
+                        eff.fade_out(self.fade_out_duration - 15)
+
+            print("eh?")
+
+        # If we either:
+        #   1) Have reached the end of the sequence
+        #   2) Are done fading out
+        # Then tell all the effects to remove themselves
+        max_effect_time = max(eff['time'] for eff in self.effect_sequence)
+        last_effect = next(e for e in self.effect_sequence if e['time'] == \
+                           max_effect_time)
+
+        if (self.time > last_effect['time'] + last_effect['kwargs']['duration']) or \
+           (self.time > self.last_trigger + self.fade_out_threshold + self.fade_out_duration):
+
+            # Marking ourself as "not running" makes self.rosary not call
+            # our next()
+            self.running = False
+
+            for es in self.effect_sequence:
+                # If we hadn't added the effect yet, this wouldn't exist
+                effect_id = es.get('effect_id')
+
+                # Each effect will naturally call this in its own next(),
+                # but this should be fine as subsequent calls will just
+                # do nothing
+                if effect_id is not None:
+                    self.rosary.del_effect(effect_id)
+
 
         for es in self.effect_sequence:
             if es['time'] == self.time:
-                self.rosary.add_effect(es['name'], **es['kwargs'])
+                eff = self.rosary.add_effect(es['name'], **es['kwargs'])
+                es['effect_id'] = eff
 
         self.time += 1
-        
-        
-
-    def generate_osc_path(self):
-        """
-        Centralize the dispatcher path name creation
-        Unlike for effects, there's only 1 path for a trigger
-        """
-
-        return "/{}/trigger/{}/{}".format(self.rosary.name,
-                                          self.name,
-                                          self.id)
-
-    def register_with_dispatcher(self):
-        """
-        Make some paths, son
-        """
-        print("Trigger {} registering following with dispatcher".format(self))
-        print(self.dm.registered_methods)
-
-        # If we instantiate an Effect anywhere but in Rosary's add_effect
-        # method and then call this, just exit gracefully
-        if self.rosary is not None:
-
-            osc_path = self.generate_osc_path()
-            self.rosary.dispatcher.map(osc_path,
-                                       self.trigger)
-
-            self.registered = True
