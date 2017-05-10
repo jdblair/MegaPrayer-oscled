@@ -11,7 +11,7 @@ from pythonosc import udp_client
 from pythonosc import osc_bundle_builder
 from pythonosc import osc_message_builder
 
-from mp import color, effects
+from mp import color, effects, triggers
 from mp.dispatcher_mapper import DispatcherMapper
 
 class Bead:
@@ -43,9 +43,11 @@ class Rosary:
         self.beads = []
         self.bgcolor = color.Color(0,0,0)
         self.effects = []
+        self.triggers = {}
         self.osc_ip = ip
         self.osc_port = port
-        self.effect_id = 0;
+        self.effect_id = 0
+        self.trigger_id = 0
         self.BEAD_COUNT=60
         self.run_mainloop = False
         self.mainloop_delay = 0.03
@@ -102,7 +104,9 @@ class Rosary:
             'blue': color.Color(0,0,1),
             'violet': color.Color(1,0,1),
             'cyan': color.Color(0,1,1),
-            'black': color.Color(0,0,0)
+            # It's annoying when the sim picks black and I can't see anything
+            # NOTE YUNFAN: Take this out (maybe) going into prod?
+            #'black': color.Color(0,0,0)
         }
 
         # Automagically register effects so that they're callable by name
@@ -110,6 +114,9 @@ class Rosary:
 
         # Map our own exposed methods to the dispatcher
         self.register_with_dispatcher()
+
+        # Trigger stuff
+        self.register_defined_triggers()
 
 
     def register_effect(self, effect):
@@ -139,13 +146,62 @@ class Rosary:
                 classes.add(obj)
 
         return classes
-        
+
+
     def register_defined_effects(self):
         defined_effects = self.find_defined_effects(effects)
         for eff in defined_effects:
             # Don't register abstract classes, e.g. effects.effect.Effect
             if not inspect.isabstract(eff) and issubclass(eff, effects.effect.Effect):
                 self.register_effect(eff)
+
+
+    def register_trigger(self, trigger_class):
+
+        print("REGISTER A TRIGGER")
+        print(trigger_class)
+
+        # Instantiate
+        self.trigger_id += 1
+        trigger = trigger_class()
+        trigger.rosary = self
+        trigger.id = self.trigger_id
+        self.triggers[trigger.name] = trigger
+
+        print("WHAT ARE MY TRIGGERS")
+        print(self.triggers)
+
+        self.dispatcher.map(trigger.osc_path,
+                            trigger.trigger_wrapper,
+                            trigger)
+
+
+    def find_defined_triggers(self, module_or_class):
+        """
+        Crawl through mp.triggers package and find (non-abstract) subclasses
+        to register with the rosary
+        """
+
+        classes = set()
+        for name, obj in inspect.getmembers(module_or_class):
+            if inspect.ismodule(obj) and obj.__package__ == 'mp.triggers':
+                classes = classes.union(self.find_defined_triggers(obj))
+            elif inspect.isclass(obj):
+                classes.add(obj)
+
+        return classes
+        
+
+    def register_defined_triggers(self):
+        """
+        Figure out which triggers are defined in .py files, and register them
+        """
+
+        defined_triggers = self.find_defined_triggers(triggers)
+        for tr in defined_triggers:
+            # Don't register abstract classes, e.g. effects.effect.Effect
+            if not inspect.isabstract(tr) and issubclass(tr, triggers.trigger.Trigger):
+                self.register_trigger(tr)
 
 
     def add_effect_object(self, effect):
@@ -165,7 +221,7 @@ class Rosary:
     #def add_effect(self, name, bead_set_name, color=color.Color(1,1,1)):
     @dm.expose()
     def add_effect(self, name, bead_set_name='all', color_name_or_r=None,
-                   g=None, b=None):
+                   g=None, b=None, duration=None):
         """Adds an Effect to the active Effect list by using the Effect
         name. Returns the id of the active effect.
 
@@ -189,12 +245,14 @@ class Rosary:
                 effect_color = color.Color(color_name_or_r, g, b)
 
         # If all else fails, just pick a random color from the registry
-        if effect_color is None:
+        while effect_color in (None, color.Color(0,0,0)):
             effect_color = random.choice(list(self.color_registry.values()))
+
         print("USING COLOR: {}".format(effect_color))
 
         return self.add_effect_object(self.effect_registry[name](bead_set,
-                                                                 effect_color))
+                                                                 effect_color,
+                                                                 duration))
 
     @dm.expose()
     def clear_effects(self):
@@ -209,24 +267,27 @@ class Rosary:
         # I know on the real rosary this is unneccessary, but it's
         # annoying on the sim: @jdblair is sending 0,0,0 in the real
         # thing wonky?
-        self.add_effect('set_color', 'all', 'black')
+        self.add_effect('set_color', 'all', 0, 0, 0)
 
     @dm.expose()
     def del_effect(self, id):
         """Delete an active effect by id."""
 
         effect = self.effect(id)
-        effect_paths = [effect.generate_osc_path(fn) for fn in\
-                        effect.dm.registered_methods.keys()]
-        self.effect_paths_to_unregister.extend(effect_paths)
-        self.effects.remove(effect)
+
+        if effect is not None:
+            effect_paths = [effect.generate_osc_path(fn) for fn in\
+                            effect.dm.registered_methods.keys()]
+            self.effect_paths_to_unregister.extend(effect_paths)
+            self.effects.remove(effect)
+
 
     def effect(self, id):
         """Return the Effect object of an active effect by specifying the Effect id."""
         for e in self.effects:
             if e.id == id:
                 return e
-        return 0
+        return None
 
     # Helper while developing the OSC server
     @dm.expose()
@@ -287,6 +348,12 @@ class Rosary:
                 if (effect.finished):
                     self.del_effect(effect.id)
                 self.update()
+
+            # Let the triggers figure out for themselves what to do
+            for trigger in self.triggers.values():
+                if trigger.running:
+                    trigger.next()
+
             time.sleep(self.mainloop_delay)
 
     @dm.expose()

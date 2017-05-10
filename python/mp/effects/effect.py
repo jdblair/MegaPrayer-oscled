@@ -20,14 +20,15 @@ class Effect(abc.ABC):
     # Can't decorate with @self.r, so need this here
     dm = DispatcherMapper()
 
-    def __init__(self, name, set, color=color.Color(1,1,1)):
+    def __init__(self, name, set, color=color.Color(1,1,1), duration=None):
         # the name is used when the Effect is registered
         self.name = name
         # the bead_set is a list of beads the Effect is applied to. The order is important!
         self.bead_set = self.set_bead_set(set)
         # The color of the Effect. This is not always meaningful.
         self.color = copy.copy(color)
-        self.duration = 0
+        self.duration = duration
+        self.time = 0
         # id will be assigned when the effect is attached to the mainloop
         self.id = -1
         # the Effect will be removed from effect list if self.finished is true
@@ -67,6 +68,16 @@ class Effect(abc.ABC):
         """
         self.color.next()
 
+        #print("DURATION: {}, TIME: {}".format(self.duration, self.time))
+        if self.duration is not None and self.time >= self.duration:
+            print("I MUST GO NOW MY PEOPLE NEED ME")
+            # Is this redundant?
+            # NOTE: Figure out who's responsible for this: rosary? effect?
+            #self.unregister_with_dispatcher()
+            self.rosary.del_effect(self.id)
+
+        self.time += 1
+
     @dm.expose()
     def set_color(self, r, g, b):
         self.color = color.Color(r, g, b)
@@ -74,6 +85,10 @@ class Effect(abc.ABC):
     @dm.expose()
     def set_duration(self, sec):
         self.duration = sec
+
+    @dm.expose()
+    def fade_out(self, fade_duration):
+        self.color = color.ColorFade(self.color, color.Color(0,0,0), fade_duration)
 
     def generate_osc_path(self, fn_name):
         """
@@ -83,6 +98,12 @@ class Effect(abc.ABC):
         return "/{}/effect/{}/{}".format(self.rosary.name,
                                          self.id,
                                          fn_name)
+
+    def unregister_with_dispatcher(self):
+        if self.rosary is not None:
+            for fn_name in self.dm.registered_methods.keys():
+                osc_path = self.generate_osc_path(fn_name)
+                self.rosary.dispatcher._map.pop(osc_path)
 
     def register_with_dispatcher(self):
         """
