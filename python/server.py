@@ -29,10 +29,14 @@ def trigger_something(unused_addr):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--ip",
+    parser.add_argument("--listen-ip",
         default="127.0.0.1", help="The ip to listen on")
-    parser.add_argument("--port",
+    parser.add_argument("--listen-port",
         type=int, default=5005, help="The port to listen on")
+    parser.add_argument("--ip",
+        default="127.0.0.1", help="The ip to send messages to")
+    parser.add_argument("--port",
+        type=int, default=5006, help="The port to send messages to")
     args = parser.parse_args()
 
     d = dispatcher.Dispatcher()
@@ -54,6 +58,6 @@ if __name__ == "__main__":
     r.start(interactive=False)
 
     server = osc_server.ThreadingOSCUDPServer(
-        (args.ip, args.port), d)
+        (args.listen_ip, args.listen_port), d)
     print("Serving on {}".format(server.server_address))
     server.serve_forever()
