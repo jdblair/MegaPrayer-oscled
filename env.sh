@@ -1,4 +1,4 @@
-export VERSION=-4.9
+export VERSION=-4.8
 export HOST=arm-linux-gnueabihf
 export CC=${HOST}-gcc${VERSION}
 export CXX=${HOST}-g++${VERSION}

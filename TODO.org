@@ -7,19 +7,15 @@
 ** DONE make LED update explicit using /update method, eliminate continuous update threads
 ** DONE create command line option and config file parser
 ** DONE change update threads to use condition variable
-** TODO make "ip" config field work, make sure works with multicast works
+** DONE make "ip" config field work, make sure works with multicast works
 ** TODO make oscled blink version number on startup
 ** TODO write documentation / doxygen markup
-** TODO test with multiple separate strings of LEDs
+** DONE test with multiple separate strings of LEDs
 ** TODO create debian package of oscled
 ** TODO create debian package of liblo
 ** TODO implement syslog logging
 ** TODO implement debug macros
-** TODO make run on raspberry pi (find/fix thread ABI issue)
-** TODO extend config system to remove hard-coded values in PlatformSerial drivers
 ** TODO create a configurable mode that removes the requirement for /update method
-** TODO make gtksim run on MacOS natively
-** TODO make run on chip computer (maybe already works)
 
 * mp.py
 ** TODO organize the script into a python module, with effects in individual files
@@ -44,7 +40,7 @@
 *** TODO strobe
 *** TODO flame
 *** TODO clock
-
+    
 * hardware
 ** TODO design interface board in Eagle CAD
 ** TODO get design reviewed

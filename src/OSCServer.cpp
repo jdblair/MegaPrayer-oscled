@@ -3,15 +3,18 @@
 #include <lo/lo_cpp.h>
 #include <err.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 
 #include <vector>
 #include <atomic>
 #include <iostream>
+#include <string>
 
 #include "IPlatformSerial.h"
 #include "OSCServer.h"
 
 using namespace std;
+
 
 OSCServer::led_interface::led_interface(std::shared_ptr<IPlatformSerial> ser, int base, int len, bool reverse) :
     m_ser(ser), m_base(base), m_len(len), m_reverse(reverse) {
@@ -33,20 +36,34 @@ OSCServer::led_interface::~led_interface() {
 }
 
 
-OSCServer::OSCServer(int port) : m_port(port)
+OSCServer::OSCServer(string ip, string port) : m_ip(ip), m_port(port)
 {
-    cout << "starting server on port " << port << endl;
-
     received = 0;
     m_iface_count = 0;
+    
+    lo_server_thread osc_st;
+    struct sockaddr_in sa;
+    
+    // is ip a multicast address?
+    inet_pton(AF_INET, ip.c_str(), &(sa.sin_addr));  // convert to 4-byte ipv4 address
+    uint32_t addr = ntohl(sa.sin_addr.s_addr);       // cast as uint32_t
+    if ((addr & 0xe0000000) == 0xe0000000) {         // check high order byte == 0xe0
+        cout << "starting multicast server at " << ip << ":" << port << endl;
+        osc_st = lo_server_thread_new_multicast(ip.c_str(), port.c_str(), NULL);
+    } else {
+        // liblo doesn't actually let us bind to a specific address, so
+        // specific non-multicast addresses are not supported
+        cout << "starting unicast server on port " << port << endl;
+        osc_st = lo_server_thread_new(port.c_str(), NULL);
+    }
 
-    //m_st.reset(new lo::ServerThread("225.0.0.37", port));
-    m_st.reset(new lo::ServerThread(port));
-
-    if (!m_st->is_valid()) {
+    if (! osc_st) {
         err(1, "can't create liblo server thread");
         return;
     }
+
+    // make a ServerThread object from the lo_server_thread we made above
+    m_st.reset(new lo::ServerThread(osc_st));
 
     m_st->add_method("/led", "iiii", 
                      [this](lo_arg **argv, int)  {this->osc_method_led(argv);});
@@ -84,11 +101,11 @@ void OSCServer::set_led(int n, led_t led)
 
 int OSCServer::osc_method_led(lo_arg **argv)
 {
-    cout << "/led (" << ++received << "): "
-         << argv[0]->i << ", " 
-         << argv[1]->i << ", " 
-         << argv[2]->i << ", "
-         << argv[3]->i << endl;
+    // cout << "/led (" << ++received << "): "
+    //      << argv[0]->i << ", " 
+    //      << argv[1]->i << ", " 
+    //      << argv[2]->i << ", "
+    //      << argv[3]->i << endl;
     
     auto n = argv[0]->i;
     set_led(n, led_t(argv[1]->i, argv[2]->i, argv[3]->i));
@@ -99,11 +116,11 @@ int OSCServer::osc_method_led(lo_arg **argv)
 
 int OSCServer::osc_method_led_float(lo_arg **argv)
 {
-    cout << "/ledf (" << ++received << "): "
-         << argv[0]->i << ", " 
-         << argv[1]->f << ", " 
-         << argv[2]->f << ", "
-         << argv[3]->f << endl;
+    // cout << "/ledf (" << ++received << "): "
+    //      << argv[0]->i << ", " 
+    //      << argv[1]->f << ", " 
+    //      << argv[2]->f << ", "
+    //      << argv[3]->f << endl;
     
     auto n = argv[0]->i;
     set_led(n, led_t(argv[1]->f * 255,
@@ -116,11 +133,11 @@ int OSCServer::osc_method_led_float(lo_arg **argv)
 
 int OSCServer::osc_method_bead(lo_arg **argv)
 {
-    cout << "/bead (" << ++received << "): "
-         << argv[0]->i << ", " 
-         << argv[1]->i << ", " 
-         << argv[2]->i << ", "
-         << argv[3]->i << endl;
+    // cout << "/bead (" << ++received << "): "
+    //      << argv[0]->i << ", " 
+    //      << argv[1]->i << ", " 
+    //      << argv[2]->i << ", "
+    //      << argv[3]->i << endl;
     
     auto n = argv[0]->i * m_leds_per_bead;
     for (int offset = 0; offset < m_leds_per_bead; offset++) {
@@ -133,11 +150,11 @@ int OSCServer::osc_method_bead(lo_arg **argv)
 
 int OSCServer::osc_method_bead_float(lo_arg **argv)
 {
-    cout << "/beadf (" << ++received << "): "
-         << argv[0]->i << ", " 
-         << argv[1]->f << ", " 
-         << argv[2]->f << ", "
-         << argv[3]->f << endl;
+    // cout << "/beadf (" << ++received << "): "
+    //      << argv[0]->i << ", " 
+    //      << argv[1]->f << ", " 
+    //      << argv[2]->f << ", "
+    //      << argv[3]->f << endl;
     
     auto n = argv[0]->i * m_leds_per_bead;
     for (int offset = 0; offset < m_leds_per_bead; offset++) {

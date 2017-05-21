@@ -66,7 +66,7 @@ int main(int argc, char **argv)
     config.json_parse();
 
     PlatformSerialFactory ser_factory;
-    OSCServer server(config.get_station().port);
+    OSCServer server(config.get_station().ip, config.get_station().port);
     server.set_base_bead(config.get_station().bead_base);
     server.set_leds_per_bead(config.get_station().leds_per_bead);
 

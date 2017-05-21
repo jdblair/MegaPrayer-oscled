@@ -39,18 +39,18 @@ OSCLedConfig::OSCLedConfig()
     // this can be over-ridden by the "defaults" section of the config file
     m_default.id = 0;
     m_default.ip = string("127.0.0.1");
-    m_default.port = 5005;
+    m_default.port = string("5005");
     m_default.leds_per_bead = 8;
     m_default.bead_count = 10;
     m_default.bead_base = 0;
 
     m_config.ip = string("127.0.0.1");
-    m_config.port = 5005;
+    m_config.port = string("5005");
 
     m_cmd_line_config.config_file = string("/etc/mp/config.json");
     m_cmd_line_config.id = 0;
     m_cmd_line_config.daemonize = false;
-    m_cmd_line_config.port = 5005;
+    m_cmd_line_config.port = string("5005");
     m_cmd_line_config.config_file_set = false;
     m_cmd_line_config.id_set = false;
     m_cmd_line_config.daemonize_set = false;
@@ -80,8 +80,9 @@ bool OSCLedConfig::json_parse()
         exit(1);
     }
 
-    if (json_root.isMember(KEY_DEFAULTS))
+    if (json_root.isMember(KEY_DEFAULTS)) {
         rc = json_parse_station_values(json_root[KEY_DEFAULTS], m_default);
+    }
 
     if (rc == false) {
         cout << "json_parse_station_values() returned false" << endl;
@@ -99,32 +100,32 @@ bool OSCLedConfig::json_parse()
 bool OSCLedConfig::json_parse_station_values(Json::Value s, OSCLedConfig::station_config& config)
 {
     // note that "id" cannot be set in the default
-    m_config.ip = s.get(KEY_IP, m_default.ip).asString();
-    m_config.port = s.get(KEY_PORT, m_default.port).asInt();
-    m_config.leds_per_bead = s.get(KEY_LEDS_PER_BEAD, m_default.leds_per_bead).asInt();
-    m_config.bead_count = s.get(KEY_BEAD_COUNT, m_default.bead_count).asInt();
-    m_config.bead_base = s.get(KEY_BEAD_BASE, m_default.bead_base).asInt();
-    m_config.daemonize = s.get(KEY_DAEMONIZE, m_default.daemonize).asBool();
+    config.ip = s.get(KEY_IP, m_default.ip).asString();
+    config.port = s.get(KEY_PORT, m_default.port).asString();
+    config.leds_per_bead = s.get(KEY_LEDS_PER_BEAD, m_default.leds_per_bead).asInt();
+    config.bead_count = s.get(KEY_BEAD_COUNT, m_default.bead_count).asInt();
+    config.bead_base = s.get(KEY_BEAD_BASE, m_default.bead_base).asInt();
+    config.daemonize = s.get(KEY_DAEMONIZE, m_default.daemonize).asBool();
 
     // over-ride with command line arguments
     if (m_cmd_line_config.ip_set)
-        m_config.ip = m_cmd_line_config.ip;
+        config.ip = m_cmd_line_config.ip;
 
     if (m_cmd_line_config.port_set)
-        m_config.port = m_cmd_line_config.port;
+        config.port = m_cmd_line_config.port;
 
     if (m_cmd_line_config.daemonize_set)
-        m_config.daemonize = m_cmd_line_config.daemonize;
+        config.daemonize = m_cmd_line_config.daemonize;
     
     if (s.isMember(KEY_IFACE)) {
         // protect against being called more than once by removing all
         // existing elements from the interface vector
-        m_config.interface.clear();
+        config.interface.clear();
 
         for (auto i = s[KEY_IFACE].begin(); i != s[KEY_IFACE].end(); i++) {
             shared_ptr<struct interface_config> iface_ptr;
             iface_ptr.reset(new struct interface_config);
-            m_config.interface.push_back(iface_ptr);
+            config.interface.push_back(iface_ptr);
 
             iface_ptr->id = i->get(KEY_IFACE_ID, 0).asInt();
             iface_ptr->led_base = i->get(KEY_IFACE_LED_BASE, 0).asInt();
@@ -133,6 +134,7 @@ bool OSCLedConfig::json_parse_station_values(Json::Value s, OSCLedConfig::statio
         }
     }
 
+    // cout << "ip: " << config.ip << endl; 
     // cout << "json_parse_station_values():" << endl;
     // cout << config.ip << endl;
     // cout << config.port << endl;
@@ -151,7 +153,7 @@ bool OSCLedConfig::json_parse_station()
         json_station = json_root[KEY_STATION];
         for (auto i = json_station.begin(); i != json_station.end(); i++) {
             if (i->get(KEY_ID, 0).asInt() == m_config.id) {
-                json_parse_station_values(*i, m_default);
+                json_parse_station_values(*i, m_config);
                 return true;
             }
         }
@@ -197,7 +199,7 @@ bool OSCLedConfig::getopt(int argc, char * const argv[])
             {0, 0, 0}
         };
         
-        c = getopt_long(argc, argv, "vc:i:dh", long_options, &option_index);
+        c = getopt_long(argc, argv, "vc:i:I:dhp:", long_options, &option_index);
         if (c == -1)
             break;
         
@@ -214,7 +216,6 @@ bool OSCLedConfig::getopt(int argc, char * const argv[])
                 return false;  // err() doesn't return
             }
             m_cmd_line_config.id_set = true;
-            
             break;
         
         case 'd':
@@ -229,11 +230,9 @@ bool OSCLedConfig::getopt(int argc, char * const argv[])
             break;
 
         case 'p':
-            if (sscanf(optarg, "%d", &m_cmd_line_config.port) != 1) {
-                err(1, "can't parse --port/-p argument");
-                return false;  // err() doesn't return
-            }
+            m_cmd_line_config.port = string(optarg);
             m_cmd_line_config.port_set = true;
+            break;
 
         case 'v':
             // these macros are defined in config.h

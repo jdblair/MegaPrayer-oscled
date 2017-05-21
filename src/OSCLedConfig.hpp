@@ -24,7 +24,7 @@ public:
         bool daemonize_set;
         std::string ip;
         bool ip_set;
-        int port;
+        std::string port;
         bool port_set;
     };
 
@@ -38,7 +38,7 @@ public:
     struct station_config {
         int id;
         std::string ip;
-        int port;
+        std::string port;
         int leds_per_bead;
         int bead_count;
         int bead_base;

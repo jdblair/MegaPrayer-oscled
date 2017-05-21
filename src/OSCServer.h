@@ -32,7 +32,7 @@ class OSCServer {
     } led_t;
 
  public:
-    OSCServer(int port);
+    OSCServer(std::string ip, std::string port);
 
     int bind(std::shared_ptr<IPlatformSerial> ser, int base, int len, bool reverse);
     int drop_interfaces();
@@ -82,7 +82,8 @@ class OSCServer {
     void set_base_bead(int base_bead) { m_base_bead = base_bead; };
 
  private:
-    int m_port;
+    std::string m_port;
+    std::string m_ip;
     std::shared_ptr<lo::ServerThread> m_st;
     
     std::atomic<int> received;
