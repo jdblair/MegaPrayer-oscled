@@ -34,7 +34,7 @@ class OSCServer {
  public:
     OSCServer(std::string ip, std::string port);
 
-    int bind(std::shared_ptr<IPlatformSerial> ser, int base, int len, bool reverse);
+    int bind(std::shared_ptr<IPlatformSerial> ser, int base, int len, bool reverse, std::string byte_order);
     int drop_interfaces();
     void start() { m_st->start(); };
     int osc_method_led(lo_arg **argv);
@@ -50,7 +50,7 @@ class OSCServer {
     public:
         void update_thread();
 
-        led_interface(std::shared_ptr<IPlatformSerial> ser, int base, int len, bool reverse);
+        led_interface(std::shared_ptr<IPlatformSerial> ser, int base, int len, bool reverse, std::string byte_order);
 
         ~led_interface();
 
@@ -61,6 +61,9 @@ class OSCServer {
         int m_base;
         int m_len;
         bool m_reverse;
+        int m_r_offset;
+        int m_g_offset;
+        int m_b_offset;
 
         std::vector<led_t> leds;
         uint8_t *led_buf;
