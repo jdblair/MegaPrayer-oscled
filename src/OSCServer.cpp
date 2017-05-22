@@ -12,16 +12,23 @@
 
 #include "IPlatformSerial.h"
 #include "OSCServer.h"
+#include "OSCLedConfig.hpp"
 
 using namespace std;
 
 
-OSCServer::led_interface::led_interface(std::shared_ptr<IPlatformSerial> ser, int base, int len, bool reverse, string byte_order = string("rgb")) :
-    m_ser(ser), m_base(base), m_len(len), m_reverse(reverse) {
+OSCServer::led_interface::led_interface(std::shared_ptr<IPlatformSerial> ser,
+                                        OSCLedConfig::interface_config &cfg) :
+    m_ser(ser) {
+
+    m_base = cfg.led_base;
+    m_len = cfg.led_count;
+    m_reverse = cfg.reversed;
+    
     led_buf = new uint8_t[(m_len * 3)];
 
     // initialize leds with zero-value leds
-    for (auto i = 0; i < len; i++) {
+    for (auto i = 0; i < m_len; i++) {
         leds.push_back(led_t(0,0,0));
     }
 
@@ -32,12 +39,9 @@ OSCServer::led_interface::led_interface(std::shared_ptr<IPlatformSerial> ser, in
     m_g_offset = 1;
     m_b_offset = 2;
 
-    // cout << "byte_order = " << byte_order << endl;
-
     // parse byte_order string
-    for (int i = 0; i < 3; i++) {
-        // cout << i << ": " << byte_order[i] << endl;
-        switch (byte_order[i]) {
+    for (int i = 0; i < cfg.byte_order.length(); i++) {
+        switch (cfg.byte_order[i]) {
         case 'r':
         case 'R':
             m_r_offset = i;
@@ -201,11 +205,9 @@ int OSCServer::osc_method_update(lo_arg **argv)
 }
 
 // create an led_interface and added to m_led_ifaces
-int OSCServer::bind(shared_ptr<IPlatformSerial> ser, int base, int len, bool reverse, string byte_order)
+int OSCServer::bind(shared_ptr<IPlatformSerial> ser,  OSCLedConfig::interface_config &cfg)
 {
-    // cout << "bind: byte_order = " << byte_order << endl;
-    
-    shared_ptr<led_interface> led_iface(new led_interface(ser, base, len, reverse, byte_order));
+    shared_ptr<led_interface> led_iface(new led_interface(ser, cfg));
     
     m_led_ifaces.push_back(led_iface);
 
@@ -249,6 +251,7 @@ void OSCServer::led_interface::update_led_buf()
     }
     m_ser->send(led_buf, m_len * 3);
 }
+
 
 
 void OSCServer::led_interface::update_thread()

@@ -23,7 +23,14 @@
                     "led_count" : 40,
                     "reversed" : false,
                     "byte_order": "brg"
-                }
+                },
+                {
+                    "id": 2,
+                    "type": "dotstar",
+                    "led_base" : 0,
+                    "led_count" : 60,
+                    "byte_order": "xrgb"
+                },
             ]
         },
         {

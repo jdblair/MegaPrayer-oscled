@@ -19,6 +19,7 @@
 #include <thread>
 
 #include "IPlatformSerial.h"
+#include "OSCLedConfig.hpp"
 
 
 class OSCServer {
@@ -29,12 +30,18 @@ class OSCServer {
         uint8_t r;
         uint8_t g;
         uint8_t b;
+        uint8_t brightness;  // used by dotstar LEDs, value is 0 to 31
     } led_t;
+
+    typedef enum {
+        LED_PIXEL,
+        LED_DOTSTAR
+    } led_type_t;
 
  public:
     OSCServer(std::string ip, std::string port);
 
-    int bind(std::shared_ptr<IPlatformSerial> ser, int base, int len, bool reverse, std::string byte_order);
+    int bind(std::shared_ptr<IPlatformSerial> ser, OSCLedConfig::interface_config &cfg);
     int drop_interfaces();
     void start() { m_st->start(); };
     int osc_method_led(lo_arg **argv);
@@ -50,7 +57,7 @@ class OSCServer {
     public:
         void update_thread();
 
-        led_interface(std::shared_ptr<IPlatformSerial> ser, int base, int len, bool reverse, std::string byte_order);
+        led_interface(std::shared_ptr<IPlatformSerial> ser, OSCLedConfig::interface_config &cfg);
 
         ~led_interface();
 
