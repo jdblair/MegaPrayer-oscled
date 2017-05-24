@@ -180,7 +180,7 @@ shared_ptr<OSCServer::ILEDDataFormat> OSCServer::LEDDataFormatFactory::create_le
 {
     shared_ptr<OSCServer::ILEDDataFormat> fmt;
 
-    cout << "led_type = " << cfg.led_type << endl;
+    //cout << "led_type = " << cfg.led_type << endl;
     
     // ws2801 is used in the 36mm "pixel" LED modules
     if (cfg.led_type == string("ws2801")) {
