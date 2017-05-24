@@ -2,6 +2,8 @@
 #include <getopt.h>
 #include <iostream>
 #include <fstream>
+#include <string>
+#include <locale>
 #include <stdio.h>
 #include <err.h>
 
@@ -17,7 +19,7 @@
 using namespace std;
 
 // string constants used for config file parsing
-const string OSCLedConfig::KEY_DEFAULTS = "global";
+const string OSCLedConfig::KEY_GLOBAL = "global";
 const string OSCLedConfig::KEY_ID = "id";
 const string OSCLedConfig::KEY_STATION = "station";
 const string OSCLedConfig::KEY_IFACE = "interface";
@@ -32,7 +34,8 @@ const string OSCLedConfig::KEY_IFACE_LED_BASE = "led_base";
 const string OSCLedConfig::KEY_IFACE_LED_COUNT = "led_count";
 const string OSCLedConfig::KEY_IFACE_REVERSED = "reversed";
 const string OSCLedConfig::KEY_IFACE_BYTE_ORDER = "byte_order";
-
+const string OSCLedConfig::KEY_IFACE_BRIGHTNESS = "brightness";
+const string OSCLedConfig::KEY_IFACE_LED_TYPE = "led_type";
 
 OSCLedConfig::OSCLedConfig()
 {
@@ -82,8 +85,8 @@ bool OSCLedConfig::json_parse()
         exit(1);
     }
 
-    if (json_root.isMember(KEY_DEFAULTS)) {
-        rc = json_parse_station_values(json_root[KEY_DEFAULTS], m_default);
+    if (json_root.isMember(KEY_GLOBAL)) {
+        rc = json_parse_station_values(json_root[KEY_GLOBAL], m_default);
     }
 
     if (rc == false) {
@@ -108,7 +111,6 @@ bool OSCLedConfig::json_parse_station_values(Json::Value s, OSCLedConfig::statio
     config.bead_count = s.get(KEY_BEAD_COUNT, m_default.bead_count).asInt();
     config.bead_base = s.get(KEY_BEAD_BASE, m_default.bead_base).asInt();
     config.daemonize = s.get(KEY_DAEMONIZE, m_default.daemonize).asBool();
-    //config.byte_order = s.get(KEY_IFACE_BYTE_ORDER, m_default.byte_order).asString();
 
     // over-ride with command line arguments
     if (m_cmd_line_config.ip_set)
@@ -134,7 +136,13 @@ bool OSCLedConfig::json_parse_station_values(Json::Value s, OSCLedConfig::statio
             iface_ptr->led_base = i->get(KEY_IFACE_LED_BASE, 0).asInt();
             iface_ptr->led_count = i->get(KEY_IFACE_LED_COUNT, 10).asInt();
             iface_ptr->reversed = i->get(KEY_IFACE_REVERSED, false).asBool();
+            iface_ptr->led_type = i->get(KEY_IFACE_LED_TYPE, "ws2801").asString();
             iface_ptr->byte_order = i->get(KEY_IFACE_BYTE_ORDER, "rgb").asString();
+            iface_ptr->brightness = i->get(KEY_IFACE_BRIGHTNESS, 31).asInt();
+
+            // normalize strings to lower case
+            // tolower(iface_ptr->byte_order);
+            // tolower(iface_ptr->led_type);
         }
     }
 
