@@ -33,6 +33,7 @@ public:
         int led_base;
         int led_count;
         bool reversed;
+        std::string led_type;
         std::string byte_order;
     };
 
@@ -66,7 +67,7 @@ public:
     const struct station_config& get_station() { return m_config; };
 
     // string contants used for config file parsing
-    static const std::string KEY_DEFAULTS;
+    static const std::string KEY_GLOBAL;
     static const std::string KEY_ID;
     static const std::string KEY_STATION;
     static const std::string KEY_IFACE;
@@ -81,6 +82,7 @@ public:
     static const std::string KEY_IFACE_LED_COUNT;
     static const std::string KEY_IFACE_REVERSED;
     static const std::string KEY_IFACE_BYTE_ORDER;
+    static const std::string KEY_IFACE_LED_TYPE;
     
 private:
     OSCLedConfig();
