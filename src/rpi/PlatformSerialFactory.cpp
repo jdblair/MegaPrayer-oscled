@@ -9,7 +9,7 @@
 #include <PiGPIOSerial.h>
 #include <err.h>
 
-std::shared_ptr<IPlatformSerial> PlatformSerialFactory::create_platform_serial(int iface_num)
+std::shared_ptr<IPlatformSerial> const PlatformSerialFactory::create_platform_serial(int const iface_num)
 {
     std::shared_ptr<PiGPIOSerial> ser;
 

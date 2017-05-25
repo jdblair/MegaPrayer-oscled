@@ -77,6 +77,7 @@ int main(int argc, char **argv)
             ", led_base: " << (*i)->led_base <<
             ", led_count: " << (*i)->led_count <<
             ", reversed: " << (*i)->reversed <<
+            ", led_type: " << (*i)->led_type <<
             ", byte_order: " << (*i)->byte_order << endl;
     }
 

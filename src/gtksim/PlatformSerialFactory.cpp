@@ -14,7 +14,7 @@
 using namespace std;
 
 // GTKSim version of PlatformSerialFactory
-std::shared_ptr<IPlatformSerial> PlatformSerialFactory::create_platform_serial(int iface_num)
+const std::shared_ptr<IPlatformSerial> PlatformSerialFactory::create_platform_serial(int const iface_num)
 {
     std::shared_ptr<GtkSimSerial> ser;
 

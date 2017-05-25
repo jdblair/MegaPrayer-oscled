@@ -6,5 +6,5 @@ class PlatformSerialFactory
 {
  public:
     PlatformSerialFactory() {};
-    std::shared_ptr<IPlatformSerial> create_platform_serial(int iface_num);
+    std::shared_ptr<IPlatformSerial> const create_platform_serial(int const iface_num);
 };

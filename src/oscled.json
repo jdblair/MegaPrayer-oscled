@@ -4,6 +4,8 @@
         "port": 5005,
         "leds_per_bead": 8,
         "bead_count": 10,
+        "byte_order": "brg",
+        "led_type": "WS201"
     },
     "station": [
         {
@@ -14,23 +16,14 @@
                     "id": 0,
                     "led_base" : 0,
                     "led_count" : 40,
-                    "reversed" : true,
-                    "byte_order": "brg"
+                    "reversed" : true
                 },
                 {
                     "id": 1,
                     "led_base" : 40,
                     "led_count" : 40,
-                    "reversed" : false,
-                    "byte_order": "brg"
-                },
-                {
-                    "id": 2,
-                    "type": "dotstar",
-                    "led_base" : 0,
-                    "led_count" : 60,
-                    "byte_order": "xrgb"
-                },
+                    "reversed" : false
+                }
             ]
         },
         {
@@ -41,15 +34,13 @@
                     "id": 0,
                     "led_base" : 0,
                     "led_count" : 40,
-                    "reversed" : true,
-                    "byte_order": "brg"
+                    "reversed" : true
                 },
                 {
                     "id": 1,
                     "led_base" : 40,
                     "led_count" : 40,
-                    "reversed" : false,
-                    "byte_order": "brg"
+                    "reversed" : false
                 }
             ]
         }

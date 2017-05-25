@@ -7,7 +7,7 @@
 #include "event_gpio.h"
 
 
-PlatformSerial::PlatformSerial(int clk_pin, int dat_pin) :
+PlatformSerial::PlatformSerial(int const clk_pin, int const dat_pin) :
     gpio_clk(clk_pin), gpio_dat(dat_pin)
 {
 }
@@ -31,7 +31,7 @@ bool PlatformSerial::init(void)
 }
 
 
-void PlatformSerial::send(unsigned char *buf, size_t len)
+void PlatformSerial::send(unsigned char const *buf, size_t const len)
 {
     size_t i;
     int b;

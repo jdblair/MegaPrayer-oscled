@@ -6,6 +6,7 @@
 #include <locale>
 #include <stdio.h>
 #include <err.h>
+#include <algorithm>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -47,7 +48,8 @@ OSCLedConfig::OSCLedConfig()
     m_default.leds_per_bead = 8;
     m_default.bead_count = 10;
     m_default.bead_base = 0;
-    //m_default.byte_order = string("rgb");
+    m_default.byte_order = string("rgb");
+    m_default.led_type = string("ws201");
 
     m_config.ip = string("127.0.0.1");
     m_config.port = string("5005");
@@ -102,7 +104,7 @@ bool OSCLedConfig::json_parse()
 
 // this is used to parse both the default station config and the
 // actual station config
-bool OSCLedConfig::json_parse_station_values(Json::Value s, OSCLedConfig::station_config& config)
+bool OSCLedConfig::json_parse_station_values(Json::Value s, OSCLedConfig::station_config &config)
 {
     // note that "id" cannot be set in the default
     config.ip = s.get(KEY_IP, m_default.ip).asString();
@@ -141,20 +143,21 @@ bool OSCLedConfig::json_parse_station_values(Json::Value s, OSCLedConfig::statio
             iface_ptr->brightness = i->get(KEY_IFACE_BRIGHTNESS, 31).asInt();
 
             // normalize strings to lower case
-            // tolower(iface_ptr->byte_order);
-            // tolower(iface_ptr->led_type);
+            transform(iface_ptr->byte_order.begin(), iface_ptr->byte_order.end(), iface_ptr->byte_order.begin(), ::tolower);
+            transform(iface_ptr->led_type.begin(), iface_ptr->led_type.end(), iface_ptr->led_type.begin(), ::tolower);
         }
     }
 
     // cout << "ip: " << config.ip << endl; 
     // cout << "json_parse_station_values():" << endl;
-    // cout << config.ip << endl;
-    // cout << config.port << endl;
-    // cout << config.leds_per_bead << endl;
-    // cout << config.bead_count << endl;
-    // cout << config.bead_base << endl;
-    // cout << config.daemonize << endl;
-    // cout << config.byte_order << endl;
+    // cout << "ip: " << config.ip << endl;
+    // cout << "port: " << config.port << endl;
+    // cout << "leds_per_bead: " << config.leds_per_bead << endl;
+    // cout << "bead_count: " << config.bead_count << endl;
+    // cout << "bead_base: " << config.bead_base << endl;
+    // cout << "daemonize: " << config.daemonize << endl;
+    // cout << "byte_order: " << config.byte_order << endl;
+    // cout << "led_type: " << config.led_type << endl;
 
     return true;
 }

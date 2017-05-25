@@ -33,8 +33,9 @@ public:
         int led_base;
         int led_count;
         bool reversed;
-        std::string led_type;
         std::string byte_order;
+        std::string led_type;
+        int brightness;
     };
 
     struct station_config {
@@ -46,15 +47,16 @@ public:
         int bead_base;
         bool daemonize;
         std::string byte_order;
+        std::string led_type;
         std::vector<std::shared_ptr<struct interface_config>> interface;
     };
 
     bool getopt(int argc, char * const argv[]);
     bool json_parse();
     bool json_parse_station();
-    bool json_parse_station_values(Json::Value s, OSCLedConfig::station_config& config);
+    bool json_parse_station_values(Json::Value s, OSCLedConfig::station_config &config);
 
-    const Json::Value json_interface(const int num);
+    const Json::Value json_interface(int const num);
 
     Json::Value json_root;
     Json::Value json_station;
@@ -83,6 +85,7 @@ public:
     static const std::string KEY_IFACE_REVERSED;
     static const std::string KEY_IFACE_BYTE_ORDER;
     static const std::string KEY_IFACE_LED_TYPE;
+    static const std::string KEY_IFACE_BRIGHTNESS;
     
 private:
     OSCLedConfig();

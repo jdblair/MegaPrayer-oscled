@@ -156,7 +156,7 @@ int OSCServer::osc_method_update(lo_arg **argv)
 }
 
 // create an led_interface and added to m_led_ifaces
-int OSCServer::bind(shared_ptr<IPlatformSerial> ser,  OSCLedConfig::interface_config &cfg)
+int OSCServer::bind(shared_ptr<IPlatformSerial> const ser, OSCLedConfig::interface_config const &cfg)
 {
     shared_ptr<led_interface> led_iface(new led_interface(ser, cfg));
     
@@ -176,7 +176,7 @@ int OSCServer::drop_interfaces()
     m_iface_count=0;
 }
 
-shared_ptr<OSCServer::ILEDDataFormat> OSCServer::LEDDataFormatFactory::create_led_format(OSCLedConfig::interface_config &cfg)
+shared_ptr<OSCServer::ILEDDataFormat> OSCServer::LEDDataFormatFactory::create_led_format(OSCLedConfig::interface_config const &cfg)
 {
     shared_ptr<OSCServer::ILEDDataFormat> fmt;
 
@@ -199,7 +199,7 @@ shared_ptr<OSCServer::ILEDDataFormat> OSCServer::LEDDataFormatFactory::create_le
 }
 
 // ws2801 is used in the 36mm "pixel" LED modules
-OSCServer::LEDFormat_WS2801::LEDFormat_WS2801(OSCLedConfig::interface_config &cfg) :
+OSCServer::LEDFormat_WS2801::LEDFormat_WS2801(OSCLedConfig::interface_config const &cfg) :
     ILEDDataFormat(cfg) {
 
     buf_len = cfg.led_count * 3;
@@ -227,7 +227,7 @@ OSCServer::LEDFormat_WS2801::LEDFormat_WS2801(OSCLedConfig::interface_config &cf
 }    
 
 
-void OSCServer::LEDFormat_WS2801::update(vector<led_t> &leds)
+void OSCServer::LEDFormat_WS2801::update(vector<led_t> const &leds)
 {
     size_t i = 0;
     
@@ -242,7 +242,7 @@ void OSCServer::LEDFormat_WS2801::update(vector<led_t> &leds)
 }
 
 // APA102 is used in the "dotstar" LED strips
-OSCServer::LEDFormat_APA102::LEDFormat_APA102(OSCLedConfig::interface_config &cfg) :
+OSCServer::LEDFormat_APA102::LEDFormat_APA102(OSCLedConfig::interface_config const &cfg) :
     ILEDDataFormat(cfg) {
 
     buf_len = (cfg.led_count * 4) + 8;
@@ -267,7 +267,7 @@ OSCServer::LEDFormat_APA102::LEDFormat_APA102(OSCLedConfig::interface_config &cf
     }
 }
 
-void OSCServer::LEDFormat_APA102::update(vector<led_t> &leds)
+void OSCServer::LEDFormat_APA102::update(vector<led_t> const &leds)
 {
     size_t i = 4;
     
@@ -291,8 +291,8 @@ void OSCServer::LEDFormat_APA102::update(vector<led_t> &leds)
 }
 
 
-OSCServer::led_interface::led_interface(std::shared_ptr<IPlatformSerial> ser,
-                                        OSCLedConfig::interface_config &cfg) :
+OSCServer::led_interface::led_interface(std::shared_ptr<IPlatformSerial> const ser,
+                                        OSCLedConfig::interface_config const &cfg) :
     m_ser(ser) {
 
     m_base = cfg.led_base;
