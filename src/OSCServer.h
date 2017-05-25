@@ -23,25 +23,19 @@
 
 
 class OSCServer {
- private:
+ public:
     typedef struct led {
-    led(uint8_t r_arg, uint8_t g_arg, uint8_t b_arg) :
-        r(r_arg), g(g_arg), b(b_arg) {};
+    led(uint8_t r_arg, uint8_t g_arg, uint8_t b_arg, uint8_t brightness_arg=0xff) :
+        r(r_arg), g(g_arg), b(b_arg), brightness(brightness_arg) {};
         uint8_t r;
         uint8_t g;
         uint8_t b;
-        uint8_t brightness;  // used by dotstar LEDs, value is 0 to 31
+        uint8_t brightness;  // used by apa102 LEDs, value is 0 to 31
     } led_t;
 
-    typedef enum {
-        LED_PIXEL,
-        LED_DOTSTAR
-    } led_type_t;
-
- public:
     OSCServer(std::string ip, std::string port);
 
-    int bind(std::shared_ptr<IPlatformSerial> ser, OSCLedConfig::interface_config &cfg);
+    int bind(std::shared_ptr<IPlatformSerial> const ser, OSCLedConfig::interface_config const &cfg);
     int drop_interfaces();
     void start() { m_st->start(); };
     int osc_method_led(lo_arg **argv);
@@ -50,14 +44,59 @@ class OSCServer {
     int osc_method_bead_float(lo_arg **argv);
     int osc_method_update(lo_arg **argv);
     void set_led(int n, led_t led);
+    
+    class ILEDDataFormat {
+    public:
+        uint8_t *buf;
+        size_t buf_len;
 
+    protected:
+        OSCLedConfig::interface_config m_cfg;
+
+    public:        
+    ILEDDataFormat(OSCLedConfig::interface_config const &cfg) :
+        m_cfg(cfg) {};
+
+        uint8_t *get_buf() { return buf; };
+        size_t get_buf_len() { return buf_len; };
+        virtual void update(std::vector<led_t> const &leds) {
+            std::cout << "ILEDDataFormat not over-ridden" << std::endl;
+        }
+        ~ILEDDataFormat() { if (buf) delete buf; };
+    };
+
+    class LEDDataFormatFactory {
+    public:
+        LEDDataFormatFactory() {};
+        std::shared_ptr<OSCServer::ILEDDataFormat> create_led_format(OSCLedConfig::interface_config const &cfg);
+    };
+        
+    class LEDFormat_WS2801 : public ILEDDataFormat {
+    public:
+        LEDFormat_WS2801(OSCLedConfig::interface_config const &cfg);
+        void update(std::vector<led_t> const &leds);
+    private:
+        int m_r_offset;
+        int m_g_offset;
+        int m_b_offset;
+    };
+        
+    class LEDFormat_APA102 : public ILEDDataFormat {
+    public:
+        LEDFormat_APA102(OSCLedConfig::interface_config const &cfg);
+        void update(std::vector<led_t> const &leds);
+    private:
+        int m_brightness;
+    };
+
+        
     // led_interface encapsulates the physical serial interface and the state
     // of all connected LED modules.
     class led_interface {
     public:
         void update_thread();
 
-        led_interface(std::shared_ptr<IPlatformSerial> ser, OSCLedConfig::interface_config &cfg);
+        led_interface(std::shared_ptr<IPlatformSerial> const ser, OSCLedConfig::interface_config const &cfg);
 
         ~led_interface();
 
@@ -77,10 +116,12 @@ class OSCServer {
         std::thread t_update;
         bool run_update_thread;
 
-        std::mutex led_buf_mutex;
+        std::mutex leds_mutex;
 
         std::mutex update_mutex;
         std::condition_variable update_cv;
+
+        std::shared_ptr<ILEDDataFormat> m_fmt;
 
         void set_led(int offset, led_t led);
         void notify_update_thread();
