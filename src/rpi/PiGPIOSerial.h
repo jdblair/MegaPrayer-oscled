@@ -9,10 +9,10 @@
 class PiGPIOSerial : public IPlatformSerial
 {
  public:
-    PiGPIOSerial(int clk_pin, int dat_pin);
+    PiGPIOSerial(int const clk_pin, int const dat_pin);
 
     int init();
-    void send(unsigned char *buf, size_t len);
+    void send(unsigned char const *buf, size_t const len);
 
     int iface_num;
 

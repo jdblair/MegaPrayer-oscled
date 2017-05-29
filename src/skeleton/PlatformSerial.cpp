@@ -10,7 +10,7 @@ PlatformSerial::PlatformSerial()
 }
 
 
-void PlatformSerial::send(unsigned char *buf, size_t len)
+void PlatformSerial::send(unsigned char const *buf, size_t const len)
 {
     size_t i;
 

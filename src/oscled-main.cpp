@@ -72,11 +72,12 @@ int main(int argc, char **argv)
 
     for (auto i = config.get_station().interface.begin(); i != config.get_station().interface.end(); i++) {
         std::shared_ptr<IPlatformSerial> ser = ser_factory.create_platform_serial((*i)->id);
-        server.bind(ser, (*i)->led_base, (*i)->led_count, (*i)->reversed, (*i)->byte_order);
+        server.bind(ser, *(*i));
         cout << "created iface: " << (*i)->id <<
             ", led_base: " << (*i)->led_base <<
             ", led_count: " << (*i)->led_count <<
             ", reversed: " << (*i)->reversed <<
+            ", led_type: " << (*i)->led_type <<
             ", byte_order: " << (*i)->byte_order << endl;
     }
 
