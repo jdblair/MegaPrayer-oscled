@@ -20,8 +20,10 @@ oscled is a C++ project that is configured using autotools.
 * automake 
 * [liblo](https://github.com/radarsat1/liblo/)
 * gtk+ and goocanvas
+* tkinter
+* python 3
 
-This should install everything necessary on Ubuntu, with the exception of liblo:
+This should install everything necessary on Ubuntu, with the exception of liblo, python 3, and tkinter:
 
 `apt-get install build-essential autoconf libgoocanvas-dev g++-arm-linux-gnueabihf`
 
