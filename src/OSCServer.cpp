@@ -16,7 +16,7 @@
 using namespace std;
 
 
-OSCServer::led_interface::led_interface(std::shared_ptr<IPlatformSerial> ser, int base, int len, bool reverse) :
+OSCServer::led_interface::led_interface(std::shared_ptr<IPlatformSerial> ser, int base, int len, bool reverse, string byte_order = string("rgb")) :
     m_ser(ser), m_base(base), m_len(len), m_reverse(reverse) {
     led_buf = new uint8_t[(m_len * 3)];
 
@@ -26,6 +26,33 @@ OSCServer::led_interface::led_interface(std::shared_ptr<IPlatformSerial> ser, in
     }
 
     t_update = std::thread(&OSCServer::led_interface::update_thread, this);
+
+    // make sure offset are defined
+    m_r_offset = 0;
+    m_g_offset = 1;
+    m_b_offset = 2;
+
+    // cout << "byte_order = " << byte_order << endl;
+
+    // parse byte_order string
+    for (int i = 0; i < 3; i++) {
+        // cout << i << ": " << byte_order[i] << endl;
+        switch (byte_order[i]) {
+        case 'r':
+        case 'R':
+            m_r_offset = i;
+            break;
+        case 'g':
+        case 'G':
+            m_g_offset = i;
+            break;
+        case 'b':
+        case 'B':
+            m_b_offset = i;
+            break;
+        }
+    }
+
 };
 
 
@@ -174,9 +201,11 @@ int OSCServer::osc_method_update(lo_arg **argv)
 }
 
 // create an led_interface and added to m_led_ifaces
-int OSCServer::bind(shared_ptr<IPlatformSerial> ser, int base, int len, bool reverse)
+int OSCServer::bind(shared_ptr<IPlatformSerial> ser, int base, int len, bool reverse, string byte_order)
 {
-    shared_ptr<led_interface> led_iface(new led_interface(ser, base, len, reverse));
+    // cout << "bind: byte_order = " << byte_order << endl;
+    
+    shared_ptr<led_interface> led_iface(new led_interface(ser, base, len, reverse, byte_order));
     
     m_led_ifaces.push_back(led_iface);
 
@@ -211,9 +240,10 @@ void OSCServer::led_interface::update_led_buf()
         lock_guard<mutex> lock(led_buf_mutex);
         for (auto it = leds.begin(); it != leds.end(); ++it) {
             //cout << "update:" << ": " << int(it->r) << ", " << int(it->g) << ", " << int(it->b) << endl;
-            led_buf[i] = it->r;
-            led_buf[i+1] = it->g;
-            led_buf[i+2] = it->b;
+            
+            led_buf[i + m_r_offset] = it->r;
+            led_buf[i + m_g_offset] = it->g;
+            led_buf[i + m_b_offset] = it->b;
             i += 3;
         }
     }

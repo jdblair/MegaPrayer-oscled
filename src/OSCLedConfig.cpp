@@ -17,7 +17,7 @@
 using namespace std;
 
 // string constants used for config file parsing
-const string OSCLedConfig::KEY_DEFAULTS = "defaults";
+const string OSCLedConfig::KEY_DEFAULTS = "global";
 const string OSCLedConfig::KEY_ID = "id";
 const string OSCLedConfig::KEY_STATION = "station";
 const string OSCLedConfig::KEY_IFACE = "interface";
@@ -31,6 +31,7 @@ const string OSCLedConfig::KEY_IFACE_ID = "id";
 const string OSCLedConfig::KEY_IFACE_LED_BASE = "led_base";
 const string OSCLedConfig::KEY_IFACE_LED_COUNT = "led_count";
 const string OSCLedConfig::KEY_IFACE_REVERSED = "reversed";
+const string OSCLedConfig::KEY_IFACE_BYTE_ORDER = "byte_order";
 
 
 OSCLedConfig::OSCLedConfig()
@@ -43,6 +44,7 @@ OSCLedConfig::OSCLedConfig()
     m_default.leds_per_bead = 8;
     m_default.bead_count = 10;
     m_default.bead_base = 0;
+    //m_default.byte_order = string("rgb");
 
     m_config.ip = string("127.0.0.1");
     m_config.port = string("5005");
@@ -106,6 +108,7 @@ bool OSCLedConfig::json_parse_station_values(Json::Value s, OSCLedConfig::statio
     config.bead_count = s.get(KEY_BEAD_COUNT, m_default.bead_count).asInt();
     config.bead_base = s.get(KEY_BEAD_BASE, m_default.bead_base).asInt();
     config.daemonize = s.get(KEY_DAEMONIZE, m_default.daemonize).asBool();
+    //config.byte_order = s.get(KEY_IFACE_BYTE_ORDER, m_default.byte_order).asString();
 
     // over-ride with command line arguments
     if (m_cmd_line_config.ip_set)
@@ -131,6 +134,7 @@ bool OSCLedConfig::json_parse_station_values(Json::Value s, OSCLedConfig::statio
             iface_ptr->led_base = i->get(KEY_IFACE_LED_BASE, 0).asInt();
             iface_ptr->led_count = i->get(KEY_IFACE_LED_COUNT, 10).asInt();
             iface_ptr->reversed = i->get(KEY_IFACE_REVERSED, false).asBool();
+            iface_ptr->byte_order = i->get(KEY_IFACE_BYTE_ORDER, "rgb").asString();
         }
     }
 
@@ -142,6 +146,7 @@ bool OSCLedConfig::json_parse_station_values(Json::Value s, OSCLedConfig::statio
     // cout << config.bead_count << endl;
     // cout << config.bead_base << endl;
     // cout << config.daemonize << endl;
+    // cout << config.byte_order << endl;
 
     return true;
 }

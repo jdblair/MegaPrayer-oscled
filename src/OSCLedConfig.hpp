@@ -33,6 +33,7 @@ public:
         int led_base;
         int led_count;
         bool reversed;
+        std::string byte_order;
     };
 
     struct station_config {
@@ -43,6 +44,7 @@ public:
         int bead_count;
         int bead_base;
         bool daemonize;
+        std::string byte_order;
         std::vector<std::shared_ptr<struct interface_config>> interface;
     };
 
@@ -78,6 +80,7 @@ public:
     static const std::string KEY_IFACE_LED_BASE;
     static const std::string KEY_IFACE_LED_COUNT;
     static const std::string KEY_IFACE_REVERSED;
+    static const std::string KEY_IFACE_BYTE_ORDER;
     
 private:
     OSCLedConfig();

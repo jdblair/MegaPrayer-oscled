@@ -1,9 +1,9 @@
 {
-    "defaults": {
+    "global": {
         "ip": "239.0.0.1",
         "port": 5005,
         "leds_per_bead": 8,
-        "bead_count": 10
+        "bead_count": 10,
     },
     "station": [
         {
@@ -14,13 +14,15 @@
                     "id": 0,
                     "led_base" : 0,
                     "led_count" : 40,
-                    "reversed" : true
+                    "reversed" : true,
+                    "byte_order": "brg"
                 },
                 {
                     "id": 1,
                     "led_base" : 40,
                     "led_count" : 40,
-                    "reversed" : false
+                    "reversed" : false,
+                    "byte_order": "brg"
                 }
             ]
         },
@@ -32,13 +34,15 @@
                     "id": 0,
                     "led_base" : 0,
                     "led_count" : 40,
-                    "reversed" : true
+                    "reversed" : true,
+                    "byte_order": "brg"
                 },
                 {
                     "id": 1,
                     "led_base" : 40,
                     "led_count" : 40,
-                    "reversed" : false
+                    "reversed" : false,
+                    "byte_order": "brg"
                 }
             ]
         }
