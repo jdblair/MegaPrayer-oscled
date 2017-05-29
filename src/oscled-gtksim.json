@@ -15,13 +15,13 @@
                     "id": 0,
                     "led_base" : 0,
                     "led_count" : 240,
-                    "reversed" : true,
+                    "reversed" : true
                 },
                 {
                     "id": 1,
                     "led_base" : 240,
                     "led_count" : 240,
-                    "reversed" : false,
+                    "reversed" : false
                 }
             ]
         }
