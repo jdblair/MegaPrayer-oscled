@@ -347,7 +347,8 @@ class Rosary:
                 effect.next(self)
                 if (effect.finished):
                     self.del_effect(effect.id)
-                self.update()
+
+            self.update()
 
             # Let the triggers figure out for themselves what to do
             for trigger in self.triggers.values():
