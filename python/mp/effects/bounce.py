@@ -35,4 +35,5 @@ class Bounce(effect.Effect):
 
     @dm.expose()
     def set_direction(self, direction):
+        print("OH SHIT I WAS TOLD TO SET DIRECTION")
         self.direction = direction

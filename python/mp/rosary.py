@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import ast
 import code
 import copy
 import threading
@@ -57,6 +58,8 @@ class Rosary:
         self.dispatcher = dispatcher
         # This will get populated as effects get deleted
         self.effect_paths_to_unregister = []
+        # Available knobs to turn
+        self.knobs = {}
 
         self.osc_client = udp_client.UDPClient(self.osc_ip, self.osc_port)
 
@@ -113,7 +116,8 @@ class Rosary:
         self.register_defined_effects()
 
         # Map our own exposed methods to the dispatcher
-        self.register_with_dispatcher()
+        #self.register_with_dispatcher()
+        self.register_with_dispatcher_new()
 
         # Trigger stuff
         self.register_defined_triggers()
@@ -276,9 +280,10 @@ class Rosary:
         effect = self.effect(id)
 
         if effect is not None:
-            effect_paths = [effect.generate_osc_path(fn) for fn in\
-                            effect.dm.registered_methods.keys()]
-            self.effect_paths_to_unregister.extend(effect_paths)
+            #effect_paths = [effect.generate_osc_path(fn) for fn in\
+            #                effect.dm.registered_methods.keys()]
+            #self.effect_paths_to_unregister.extend(effect_paths)
+            self.unregister_effect_knobs(effect)
             self.effects.remove(effect)
 
 
@@ -295,6 +300,17 @@ class Rosary:
         """Return all running effects"""
         print(self.effects)
         return self.effects
+
+    @dm.expose()
+    def get_knobs(self):
+        print(self.knobs)
+        return self.knobs
+
+    @dm.expose()
+    def paths(self):
+        print("GET ROSARY PATHS")
+        print(self.dm.registered_methods.keys())
+        return self.dm.registered_methods.keys()
 
     def update(self):
         """Transmit the OSC message to update all beads on the rosary."""
@@ -324,6 +340,56 @@ class Rosary:
         while self.effect_paths_to_unregister:
             self.dispatcher._map.pop(self.effect_paths_to_unregister.pop())
 
+
+    def unregister_effect_knobs(self, effect):
+        """
+        Given an effect, find all mappings in self.knobs
+        involving effect, and remove them
+        """
+
+        # NOTE: self.knobs looks like:
+        # {
+        #   'set_color': [
+        #       (<function reference>, <effect instance>),
+        #       (<function reference>, <effect instance>)
+        #   ]
+        # }
+
+
+        # Use list instead of self.knobs.keys() to avoid
+        # "RuntimeError: dictionary changed size during iteration"
+        # https://stackoverflow.com/a/11941855
+        for fn_name in list(self.knobs):
+            mappings = self.knobs[fn_name]
+            # Traverse backwards so that we can remove items without
+            # accidentally skipping an item due to timing
+            for mapping in reversed(mappings):
+                mapped_fn = mapping[0]
+                mapped_effect = mapping[1]
+                if effect == mapped_effect:
+                    mappings.remove(mapping)
+
+            # If self.knobs[fn_name] is left with an empty list,
+            # remove `fn_name` from self.knobs as well
+            if len(mappings) < 1:
+                self.knobs.pop(fn_name)
+
+    def register_effect_knobs(self, effect):
+        """
+        Given an effect, create mappings in self.knobs to effect's
+        `dm.expose()`-ed functions
+        """
+
+        if not effect.registered:
+            for fn_name, fn in effect.dm.registered_methods.items():
+                if fn_name in self.knobs.keys():
+                    self.knobs[fn_name].append( (fn, effect) )
+                else:
+                    self.knobs[fn_name] = [ (fn, effect) ]
+
+            effect.registered = True
+
+
     def mainloop(self):
         """This is the animiation loop. It cycles through all active effects
         and invokes next() on each effect.
@@ -333,21 +399,18 @@ class Rosary:
 
         """
         while (self.run_mainloop):
+
             for effect in self.effects:
 
-                # I didn't want to pass the dispatcher through to the effect
-                # in its initialization because it feels silly to force
-                # Effect writers to always take a dispatcher.
-                # Since we're attaching the rosary after initialization anyway
-                # I'll just hook onto the first iteration of mainloop to
-                # register effects "endpoints" with the dispatcher
-                if not effect.registered:
-                    effect.register_with_dispatcher()
+                # If any new effects have been added since the last iteration,
+                # add their knobs to the dispatched functikon
+                self.register_effect_knobs(effect)
 
                 effect.next(self)
                 if (effect.finished):
                     self.del_effect(effect.id)
-                self.update()
+
+            self.update()
 
             # Let the triggers figure out for themselves what to do
             for trigger in self.triggers.values():
@@ -384,28 +447,119 @@ class Rosary:
         if (self.run_mainloop):
             self.run_mainloop = False
 
-    def generate_osc_path(self, fn_name):
+    def some_shit(self, full_path, *args, **kwargs):
+        print("PATH: {}".format(full_path))
+        print("ARGS: {}".format(args))
+        print("KWARGS: {}".format(kwargs))
+
+        knob_args = full_path.split('/knob/')[-1]
+        print("KNOB NAME: {}".format(knob_args))
+        parsed_args = knob_args.split('/')
+        # We know that the first thing is the knob name
+        knob_name = parsed_args.pop(0)
+        # Expect there to be an even-numbered count
+
+        print("LEFTOVER ARGS")
+        print(args)
+        print(len(args))
+        print(len(args)/2)
+
+        # IF WE DECIDE TO INFER KWARGS USE THIS
+        inferred_kwargs = {}
+        for i in range(int(len(parsed_args)/2)):
+            implied_arg = parsed_args[i*2]
+            implied_val = parsed_args[i*2 + 1]
+
+            # Convert strings representing ints to ints and
+            # strings representing floats to floats
+            try:
+                implied_val = ast.literal_eval(implied_val)
+            except ValueError:
+                pass
+
+            inferred_kwargs[implied_arg] = implied_val
+
+        print("PASSED ARGS")
+        print(args)
+        print("I CAN READ!")
+        print(inferred_kwargs)
+
+        # If we have inferred kwargs, use them
+        # Otherwise, use whatever is in passed args
+        # If nothing, assume a 1 from passed args
+        if inferred_kwargs:
+            self.turn_knob(knob_name, **inferred_kwargs)
+        else:
+            self.turn_knob(knob_name, *args)
+
+    def other_shit(self, full_path, *args, **kwargs):
+        print("PATH: {}".format(full_path))
+        print("ARGS: {}".format(args))
+        print("KWARGS: {}".format(kwargs))
+
+        knob_args = full_path.split('/rosary/')[-1]
+        print("ROSARY FN NAME: {}".format(knob_args))
+        parsed_args = knob_args.split('/')
+        # We know that the first thing is the knob name
+        knob_name = parsed_args.pop(0)
+        # Expect there to be an even-numbered count
+
+        print("LEFTOVER ARGS")
+        print(args)
+        print(len(args))
+        print(len(args)/2)
+
+        # IF WE DECIDE TO INFER KWARGS USE THIS
+        inferred_kwargs = {}
+        for i in range(int(len(parsed_args)/2)):
+            implied_arg = parsed_args[i*2]
+            implied_val = parsed_args[i*2 + 1]
+
+            # Convert strings representing ints to ints and
+            # strings representing floats to floats
+            try:
+                implied_val = ast.literal_eval(implied_val)
+            except ValueError:
+                pass
+
+            inferred_kwargs[implied_arg] = implied_val
+
+        print("PASSED ARGS")
+        print(args)
+        print("I CAN READ!")
+        print(inferred_kwargs)
+
+        # If we have inferred kwargs, use them
+        # Otherwise, use whatever is in passed args
+        # If nothing, assume a 1 from passed args
+        if inferred_kwargs:
+            #self.turn_knob(knob_name, **inferred_kwargs)
+            if knob_name in self.dm.registered_methods.keys():
+                self.dm.registered_methods[knob_name](self, **inferred_kwargs)
+        else:
+            #self.turn_knob(knob_name, *args)
+            if knob_name in self.dm.registered_methods.keys():
+                self.dm.registered_methods[knob_name](self, *args)
+
+
+    def register_with_dispatcher_new(self):
         """
-        I know this is not consistent with the pattern already established
-        in effect.py, but I feel like just calling /rosary is more intuitive
-        ...for now
+        Wildcard handler for knobs
         """
 
-        return "/rosary/{}".format(fn_name)
+        self.dispatcher.map("/rosary/*", self.other_shit)
+        self.dispatcher.map("/knob/*", self.some_shit)
 
-    def register_with_dispatcher(self):
+
+    def turn_knob(self, knob_name, *args, **kwargs):
         """
-        Maybe I could move this function to the DispatcherMapper class.
-        Mabye another day.
+        
         """
 
-        print("* ROSARY PATHS *")
-        for fn_name in self.dm.registered_methods.keys():
+        print("TURN THE KNOB!")
+        print("knob_name: {}".format(knob_name))
+        print("args: {}".format(args))
+        print("kwargs: {}".format(kwargs))
 
-            osc_path = self.generate_osc_path(fn_name)
-            print(osc_path)
-
-            self.dispatcher.map(osc_path,
-                                self.dm.invoke_exposed,
-                                fn_name,
-                                self)
+        for fn, instance in self.knobs.get(knob_name, []):
+            fn(instance, *args, **kwargs)

@@ -88,40 +88,5 @@ class Effect(abc.ABC):
 
     @dm.expose()
     def fade_out(self, fade_duration):
+        print("OH SHIT FADE OUT")
         self.color = color.ColorFade(self.color, color.Color(0,0,0), fade_duration)
-
-    def generate_osc_path(self, fn_name):
-        """
-        Centralize the dispatcher path name creation
-        """
-
-        return "/{}/effect/{}/{}".format(self.rosary.name,
-                                         self.id,
-                                         fn_name)
-
-    def unregister_with_dispatcher(self):
-        if self.rosary is not None:
-            for fn_name in self.dm.registered_methods.keys():
-                osc_path = self.generate_osc_path(fn_name)
-                self.rosary.dispatcher._map.pop(osc_path)
-
-    def register_with_dispatcher(self):
-        """
-        Make some paths, son
-        """
-        print("Effect {} registering following with dispatcher".format(self))
-        print(self.dm.registered_methods)
-
-        # If we instantiate an Effect anywhere but in Rosary's add_effect
-        # method and then call this, just exit gracefully
-        if self.rosary is not None:
-            for fn_name in self.dm.registered_methods.keys():
-
-                osc_path = self.generate_osc_path(fn_name)
-                print(osc_path)
-
-                self.rosary.dispatcher.map(osc_path,
-                                           self.dm.invoke_exposed,
-                                           fn_name,
-                                           self)
-            self.registered = True

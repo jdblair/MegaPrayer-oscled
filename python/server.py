@@ -12,15 +12,21 @@ from pythonosc import osc_server
 
 from mp import rosary
 
-def print_dispatcher_paths(unused_addr, d):
+def print_dispatcher_paths(unused_addr, args):
     """
     This is so weird. I'm mapping a function to the dispatcher that
     takes an instance of...itself as an argument.
     """
 
     print("* DISPATCHER PATHS *")
-    for k in sorted(d[0]._map.keys()):
+    for k in sorted(args[0].dispatcher._map.keys()):
         print(k)
+    print("* ROSARY PATHS *")
+    for k in r.dm.registered_methods.keys():
+        print("/rosary/{}".format(k))
+    print("* EFFECT KNOB PATHS *")
+    for k in r.knobs.keys():
+        print("/effect/{}".format(k))
 
 def trigger_something(unused_addr):
     print(unused_addr)
@@ -40,10 +46,14 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     d = dispatcher.Dispatcher()
+    # Since the Rosary itself won't be instantiated often, I don't feel
+    # bad about requiring that the dispatcher be passed
+    r = rosary.Rosary(args.ip, args.port, d)
+
     # Since basically all the paths will be dynamically generated,
     # this will be useful for developing
     # (Especially for checking that paths for cleared effects are removed)
-    d.map("/paths", print_dispatcher_paths, d)
+    d.map("/paths", print_dispatcher_paths, r)
 
     # TODO: /trigger/<name> to trigger object
     # Examples:
@@ -52,9 +62,6 @@ if __name__ == "__main__":
     #   /trigger/nail/left i 1
     d.map("/trigger", trigger_something)
 
-    # Since the Rosary itself won't be instantiated often, I don't feel
-    # bad about requiring that the dispatcher be passed
-    r = rosary.Rosary(args.ip, args.port, d)
     r.start(interactive=False)
 
     server = osc_server.ThreadingOSCUDPServer(
