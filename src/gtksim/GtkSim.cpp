@@ -63,7 +63,7 @@ void GtkSim::set_leds_per_bead(const int leds_per_bead) {
 // a single update in a single send() operation. since this is how I wrote the code
 // it should work. however, a more correct simulation would need to simulate timing,
 // since the LED modules reset after a 500 usec delay.
-void GtkSimSerial::send(unsigned char *buf, const size_t len) {
+void GtkSimSerial::send(unsigned char const *buf, size_t const len) {
     // most of the time there is no change to buf
     // this check avoids calling the gtk machinery if there has been no change
     if (len > m_last_buf_len) {

@@ -20,7 +20,7 @@ class IPlatformSerial
 {
  public:
     IPlatformSerial() {};
-    virtual void send(unsigned char const *buf, const size_t len) {
+    virtual void send(unsigned char const *buf, size_t const len) {
         std::cout << "IPlatformSerial not over-ridden" << std::endl;
     }
 
