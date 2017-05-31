@@ -18,7 +18,7 @@ class Casino(effect.Effect):
         super().__init__("casino", bead_set, color=color, duration=duration)
         self.direction = direction
         if (self.direction < 0):
-            self.current = len(self.bead_list) - 1
+            self.current = len(self.bead_list) -1
         else:
             self.current = 0
         self.last = self.current
@@ -27,13 +27,16 @@ class Casino(effect.Effect):
 
     def next(self, rosary):
         super().next()
+
+        #turn on all beads from end_position to end of bead set
+        for b in range(self.end_position, len(self.bead_list)):
+            self.bead_list[b].color.set(self.color)
         
         self.bead_list[self.last].color.set(rosary.bgcolor)
         self.current += self.direction
         self.last = self.current
-        print("current", self.current)
-        print("last", self.last)
         self.bead_list[self.current].color.set(self.color)
+
         if (self.current >= self.end_position):
             self.current = 0
             self.last = 0
@@ -42,9 +45,10 @@ class Casino(effect.Effect):
             #shut off all the beads and start over
             for b in self.bead_list:
                 b.color.set(rosary.bgcolor)
-            self.end_position = len(self.bead_list) -1
+            self.end_position = len(self.bead_list) - 1
             self.current = 0
             self.last = 0
+
 
     @dm.expose()
     def set_direction(self, direction):
