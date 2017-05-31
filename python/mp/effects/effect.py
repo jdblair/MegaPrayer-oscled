@@ -90,3 +90,5 @@ class Effect(abc.ABC):
     def fade_out(self, fade_duration):
         print("OH SHIT FADE OUT")
         self.color = color.ColorFade(self.color, color.Color(0,0,0), fade_duration)
+        # Begin countdown to self-destruction
+        self.duration = self.time + fade_duration

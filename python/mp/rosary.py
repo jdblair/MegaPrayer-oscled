@@ -221,42 +221,53 @@ class Rosary:
         self.effects.append(effect)
         return self.effect_id
 
-    #def add_effect(self, name, bead_set, color=color.Color(1,1,1)):
-    #def add_effect(self, name, bead_set_name, color=color.Color(1,1,1)):
-    @dm.expose()
-    def add_effect(self, name, bead_set_name='all', color_name_or_r=None,
-                   g=None, b=None, duration=None):
-        """Adds an Effect to the active Effect list by using the Effect
-        name. Returns the id of the active effect.
 
-        """
-        print("ADD THIS EFFECT: {}".format(name))
+    @dm.expose()
+    def add_effect(self, *args, **kwargs):
+        print("ADD EFFECT NEW")
+        print("ARGS: {}".format(args))
+        print("KWARGS: {}".format(kwargs))
+
+        effect_name = kwargs.get('name')
+        bead_set_name = kwargs.get('bead_set', 'all')
+        color_name = kwargs.get('color', 'white')
+        r = kwargs.get('r', 0.0)
+        g = kwargs.get('g', 0.0)
+        b = kwargs.get('b', 0.0)
 
         # If you don't pass in a good name I'll pretend I didn't hear you
         bead_set = self.set_registry.get(bead_set_name.lower(),
                                          self.set_registry['all'])
 
-        effect_color = None
-        # If the first arg is a string, try to read a color name
-        if isinstance(color_name_or_r, str):
-            effect_color = self.color_registry.get(color_name_or_r.lower())
-        # If the first arg is either an int or a float, try to make
-        # a color out of r,g,b values
-        # NOTE: I MAKE NO APOLOGIES FOR OVERLOADING COLOR_NAME_OR_R
-        # AND WILL DEFEND IT TO THE DEATH! -YUNFAN, 2017-04-26
-        elif isinstance(color_name_or_r, (int, float)):
-            if g is not None and b is not None:
-                effect_color = color.Color(color_name_or_r, g, b)
-
+        if any([r, g, b]):
+            effect_color = color.Color(r, g, b)
+        else:
+            effect_color = self.color_registry.get(color_name.lower())
         # If all else fails, just pick a random color from the registry
         while effect_color in (None, color.Color(0,0,0)):
             effect_color = random.choice(list(self.color_registry.values()))
 
-        print("USING COLOR: {}".format(effect_color))
+        # Whether we're overwriting the string or setting for the first time,
+        # it's all the same to us
+        kwargs['bead_set'] = bead_set
+        kwargs['color'] = effect_color
+        print("EFFECT {} USING BEAD SET: {}, COLOR: {}".format(effect_name, bead_set, effect_color))
 
-        return self.add_effect_object(self.effect_registry[name](bead_set,
-                                                                 effect_color,
-                                                                 duration))
+        # I'd rather be fancy and strip out kwargs that won't be accepted
+        # than force people writing effects to take **kwargs /flex
+        requested_effect = self.effect_registry.get(effect_name)
+        requested_effect_args = inspect.getargspec(requested_effect).args
+
+        # Er, "clean up" the kwargs to pass to an effect init method
+        for key in list(kwargs):
+            if key not in requested_effect_args:
+                kwargs.pop(key)
+
+        if requested_effect is not None:
+            return self.add_effect_object(requested_effect(*args, **kwargs))
+        else:
+            return None
+
 
     @dm.expose()
     def clear_effects(self):
@@ -300,17 +311,6 @@ class Rosary:
         """Return all running effects"""
         print(self.effects)
         return self.effects
-
-    @dm.expose()
-    def get_knobs(self):
-        print(self.knobs)
-        return self.knobs
-
-    @dm.expose()
-    def paths(self):
-        print("GET ROSARY PATHS")
-        print(self.dm.registered_methods.keys())
-        return self.dm.registered_methods.keys()
 
     def update(self):
         """Transmit the OSC message to update all beads on the rosary."""
