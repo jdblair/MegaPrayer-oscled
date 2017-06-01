@@ -22,14 +22,11 @@ def print_dispatcher_paths(unused_addr, args):
     for k in sorted(args[0].dispatcher._map.keys()):
         print(k)
     print("* ROSARY PATHS *")
-    for k in r.dm.registered_methods.keys():
+    for k in r.dm.exposed_methods.keys():
         print("/rosary/{}".format(k))
     print("* EFFECT KNOB PATHS *")
     for k in r.knobs.keys():
         print("/effect/{}".format(k))
-
-def trigger_something(unused_addr):
-    print(unused_addr)
 
 
 if __name__ == "__main__":
@@ -54,13 +51,6 @@ if __name__ == "__main__":
     # this will be useful for developing
     # (Especially for checking that paths for cleared effects are removed)
     d.map("/paths", print_dispatcher_paths, r)
-
-    # TODO: /trigger/<name> to trigger object
-    # Examples:
-    #   /trigger/rosary/5 i 1
-    #   /trigger/rosary/5 i 0
-    #   /trigger/nail/left i 1
-    d.map("/trigger", trigger_something)
 
     r.start(interactive=False)
 

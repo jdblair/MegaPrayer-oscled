@@ -150,7 +150,7 @@ class Trigger(abc.ABC):
         if self.time - self.last_trigger < self.fade_out_threshold:
             for es in self.effect_sequence:
                 if es['time'] == self.time:
-                    eff = self.rosary.add_effect(es['name'], **es['kwargs'])
+                    eff = self.rosary.add_effect(name=es['name'], **es['kwargs'])
                     es['effect_id'] = eff
 
         self.time += 1
