@@ -1,0 +1,12 @@
+Source: oscled
+Maintainer: John D. Blair <jdb@moship.net>
+Section: misc
+Priority: optional
+Standards-Version: 3.9.2
+Build-Depends: liblo7, debhelper (>= 9)
+
+Package: oscled
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: OSC-based LED controller
+ Controls LED modules with OSC messages. Used for the MegaPrayer Project at Burning Man 2017.
