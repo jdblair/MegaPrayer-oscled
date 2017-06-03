@@ -44,7 +44,7 @@ class Rosary:
         self.beads = []
         self.bgcolor = color.Color(0,0,0)
         self.effects = []
-        self.triggers = {}
+        self.triggers = []
         self.osc_ip = ip
         self.osc_port = port
         self.effect_id = 0
@@ -53,11 +53,10 @@ class Rosary:
         self.run_mainloop = False
         self.mainloop_delay = 0.03
         self.effect_registry = {}
+        self.trigger_registry = {}
         # Reasonable defaults
         self.name = name
         self.dispatcher = dispatcher
-        # This will get populated as effects get deleted
-        self.effect_paths_to_unregister = []
         # Available knobs to turn
         self.knobs = {}
 
@@ -180,15 +179,19 @@ class Rosary:
         """
 
         # Instantiate
-        self.trigger_id += 1
-        trigger = trigger_class()
-        trigger.rosary = self
-        trigger.id = self.trigger_id
-        self.triggers[trigger.name] = trigger
-
-        self.dispatcher.map(trigger.osc_path,
-                            trigger.trigger_wrapper,
-                            trigger)
+#        self.trigger_id += 1
+#        trigger = trigger_class()
+#        trigger.rosary = self
+#        trigger.id = self.trigger_id
+#        self.triggers[trigger.name] = trigger
+#
+#        self.dispatcher.map(trigger.osc_path,
+#                            trigger.trigger_wrapper,
+#                            trigger)
+        print("REGISTER TRIGGER")
+        print(trigger_class)
+        t = trigger_class()
+        self.trigger_registry[t.name] = trigger_class
 
 
     def find_written_triggers(self, module_or_class):
@@ -247,8 +250,16 @@ class Rosary:
 
         # If we need to unregister effects' paths from the dispatcher,
         # do it here
-        while self.effect_paths_to_unregister:
-            self.dispatcher._map.pop(self.effect_paths_to_unregister.pop())
+#        while self.effect_paths_to_unregister:
+#            self.dispatcher._map.pop(self.effect_paths_to_unregister.pop())
+
+
+    # TODO: HOW MUCH DO I NEED THIS?
+    def trigger(self, id):
+        for t in self.triggers:
+            if t.id == id:
+                return t
+        return None
 
 
     def effect(self, id):
@@ -271,6 +282,18 @@ class Rosary:
         effect.rosary = self
         self.effects.append(effect)
         return self.effect_id
+
+
+    def add_trigger_object(self, trigger):
+        print("ADD TRIGGER OBJECT")
+        self.trigger_id += 1
+        trigger.id = self.trigger_id
+        trigger.rosary = self
+        self.triggers.append(trigger)
+        trigger.run()
+        print("SELF TRIGGERS")
+        print(self.triggers)
+        return self.trigger_id
 
 
     @dm.expose()
@@ -459,9 +482,11 @@ class Rosary:
             self.update()
 
             # Let the triggers figure out for themselves what to do
-            for trigger in self.triggers.values():
-                if trigger.running:
-                    trigger.next()
+            #for trigger in self.triggers.values():
+            #    if trigger.running:
+            #        trigger.next()
+            for trigger in self.triggers:
+                trigger.time += 1
 
             time.sleep(self.mainloop_delay)
 
@@ -469,6 +494,12 @@ class Rosary:
     ##########################################################################
     # DEFINE OSC DISPATCHER ROUTES
     ##########################################################################
+    def fire_trigger(self, trigger_name, *args, **kwargs):
+        requested_trigger = self.trigger_registry.get(trigger_name)
+        if requested_trigger is not None:
+            self.add_trigger_object(requested_trigger(*args, **kwargs))
+
+
     def turn_knob(self, knob_name, *args, **kwargs):
         """
         For all registered effect instance methods mapped to this knob_name,
@@ -528,6 +559,12 @@ class Rosary:
                 self.turn_knob(fn_name, **inferred_kwargs)
             else:
                 self.turn_knob(fn_name, *args)
+                
+        elif namespace == 'trigger':
+            if inferred_kwargs:
+                self.fire_trigger(fn_name, **inferred_kwargs)
+            else:
+                self.fire_trigger(fn_name, *args)
                 
 
     def map_to_dispatcher(self):

@@ -58,6 +58,17 @@ class Trigger(abc.ABC):
         """Returns the name of the Trigger. (Does anybody care?)"""
         return self.name
 
+    def prefire(self):
+        pass
+
+    def postfire(self):
+        pass
+
+    def run(self):
+        self.prefire()
+        self.runmore()
+        self.postfire()
+
     @abc.abstractmethod
     def set_effect_sequence(self):
         pass

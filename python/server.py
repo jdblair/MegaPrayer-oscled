@@ -24,6 +24,9 @@ def print_dispatcher_paths(unused_addr, args):
     print("* ROSARY PATHS *")
     for k in r.dm.exposed_methods.keys():
         print("/rosary/{}".format(k))
+    print("* TRIGGER PATHS *")
+    for k in r.trigger_registry.keys():
+        print("/trigger/{}".format(k))
     print("* EFFECT KNOB PATHS *")
     for k in r.knobs.keys():
         print("/effect/{}".format(k))
