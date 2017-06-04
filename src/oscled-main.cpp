@@ -53,6 +53,12 @@ static void daemonize()
 }
 
 
+void startup_lightshow(OSCServer &server, OSCLedConfig &config)
+{
+    server.test_sequence();
+}
+
+
 int main(int argc, char **argv)
 {
     OSCLedConfig &config = OSCLedConfig::getInstance();
@@ -86,6 +92,10 @@ int main(int argc, char **argv)
     } else {
         server.start();
     }
+
+    cout << "after server start\n";
+    sleep(1);
+    startup_lightshow(server, config);
 
     running = 1;
     while (running) {

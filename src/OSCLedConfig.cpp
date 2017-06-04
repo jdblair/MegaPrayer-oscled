@@ -49,7 +49,7 @@ OSCLedConfig::OSCLedConfig()
     m_default.bead_count = 10;
     m_default.bead_base = 0;
     m_default.byte_order = string("rgb");
-    m_default.led_type = string("ws201");
+    m_default.led_type = string("ws2801");
 
     m_config.ip = string("127.0.0.1");
     m_config.port = string("5005");
@@ -63,6 +63,13 @@ OSCLedConfig::OSCLedConfig()
     m_cmd_line_config.daemonize_set = false;
     m_cmd_line_config.ip_set = false;
     m_cmd_line_config.port_set = false;
+
+    // parse the PACKAGE_VERSION (x.y)
+    m_version.major = 0;
+    m_version.minor = 0;
+    if (sscanf(PACKAGE_VERSION, "%d.%d", &m_version.major, &m_version.minor) != 2) {
+        cout << "can't parse PACKAGE_VERSION = " << PACKAGE_VERSION << endl;
+    }
 }
 
 
@@ -148,16 +155,16 @@ bool OSCLedConfig::json_parse_station_values(Json::Value s, OSCLedConfig::statio
         }
     }
 
-    // cout << "ip: " << config.ip << endl; 
-    // cout << "json_parse_station_values():" << endl;
-    // cout << "ip: " << config.ip << endl;
-    // cout << "port: " << config.port << endl;
-    // cout << "leds_per_bead: " << config.leds_per_bead << endl;
-    // cout << "bead_count: " << config.bead_count << endl;
-    // cout << "bead_base: " << config.bead_base << endl;
-    // cout << "daemonize: " << config.daemonize << endl;
-    // cout << "byte_order: " << config.byte_order << endl;
-    // cout << "led_type: " << config.led_type << endl;
+    cout << "ip: " << config.ip << endl; 
+    cout << "json_parse_station_values():" << endl;
+    cout << "ip: " << config.ip << endl;
+    cout << "port: " << config.port << endl;
+    cout << "leds_per_bead: " << config.leds_per_bead << endl;
+    cout << "bead_count: " << config.bead_count << endl;
+    cout << "bead_base: " << config.bead_base << endl;
+    cout << "daemonize: " << config.daemonize << endl;
+    cout << "byte_order: " << config.byte_order << endl;
+    cout << "led_type: " << config.led_type << endl;
 
     return true;
 }

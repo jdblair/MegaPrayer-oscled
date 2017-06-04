@@ -44,6 +44,7 @@ class OSCServer {
     int osc_method_bead_float(lo_arg **argv);
     int osc_method_update(lo_arg **argv);
     void set_led(int n, led_t led);
+    void test_sequence();
     
     class ILEDDataFormat {
     public:
@@ -101,6 +102,7 @@ class OSCServer {
         ~led_interface();
 
         void update_led_buf();
+        void test_sequence();
 
         //int iface;
         std::shared_ptr<IPlatformSerial> m_ser;
@@ -114,7 +116,7 @@ class OSCServer {
         std::vector<led_t> leds;
         uint8_t *led_buf;
         std::thread t_update;
-        bool run_update_thread;
+        std::atomic<bool> run_update_thread;
 
         std::mutex leds_mutex;
 

@@ -10,6 +10,11 @@
 class OSCLedConfig
 {
 public:
+    struct version_number {
+        int major;
+        int minor;
+    };
+
     static OSCLedConfig& getInstance() {
         static OSCLedConfig instance;
         return instance;
@@ -65,6 +70,7 @@ public:
     struct station_config m_default;
     struct station_config m_config;
     struct cmd_line_config m_cmd_line_config;
+    struct version_number m_version;
 
     const struct station_config& get_station() { return m_config; };
 
