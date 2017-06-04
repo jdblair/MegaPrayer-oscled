@@ -26,7 +26,7 @@ class Bounce(effect.Effect):
     def next(self, rosary):
         super().next()
 
-        self.bead_list[self.last].color.set(rosary.bgcolor)
+        # self.bead_list[self.last].color.set(rosary.bgcolor)
         self.current += self.direction
         self.last = self.current
         self.bead_list[self.current].color.set(self.color)
