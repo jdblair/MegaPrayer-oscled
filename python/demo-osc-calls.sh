@@ -8,8 +8,14 @@ oscsend localhost 5006 /paths
 # Add an effect, trivial case
 oscsend localhost 5006 /rosary/add_effect s bounce
 
+# /rosary/add_effect/bounce
+
 # Add an effect with color name
 oscsend localhost 5006 /rosary/add_effect sss bounce all red
+
+# /rosary/add_effect/bounce/all/red
+
+# /effect/1/ si direction -1
 
 # Add an effect with rgb
 oscsend localhost 5006 /rosary/add_effect ssiff bounce all 1 .5 .7

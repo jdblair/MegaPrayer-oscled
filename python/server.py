@@ -55,7 +55,7 @@ if __name__ == "__main__":
     # Since the Rosary itself won't be instantiated often, I don't feel
     # bad about requiring that the dispatcher be passed
     r = rosary.Rosary(args.ip, args.port, d)
-    r.start(interactive=False)
+    r.start(interactive=True)
 
     server = osc_server.ThreadingOSCUDPServer(
         (args.listen_ip, args.listen_port), d)

@@ -56,6 +56,14 @@ class Effect(abc.ABC):
         beads.sort(key=lambda bead: bead.index)
         self.bead_list = beads
 
+    def set_bead_set(self, set):
+        """Convenience function for storing a set of beads as a sorted list."""
+        beads = []
+        for bead in set:
+            beads.append(bead)
+        beads.sort(key=lambda bead: bead.index)
+        self.bead_list = beads
+
     def get_name(self):
         """Returns the name of the Effect."""
         return self.name
