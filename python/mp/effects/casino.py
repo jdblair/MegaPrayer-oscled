@@ -18,11 +18,11 @@ class Casino(effect.Effect):
         super().__init__("casino", bead_set, color=color, duration=duration)
         self.direction = direction
         if (self.direction < 0):
-            self.current = len(self.bead_list) -1
+            self.current = len(self.bead_list) - 1
         else:
             self.current = 0
         self.last = self.current
-        self.end_position = len(self.bead_list) -1
+        self.end_position = len(self.bead_list) - 1
         
 
     def next(self, rosary):
