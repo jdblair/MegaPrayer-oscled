@@ -80,7 +80,7 @@ public:
         m_last_buf_len = 0;
     };
 
-    void send(unsigned char *buf, size_t len);
+    void send(unsigned char const *buf, const size_t len);
     ~GtkSimSerial() {
         free(m_last_buf);
     };

@@ -1,0 +1,9 @@
+#!/usr/bin/make -f
+%:
+	dh $@
+
+build:
+	dh_testdir
+	dh_auto_configure -- --enable-serial=opi
+	dh_auto_build
+	dh_auto_test
