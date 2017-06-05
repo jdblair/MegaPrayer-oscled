@@ -120,6 +120,9 @@ class Rosary:
         # Map our own exposed methods to the dispatcher
         self.map_to_dispatcher()
 
+    def beads_set_bgcolor(self):
+        for bead in self.beads:
+            bead.color.set(self.bgcolor)
 
     ##########################################################################
     # INITIALIZATION STUFF - DISCOVER WRITTEN MODULES
@@ -467,7 +470,9 @@ class Rosary:
         * mainloop_delay: how long to wait, in seconds, at the bottom of each loop
 
         """
+
         while (self.run_mainloop):
+            self.beads_set_bgcolor()
 
             for effect in self.effects:
 

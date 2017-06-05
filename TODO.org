@@ -40,27 +40,28 @@
 *** TODO strobe
 *** TODO flame
 *** TODO clock
+
     
 * hardware
-** TODO design interface board in Eagle CAD
-** TODO get design reviewed
-** TODO order board from OSH Park
-** TODO design mounting system for LED modules (styrofoam disks?)
-** TODO assemble 10 beads (w/o the papier mache part)
-** TODO design/prototype orange pi housing
+** DONE design interface board in Eagle CAD
+** DONE get design reviewed
+** DONE order board from OSH Park
+** DONE design mounting system for LED modules (styrofoam disks?)
+** DONE assemble 10 beads (w/o the papier mache part)
+** DONE design/prototype orange pi housing
 ** TODO design input hardware for nails
-** TODO design input hardware for Jerry's hidden control panel
+** DONE design input hardware for Jerry's hidden control panel
 
 * cross lighting
-** TODO sync with Ian
+** DONE sync with Ian
 ** TODO implement DMX interface
 ** TODO implement OSC interface to DMX interface
 ** TODO tie into mp.py somehow
 ** TODO add the cross lighting to the gtksim app
-
+   
 * production
 ** TODO assemble daughter boards
-** TODO aseemble all the cables and connectors
+** TODO assemble all the cables and connectors
 *** TODO ethernet
 *** TODO 48V+
 *** TODO GND
@@ -71,3 +72,4 @@
 *** TODO mount boards
 *** TODO mount connectors
 *** TODO label and close it up
+** TODO design and assemble the equipment cabinet

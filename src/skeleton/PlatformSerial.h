@@ -10,7 +10,7 @@ class PlatformSerial : public IPlatformSerial
  public:
     PlatformSerial(void);
 
-    void send(unsigned char *buf, size_t len);
+    void send(unsigned char const *buf, size_t const len);
 
     int iface_num;
 

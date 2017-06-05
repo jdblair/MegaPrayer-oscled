@@ -55,6 +55,16 @@ if __name__ == "__main__":
     # (Especially for checking that paths for cleared effects are removed)
     d.map("/paths", print_dispatcher_paths, r)
 
+    # TODO: /trigger/<name> to trigger object
+    # Examples:
+    #   /trigger/rosary/5 i 1
+    #   /trigger/rosary/5 i 0
+    #   /trigger/nail/left i 1
+    d.map("/trigger", trigger_something)
+
+    # Since the Rosary itself won't be instantiated often, I don't feel
+    # bad about requiring that the dispatcher be passed
+    r = rosary.Rosary(args.ip, args.port, d)
     r.start(interactive=False)
 
     server = osc_server.ThreadingOSCUDPServer(

@@ -33,6 +33,9 @@ public:
         int led_base;
         int led_count;
         bool reversed;
+        std::string byte_order;
+        std::string led_type;
+        int brightness;
     };
 
     struct station_config {
@@ -43,15 +46,17 @@ public:
         int bead_count;
         int bead_base;
         bool daemonize;
+        std::string byte_order;
+        std::string led_type;
         std::vector<std::shared_ptr<struct interface_config>> interface;
     };
 
     bool getopt(int argc, char * const argv[]);
     bool json_parse();
     bool json_parse_station();
-    bool json_parse_station_values(Json::Value s, OSCLedConfig::station_config& config);
+    bool json_parse_station_values(Json::Value s, OSCLedConfig::station_config &config);
 
-    const Json::Value json_interface(const int num);
+    const Json::Value json_interface(int const num);
 
     Json::Value json_root;
     Json::Value json_station;
@@ -64,7 +69,7 @@ public:
     const struct station_config& get_station() { return m_config; };
 
     // string contants used for config file parsing
-    static const std::string KEY_DEFAULTS;
+    static const std::string KEY_GLOBAL;
     static const std::string KEY_ID;
     static const std::string KEY_STATION;
     static const std::string KEY_IFACE;
@@ -78,6 +83,9 @@ public:
     static const std::string KEY_IFACE_LED_BASE;
     static const std::string KEY_IFACE_LED_COUNT;
     static const std::string KEY_IFACE_REVERSED;
+    static const std::string KEY_IFACE_BYTE_ORDER;
+    static const std::string KEY_IFACE_LED_TYPE;
+    static const std::string KEY_IFACE_BRIGHTNESS;
     
 private:
     OSCLedConfig();

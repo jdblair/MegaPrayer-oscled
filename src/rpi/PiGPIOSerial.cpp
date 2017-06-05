@@ -65,7 +65,7 @@ int PiGPIOSerial::init()
 }
 
 
-void PiGPIOSerial::send(unsigned char *buf, size_t len)
+void PiGPIOSerial::send(unsigned char const *buf, size_t const len)
 {
     size_t i;
     int b;

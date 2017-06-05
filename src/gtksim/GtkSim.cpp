@@ -44,7 +44,7 @@ GtkSim::GtkSim() {
     t_gtkmain.detach();
 };
 
-void GtkSim::set_leds_per_bead(int leds_per_bead) {
+void GtkSim::set_leds_per_bead(const int leds_per_bead) {
     m_leds_per_bead = leds_per_bead;
     m_leds.erase(m_leds.begin(), m_leds.end());
     for (int i = 0; i < BEAD_COUNT * m_leds_per_bead; i++) {
@@ -63,7 +63,7 @@ void GtkSim::set_leds_per_bead(int leds_per_bead) {
 // a single update in a single send() operation. since this is how I wrote the code
 // it should work. however, a more correct simulation would need to simulate timing,
 // since the LED modules reset after a 500 usec delay.
-void GtkSimSerial::send(unsigned char *buf, size_t len) {
+void GtkSimSerial::send(unsigned char const *buf, size_t const len) {
     // most of the time there is no change to buf
     // this check avoids calling the gtk machinery if there has been no change
     if (len > m_last_buf_len) {
@@ -202,9 +202,6 @@ void GtkSim::main()
         g_beads[i] = goo_canvas_ellipse_new(root, x, y, bead_radius, bead_radius,
                                             "fill-color", "#000000", NULL);
     }
-
-    //gtk_idle_add_priority(G_PRIORITY_LOW, gtksim_update_beads, this);
-    //gtk_idle_add_priority(500, gtksim_update_beads, this);
 
     m_gtk_ready = true;
                                         
