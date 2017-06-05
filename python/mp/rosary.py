@@ -337,8 +337,12 @@ class Rosary:
         """
 
         next_frame_time = time.monotonic()
+        
+        # # setup data[] for running average of last 60 time deltas
+        # data = []
+        # for i in range(60):
+        #     data.append(0)
 
-        i = 0
         while (self.run_mainloop):
             next_frame_time += self.frame_time
 
@@ -379,6 +383,13 @@ class Rosary:
                         self.del_effect(effect.id)
 
                 now = time.monotonic()
+
+            # # compute a running average of the last 60 time deltas
+            # if (i == 60):
+            #     print(sum(data) / 60)
+            #     i = 0
+            # data[i] = next_frame_time - now
+            # i += 1
 
             # sleep our estimated drift time
             time.sleep(next_frame_time - now)
