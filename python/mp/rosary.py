@@ -118,6 +118,9 @@ class Rosary:
         # Trigger stuff
         self.register_defined_triggers()
 
+    def beads_set_bgcolor(self):
+        for bead in self.beads:
+            bead.color.set(self.bgcolor)
 
     def register_effect(self, effect):
         """Register the name of an effect in our effect registry.  This allows
@@ -332,7 +335,10 @@ class Rosary:
         * mainloop_delay: how long to wait, in seconds, at the bottom of each loop
 
         """
+
         while (self.run_mainloop):
+            self.beads_set_bgcolor()
+
             for effect in self.effects:
 
                 # I didn't want to pass the dispatcher through to the effect
