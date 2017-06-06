@@ -5,4 +5,11 @@ from mp.effects import throb
 from mp.effects import bounce
 from mp.effects import set_color
 
-__all__ = ['effect', 'set_color', 'sine_wave', 'throb', 'bounce']
+__all__ = [
+    'effect',
+    'set_color',
+    'sine_wave',
+    'throb',
+    'bounce',
+    'random_fill'
+]
