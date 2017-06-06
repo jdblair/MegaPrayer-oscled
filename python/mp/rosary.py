@@ -50,7 +50,7 @@ class Rosary:
         self.trigger_id = 0
         self.BEAD_COUNT=60
         self.run_mainloop = False
-        self.frame_time = 1 / 30   # reciprocal of fps
+        self.frame_time = 1 / 60   # reciprocal of fps
         self.effect_registry = {}
         # Reasonable defaults
         self.name = name
