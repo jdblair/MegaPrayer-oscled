@@ -8,16 +8,16 @@ class RandomFill(effect.Effect):
     Illuminate all the beads in a set by choosing random beads to turn on.
 
     knobs:
-    * frames: number of frames the bead should be illuminated
+    * speed: number of frames the bead should be illuminated
     * size: number of beads to illuminate at a time
     """
 
     # Wish there were a better way than requiring this every time
     dm = copy.deepcopy(effect.Effect.dm)
 
-    def __init__(self, bead_set, color=color.Color(), duration=None, size=1, frames=2):
+    def __init__(self, bead_set, color=color.Color(), duration=None, size=1, speed=2):
         super().__init__("random_fill", bead_set, color=color, duration=duration)
-        self.frames = frames
+        self.speed = speed
         self.size = size
         self.count = 0
         self.remaining = set(bead_set)
@@ -28,7 +28,7 @@ class RandomFill(effect.Effect):
         super().next()
 
         if (len(self.remaining) > 0):
-            if self.count >= self.frames:
+            if self.count >= self.speed:
                 self.count = 0
             if self.count == 0:
                 for b in random.sample(self.remaining, self.size):
@@ -45,5 +45,5 @@ class RandomFill(effect.Effect):
         self.size = size
 
     @dm.expose()
-    def set_frames(self, frames):
-        self.frames = frames
+    def set_speed(self, speed):
+        self.speed = speed
