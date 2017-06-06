@@ -15,10 +15,10 @@ class Sparkle(effect.Effect):
     # Wish there were a better way than requiring this every time
     dm = copy.deepcopy(effect.Effect.dm)
 
-    def __init__(self, bead_set, color=color.Color(), duration=None):
+    def __init__(self, bead_set, color=color.Color(), duration=None, size=1, speed=2):
         super().__init__("sparkle", bead_set, color=color, duration=duration)
-        self.frames = 2
-        self.size = 1
+        self.speed = speed
+        self.size = size
         self.count = 0
         self.bead_set = bead_set  # use a set intead of ordered list
         random.seed()
@@ -26,7 +26,7 @@ class Sparkle(effect.Effect):
     def next(self, rosary):
         super().next()
 
-        if self.count >= self.frames:
+        if self.count >= self.speed:
             self.count = 0
 
         if self.count == 0:
@@ -42,5 +42,5 @@ class Sparkle(effect.Effect):
         self.size = size
 
     @dm.expose()
-    def set_frames(self, frames):
-        self.frames = frames
+    def set_speed(self, speed):
+        self.speed = speed
