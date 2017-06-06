@@ -14,20 +14,17 @@ class Sparkle(effect.Effect):
         super().__init__("sparkle", bead_set, color=color, duration=duration)
         self.sparkle_time = 6
         self.count = 0
-        if len(self.bead_set) == 0:
+        if len(self.bead_list) == 0:
             self.current = 0
         else:
-            self.current = random.randint(0,len(self.bead_set) - 1)
+            self.current = random.randint(0,len(self.bead_list) - 1)
 
     def next(self, rosary):
         super().next()
-        if self.count == 0:
-        if len(self.bead_set) == 0:
+        if len(self.bead_list) == 0:
             self.current = 0
         else:
-            self.current = random.randint(0,len(self.bead_set) - 1)
-        if self.count >= self.sparkle_time:
-            self.count = 0
+            self.current = random.randint(0,len(self.bead_list) - 1)
 
         self.bead_list[self.current].color.set(self.color)
         self.count += 1
