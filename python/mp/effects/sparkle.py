@@ -20,7 +20,7 @@ class Sparkle(effect.Effect):
         self.frames = 2
         self.size = 1
         self.count = 0
-        self.bead_set = bead_set
+        self.bead_set = bead_set  # use a set intead of ordered list
         random.seed()
 
     def next(self, rosary):
