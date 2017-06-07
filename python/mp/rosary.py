@@ -336,13 +336,20 @@ class Rosary:
 
         """
 
+        next_frame_time = time.monotonic()
+        
+        # # setup data[] for running average of last 60 time deltas
+        # data = []
+        # for i in range(60):
+        #     data.append(0)
+
         while (self.run_mainloop):
-            next_frame_time = time.monotonic() + self.frame_time
+            next_frame_time += self.frame_time
 
             self.beads_set_bgcolor()
 
+            # advance the state of all the effects
             for effect in self.effects:
-
                 # I didn't want to pass the dispatcher through to the effect
                 # in its initialization because it feels silly to force
                 # Effect writers to always take a dispatcher.
@@ -361,8 +368,11 @@ class Rosary:
                 if trigger.running:
                     trigger.next()
 
+            # store the time - we will use this to decide how long to sleep
+            now = time.monotonic()
+
             # drop a frame if we've already passed next_frame_time
-            if (time.monotonic() > next_frame_time):
+            while (now > next_frame_time):
                 print('frame drop')
                 next_frame_time += self.frame_time
 
@@ -372,11 +382,23 @@ class Rosary:
                     if (effect.finished):
                         self.del_effect(effect.id)
 
-            next_frame_time += self.frame_time
+                now = time.monotonic()
 
+            # # compute a running average of the last 60 time deltas
+            # if (i == 60):
+            #     print(sum(data) / 60)
+            #     i = 0
+            # data[i] = next_frame_time - now
+            # i += 1
+
+            # sleep our estimated drift time
+            time.sleep(next_frame_time - now)
+
+            # update the LEDs
+            # do this last to try to make the updates as regular as possible
             self.update()
 
-            time.sleep(next_frame_time - time.monotonic())
+
 
     @dm.expose()
     def start(self, interactive=True):
