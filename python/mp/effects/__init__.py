@@ -13,5 +13,6 @@ __all__ = [
     'throb',
     'bounce',
     'casino',
+    'sparkle',
     'random_fill'
 ]
