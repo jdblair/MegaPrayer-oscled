@@ -5,7 +5,7 @@ import random
 
 class Sparkle(effect.Effect):
     """
-    Blink one more randomly chosen beads.
+    Blink one or more randomly chosen beads.
 
     knobs:
     * frames: number of frames the bead should be illuminated
