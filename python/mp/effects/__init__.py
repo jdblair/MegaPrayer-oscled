@@ -6,4 +6,12 @@ from mp.effects import bounce
 from mp.effects import set_color
 from mp.effects import casino
 
-__all__ = ['effect', 'set_color', 'sine_wave', 'throb', 'bounce', 'casino']
+__all__ = [
+    'effect',
+    'set_color',
+    'sine_wave',
+    'throb',
+    'bounce',
+    'casino',
+    'random_fill'
+]
