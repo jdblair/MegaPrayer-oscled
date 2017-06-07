@@ -10,13 +10,27 @@ class Color:
     def __repr__(self):
         return "Color({}, {}, {}, {})".format(self.r, self.g, self.b, self.a)
 
-    def set(self, color, intensity=1):
+    def _set(self, color, intensity=1):
         """copy the r, g, b and a values into a Color object.
         intensity is an optional argument."""
         self.r = color.r * intensity
         self.g = color.g * intensity
         self.b = color.b * intensity
         self.a = color.a
+
+    def set(self, color, intensity=1):
+        """blend the r, g, b and a values in a Color object,
+        using the Porter and Duff equation for alpha blending
+        intensity is an optional argument."""
+        self.a = color.a + (self.a * (1 - color.a))
+        if self.a == 0:
+            self.r = 0
+            self.g = 0
+            self.b = 0
+        else:
+            self.r = (((color.r * color.a) + (self.r * (1 - color.a))) / self.a) * intensity
+            self.g = (((color.g * color.a) + (self.g * (1 - color.a))) / self.a) * intensity
+            self.b = (((color.b * color.a) + (self.b * (1 - color.a))) / self.a) * intensity
 
     def next(self):
         """No-op in most cases. This is used by child objects that implement
