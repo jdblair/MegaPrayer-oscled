@@ -50,7 +50,7 @@ class Rosary:
         self.trigger_id = 0
         self.BEAD_COUNT=60
         self.run_mainloop = False
-        self.mainloop_delay = 0.03
+        self.frame_time = 1 / 30   # reciprocal of fps
         self.effect_registry = {}
         # Reasonable defaults
         self.name = name
@@ -336,11 +336,20 @@ class Rosary:
 
         """
 
+        next_frame_time = time.monotonic()
+        
+        # # setup data[] for running average of last 60 time deltas
+        # data = []
+        # for i in range(60):
+        #     data.append(0)
+
         while (self.run_mainloop):
+            next_frame_time += self.frame_time
+
             self.beads_set_bgcolor()
 
+            # advance the state of all the effects
             for effect in self.effects:
-
                 # I didn't want to pass the dispatcher through to the effect
                 # in its initialization because it feels silly to force
                 # Effect writers to always take a dispatcher.
@@ -354,14 +363,42 @@ class Rosary:
                 if (effect.finished):
                     self.del_effect(effect.id)
 
-            self.update()
-
             # Let the triggers figure out for themselves what to do
             for trigger in self.triggers.values():
                 if trigger.running:
                     trigger.next()
 
-            time.sleep(self.mainloop_delay)
+            # store the time - we will use this to decide how long to sleep
+            now = time.monotonic()
+
+            # drop a frame if we've already passed next_frame_time
+            while (now > next_frame_time):
+                print('frame drop')
+                next_frame_time += self.frame_time
+
+                # "dropping a frame" means calling next() on all the effects w/o updating the LEDs
+                for effect in self.effects:
+                    effect.next(self)
+                    if (effect.finished):
+                        self.del_effect(effect.id)
+
+                now = time.monotonic()
+
+            # # compute a running average of the last 60 time deltas
+            # if (i == 60):
+            #     print(sum(data) / 60)
+            #     i = 0
+            # data[i] = next_frame_time - now
+            # i += 1
+
+            # sleep our estimated drift time
+            time.sleep(next_frame_time - now)
+
+            # update the LEDs
+            # do this last to try to make the updates as regular as possible
+            self.update()
+
+
 
     @dm.expose()
     def start(self, interactive=True):
