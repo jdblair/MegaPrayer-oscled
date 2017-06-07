@@ -50,7 +50,7 @@ class Rosary:
         self.trigger_id = 0
         self.BEAD_COUNT=60
         self.run_mainloop = False
-        self.mainloop_delay = 0.03
+        self.frame_time = 1 / 30   # reciprocal of fps
         self.effect_registry = {}
         # Reasonable defaults
         self.name = name
@@ -337,6 +337,8 @@ class Rosary:
         """
 
         while (self.run_mainloop):
+            next_frame_time = time.monotonic() + self.frame_time
+
             self.beads_set_bgcolor()
 
             for effect in self.effects:
@@ -354,14 +356,27 @@ class Rosary:
                 if (effect.finished):
                     self.del_effect(effect.id)
 
-            self.update()
-
             # Let the triggers figure out for themselves what to do
             for trigger in self.triggers.values():
                 if trigger.running:
                     trigger.next()
 
-            time.sleep(self.mainloop_delay)
+            # drop a frame if we've already passed next_frame_time
+            if (time.monotonic() > next_frame_time):
+                print('frame drop')
+                next_frame_time += self.frame_time
+
+                # "dropping a frame" means calling next() on all the effects w/o updating the LEDs
+                for effect in self.effects:
+                    effect.next(self)
+                    if (effect.finished):
+                        self.del_effect(effect.id)
+
+            next_frame_time += self.frame_time
+
+            self.update()
+
+            time.sleep(next_frame_time - time.monotonic())
 
     @dm.expose()
     def start(self, interactive=True):
