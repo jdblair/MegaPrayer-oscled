@@ -43,7 +43,7 @@ class Casino(effect.Effect):
         if (self.end_position <= 0):
             #shut off all the beads and start over
             for b in self.bead_list:
-                b.color.set(rosary.bgcolor)
+                b.color.set(self.rosary.bgcolor)
             self.end_position = len(self.bead_list) - 1
             self.current = 0
             #self.last = 0
