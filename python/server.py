@@ -43,6 +43,9 @@ if __name__ == "__main__":
         default="127.0.0.1", help="The ip to send messages to")
     parser.add_argument("--port",
         type=int, default=5005, help="The port to send messages to")
+    parser.add_argument("--interactive",
+        type=bool, default=False, help="start interactive shell");
+
     args = parser.parse_args()
 
     d = dispatcher.Dispatcher()
@@ -58,7 +61,7 @@ if __name__ == "__main__":
     # Since the Rosary itself won't be instantiated often, I don't feel
     # bad about requiring that the dispatcher be passed
     r = rosary.Rosary(args.ip, args.port, d)
-    r.start(interactive=False)
+    r.start(interactive=args.interactive)
 
     server = osc_server.ThreadingOSCUDPServer(
         (args.listen_ip, args.listen_port), d)
