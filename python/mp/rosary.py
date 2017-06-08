@@ -288,14 +288,15 @@ class Rosary:
 
 
     def add_trigger_object(self, trigger):
-        print("ADD TRIGGER OBJECT")
+        """
+        When we "fire" a trigger, create a new trigger object like we do for
+        effects, then run through its `inner_fire()`, and promptly exit
+        """
         self.trigger_id += 1
         trigger.id = self.trigger_id
         trigger.rosary = self
         self.triggers.append(trigger)
-        trigger.run()
-        print("SELF TRIGGERS")
-        print(self.triggers)
+        trigger.fire()
         return self.trigger_id
 
 
@@ -377,6 +378,27 @@ class Rosary:
         # annoying on the sim: @jdblair is sending 0,0,0 in the real
         # thing wonky?
         self.add_effect('set_color', 'all', 0, 0, 0)
+
+
+    @dm.expose()
+    def clear_effects_fade(self):
+        """
+        Just calling clear_effects() is jarring, let's ease it in
+        """
+
+        for eff in self.effects:
+            eff.fade_out(30)
+
+
+    @dm.expose()
+    def clear_triggers(self):
+        """
+        Rudely interrupt any triggers that haven't yet finished
+        what they were doing.
+        """
+        while self.triggers:
+            tr = self.triggers[-1]
+            self.triggers.remove(tr)
 
 
     @dm.expose()
@@ -480,7 +502,7 @@ class Rosary:
                 # add their knobs to the dispatched functikon
                 self.expose_effect_knobs(effect)
 
-                effect.next(self)
+                effect.supernext()
                 if (effect.finished):
                     self.del_effect(effect.id)
 
@@ -490,8 +512,6 @@ class Rosary:
             #for trigger in self.triggers.values():
             #    if trigger.running:
             #        trigger.next()
-            for trigger in self.triggers:
-                trigger.time += 1
 
             time.sleep(self.mainloop_delay)
 
@@ -500,8 +520,22 @@ class Rosary:
     # DEFINE OSC DISPATCHER ROUTES
     ##########################################################################
     def fire_trigger(self, trigger_name, *args, **kwargs):
+
         requested_trigger = self.trigger_registry.get(trigger_name)
-        if requested_trigger is not None:
+        # I really only expect there to be one trigger running at a time,
+        # but just in case, get everyone's names
+        running_trigger_names = [t.name for t in self.triggers]
+
+        # Don't want to restart a running trigger
+        if requested_trigger is not None and \
+           trigger_name not in running_trigger_names:
+
+            # Kill all existing triggers
+            self.clear_triggers()
+
+            # Start fading out all existing effects
+            self.clear_effects_fade()
+
             self.add_trigger_object(requested_trigger(*args, **kwargs))
 
 

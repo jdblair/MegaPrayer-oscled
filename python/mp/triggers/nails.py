@@ -1,3 +1,5 @@
+import random
+from mp.effects import bounce, sine_wave
 from mp.triggers import trigger
 from mp import color
 
@@ -10,39 +12,50 @@ class LeftNail(trigger.Trigger):
     def __init__(self):
         super().__init__("left_nail")
 
-    def set_effect_sequence(self):
-        return [
-            {
-                'time': 0,
-                'name': 'bounce',
-                'kwargs': {'duration': 120,
-                           'r': 1.0, 'g': .5, 'b': .7}
-            },
-            {
-                'time': 3,
-                'name': 'bounce',
-                'kwargs': {'duration':117,
-                           'r': .8, 'g': .3, 'b': .5}
-            },
-            {
-                'time': 6,
-                'name': 'bounce',
-                'kwargs': {'duration': 116,
-                           'r': .6, 'g': .1, 'b': .3}
-            },
-            {
-                'time': 75,
-                'name': 'sine_wave',
-                'kwargs': {'duration': 120,
-                           'r': 0., 'g': .3, 'b': .3}
-            },
-            {
-                'time': 210,
-                'name': '3phase_sine_wave',
-                'kwargs': {'duration': 180,
-                           'color': 'white'}
-            }
-        ]
+    def inner_fire(self):
+
+        bounce1 = bounce.Bounce(self.rosary.set_registry.get('all'),
+                                color.Color(1.0, 0.5, 0.7),
+                                rosary=self.rosary,
+                                duration=120)
+        # Shitty hack
+        bounce1.id = random.randrange(1000, 9999)
+
+        bounce2 = bounce.Bounce(self.rosary.set_registry.get('all'),
+                                color.Color(0.8, 0.3, 0.5),
+                                rosary=self.rosary,
+                                duration=117,
+                                delay=3)
+        bounce2.id = random.randrange(1000, 9999)
+
+        bounce3 = bounce.Bounce(self.rosary.set_registry.get('all'),
+                                color.Color(0.8, 0.3, 0.5),
+                                rosary=self.rosary,
+                                duration=114,
+                                delay=6)
+        bounce3.id = random.randrange(1000, 9999)
+
+        sinewav = sine_wave.SineWave(self.rosary.set_registry.get('all'),
+                                     color.Color(0.0, 0.3, 0.3),
+                                     rosary=self.rosary,
+                                     duration=120,
+                                     delay=75)
+        sinewav.id = random.randrange(1000, 9999)
+
+        threeps = sine_wave.ThreePhaseSineWave(self.rosary.set_registry.get('all'),
+                                               color.Color(1.0, 1.0, 1.0),
+                                               rosary=self.rosary,
+                                               duration=180,
+                                               delay=210)
+        threeps.id = random.randrange(1000, 9999)
+
+
+        self.rosary.add_effect_object(bounce1)
+        self.rosary.add_effect_object(bounce2)
+        self.rosary.add_effect_object(bounce3)
+        self.rosary.add_effect_object(sinewav)
+        self.rosary.add_effect_object(threeps)
+
 
 class RightNail(LeftNail):
     """
