@@ -18,13 +18,13 @@ class Throb(effect.Effect):
     # Wish there were a better way than requiring this every time
     dm = copy.deepcopy(effect.Effect.dm)
 
-    def __init__(self, bead_set, color=color.Color(), duration=None):
-        super().__init__("throb", bead_set, color=color, duration=duration)
+    def __init__(self, bead_set, color=color.Color(), **kwargs):
+        super().__init__(name="throb", bead_set=bead_set, color=color, **kwargs)
         self.x = 0.0
         self.period = 1
         self.step = .05
 
-    def next(self, rosary):
+    def next(self):
         super().next()
 
         intensity = (math.sin(self.x * math.pi * self.period) + 1) / 2

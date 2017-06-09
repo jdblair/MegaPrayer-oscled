@@ -1,11 +1,11 @@
 class DispatcherMapper:
 
     def __init__(self):
-        self.registered_methods = {}
+        self.exposed_methods = {}
 
     def expose(self):
         def decorator(fn):
-            self.registered_methods[fn.__name__] = fn
+            self.exposed_methods[fn.__name__] = fn
             return fn
         return decorator
 
@@ -17,6 +17,6 @@ class DispatcherMapper:
 
         fn_name = hacked_variables[0]
         effect_obj = hacked_variables[1]
-        self.registered_methods[fn_name](effect_obj, *args, **kwargs)
+        self.exposed_methods[fn_name](effect_obj, *args, **kwargs)
 
 

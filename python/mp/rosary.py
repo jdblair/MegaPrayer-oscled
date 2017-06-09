@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import ast
 import code
 import copy
 import threading
@@ -43,20 +44,21 @@ class Rosary:
         self.beads = []
         self.bgcolor = color.Color(0,0,0)
         self.effects = []
-        self.triggers = {}
+        self.triggers = []
         self.osc_ip = ip
         self.osc_port = port
         self.effect_id = 0
         self.trigger_id = 0
         self.BEAD_COUNT=60
         self.run_mainloop = False
-        self.mainloop_delay = 0.03
+        self.frame_time = 1 / 30   # reciprocal of fps
         self.effect_registry = {}
+        self.trigger_registry = {}
         # Reasonable defaults
         self.name = name
         self.dispatcher = dispatcher
-        # This will get populated as effects get deleted
-        self.effect_paths_to_unregister = []
+        # Available knobs to turn
+        self.knobs = {}
 
         self.osc_client = udp_client.UDPClient(self.osc_ip, self.osc_port)
 
@@ -110,29 +112,37 @@ class Rosary:
         }
 
         # Automagically register effects so that they're callable by name
-        self.register_defined_effects()
-
-        # Map our own exposed methods to the dispatcher
-        self.register_with_dispatcher()
+        self.register_written_effects()
 
         # Trigger stuff
-        self.register_defined_triggers()
+        self.register_written_triggers()
+
+        # Map our own exposed methods to the dispatcher
+        self.map_to_dispatcher()
 
     def beads_set_bgcolor(self):
         for bead in self.beads:
             bead.color.set(self.bgcolor)
 
+    ##########################################################################
+    # INITIALIZATION STUFF - DISCOVER WRITTEN MODULES
+    ##########################################################################
     def register_effect(self, effect):
-        """Register the name of an effect in our effect registry.  This allows
+        """
+        Register the name of an effect in our effect registry.  This allows
         us to access the effect without having access to the python
         object name itself.
-
         """
         # instantiate the object so we get get the name
         e = effect(self.set_registry['none'])
         self.effect_registry[e.name] = effect
 
-    def find_defined_effects(self, module_or_class):
+
+    def find_written_effects(self, module_or_class):
+        """
+        Look through the filesystem for effect classes
+        that people have written.
+        """
 
         classes = set()
 
@@ -144,15 +154,19 @@ class Rosary:
         #   http://stackoverflow.com/a/22578562
         for name, obj in inspect.getmembers(module_or_class):
             if inspect.ismodule(obj) and obj.__package__ == 'mp.effects':
-                classes = classes.union(self.find_defined_effects(obj))
+                classes = classes.union(self.find_written_effects(obj))
             elif inspect.isclass(obj):
                 classes.add(obj)
 
         return classes
 
 
-    def register_defined_effects(self):
-        defined_effects = self.find_defined_effects(effects)
+    def register_written_effects(self):
+        """
+        Find all the effect that people have written and register them.
+        """
+
+        defined_effects = self.find_written_effects(effects)
         for eff in defined_effects:
             # Don't register abstract classes, e.g. effects.effect.Effect
             if not inspect.isabstract(eff) and issubclass(eff, effects.effect.Effect):
@@ -160,26 +174,30 @@ class Rosary:
 
 
     def register_trigger(self, trigger_class):
+        """
+        Unlike effects, instead of holding on to the init function,
+        just go ahead and instantiate the trigger once
 
-        print("REGISTER A TRIGGER")
-        print(trigger_class)
+        (Maybe reconsider this later)
+        """
 
         # Instantiate
-        self.trigger_id += 1
-        trigger = trigger_class()
-        trigger.rosary = self
-        trigger.id = self.trigger_id
-        self.triggers[trigger.name] = trigger
+#        self.trigger_id += 1
+#        trigger = trigger_class()
+#        trigger.rosary = self
+#        trigger.id = self.trigger_id
+#        self.triggers[trigger.name] = trigger
+#
+#        self.dispatcher.map(trigger.osc_path,
+#                            trigger.trigger_wrapper,
+#                            trigger)
+        print("REGISTER TRIGGER")
+        print(trigger_class)
+        t = trigger_class()
+        self.trigger_registry[t.name] = trigger_class
 
-        print("WHAT ARE MY TRIGGERS")
-        print(self.triggers)
 
-        self.dispatcher.map(trigger.osc_path,
-                            trigger.trigger_wrapper,
-                            trigger)
-
-
-    def find_defined_triggers(self, module_or_class):
+    def find_written_triggers(self, module_or_class):
         """
         Crawl through mp.triggers package and find (non-abstract) subclasses
         to register with the rosary
@@ -188,117 +206,28 @@ class Rosary:
         classes = set()
         for name, obj in inspect.getmembers(module_or_class):
             if inspect.ismodule(obj) and obj.__package__ == 'mp.triggers':
-                classes = classes.union(self.find_defined_triggers(obj))
+                classes = classes.union(self.find_written_triggers(obj))
             elif inspect.isclass(obj):
                 classes.add(obj)
 
         return classes
         
 
-    def register_defined_triggers(self):
+    def register_written_triggers(self):
         """
         Figure out which triggers are defined in .py files, and register them
         """
 
-        defined_triggers = self.find_defined_triggers(triggers)
+        defined_triggers = self.find_written_triggers(triggers)
         for tr in defined_triggers:
             # Don't register abstract classes, e.g. effects.effect.Effect
             if not inspect.isabstract(tr) and issubclass(tr, triggers.trigger.Trigger):
                 self.register_trigger(tr)
 
 
-    def add_effect_object(self, effect):
-        """Adds an Effect object to the active Effect list.  Returns the id of
-        the active effect.
-
-        """
-        self.effect_id = self.effect_id + 1
-        effect.id = self.effect_id
-        # Since rosary holds the dispatcher and the effect doesn't
-        # know about rosary on init, we can't map to dispatcher yet either
-        effect.rosary = self
-        self.effects.append(effect)
-        return self.effect_id
-
-    #def add_effect(self, name, bead_set, color=color.Color(1,1,1)):
-    #def add_effect(self, name, bead_set_name, color=color.Color(1,1,1)):
-    @dm.expose()
-    def add_effect(self, name, bead_set_name='all', color_name_or_r=None,
-                   g=None, b=None, duration=None):
-        """Adds an Effect to the active Effect list by using the Effect
-        name. Returns the id of the active effect.
-
-        """
-        print("ADD THIS EFFECT: {}".format(name))
-
-        # If you don't pass in a good name I'll pretend I didn't hear you
-        bead_set = self.set_registry.get(bead_set_name.lower(),
-                                         self.set_registry['all'])
-
-        effect_color = None
-        # If the first arg is a string, try to read a color name
-        if isinstance(color_name_or_r, str):
-            effect_color = self.color_registry.get(color_name_or_r.lower())
-        # If the first arg is either an int or a float, try to make
-        # a color out of r,g,b values
-        # NOTE: I MAKE NO APOLOGIES FOR OVERLOADING COLOR_NAME_OR_R
-        # AND WILL DEFEND IT TO THE DEATH! -YUNFAN, 2017-04-26
-        elif isinstance(color_name_or_r, (int, float)):
-            if g is not None and b is not None:
-                effect_color = color.Color(color_name_or_r, g, b)
-
-        # If all else fails, just pick a random color from the registry
-        while effect_color in (None, color.Color(0,0,0)):
-            effect_color = random.choice(list(self.color_registry.values()))
-
-        print("USING COLOR: {}".format(effect_color))
-
-        return self.add_effect_object(self.effect_registry[name](bead_set,
-                                                                 effect_color,
-                                                                 duration))
-
-    @dm.expose()
-    def clear_effects(self):
-        """Remove all active effects. This stops all activity on the rosary."""
-        # There's some weird race condition where del_effect's call to
-        # self.effects.remove doesn't reorder the list in time if we use
-        # a for loop, so do this instead
-        while self.effects:
-            effect = self.effects[0]
-            self.del_effect(effect.id)
-
-        # I know on the real rosary this is unneccessary, but it's
-        # annoying on the sim: @jdblair is sending 0,0,0 in the real
-        # thing wonky?
-        self.add_effect('set_color', 'all', 0, 0, 0)
-
-    @dm.expose()
-    def del_effect(self, id):
-        """Delete an active effect by id."""
-
-        effect = self.effect(id)
-
-        if effect is not None:
-            effect_paths = [effect.generate_osc_path(fn) for fn in\
-                            effect.dm.registered_methods.keys()]
-            self.effect_paths_to_unregister.extend(effect_paths)
-            self.effects.remove(effect)
-
-
-    def effect(self, id):
-        """Return the Effect object of an active effect by specifying the Effect id."""
-        for e in self.effects:
-            if e.id == id:
-                return e
-        return None
-
-    # Helper while developing the OSC server
-    @dm.expose()
-    def get_running_effects(self):
-        """Return all running effects"""
-        print(self.effects)
-        return self.effects
-
+    ##########################################################################
+    # ROSARY CONTROL - RUNTIME HUMAN INTERFACES
+    ##########################################################################
     def update(self):
         """Transmit the OSC message to update all beads on the rosary."""
         bundle = osc_bundle_builder.OscBundleBuilder(osc_bundle_builder.IMMEDIATELY)
@@ -324,47 +253,156 @@ class Rosary:
 
         # If we need to unregister effects' paths from the dispatcher,
         # do it here
-        while self.effect_paths_to_unregister:
-            self.dispatcher._map.pop(self.effect_paths_to_unregister.pop())
+#        while self.effect_paths_to_unregister:
+#            self.dispatcher._map.pop(self.effect_paths_to_unregister.pop())
 
-    def mainloop(self):
-        """This is the animiation loop. It cycles through all active effects
-        and invokes next() on each effect.
 
-        knobs:
-        * mainloop_delay: how long to wait, in seconds, at the bottom of each loop
+    # TODO: HOW MUCH DO I NEED THIS?
+    def trigger(self, id):
+        for t in self.triggers:
+            if t.id == id:
+                return t
+        return None
+
+
+    def effect(self, id):
+        """Return the Effect object of an active effect by specifying the Effect id."""
+        for e in self.effects:
+            if e.id == id:
+                return e
+        return None
+
+
+    def add_effect_object(self, effect):
+        """Adds an Effect object to the active Effect list.  Returns the id of
+        the active effect.
 
         """
+        self.effect_id = self.effect_id + 1
+        effect.id = self.effect_id
+        # Since rosary holds the dispatcher and the effect doesn't
+        # know about rosary on init, we can't map to dispatcher yet either
+        effect.rosary = self
+        self.effects.append(effect)
+        return self.effect_id
 
-        while (self.run_mainloop):
-            self.beads_set_bgcolor()
 
-            for effect in self.effects:
+    def add_trigger_object(self, trigger):
+        """
+        When we "fire" a trigger, create a new trigger object like we do for
+        effects, then run through its `inner_fire()`, and promptly exit
+        """
+        self.trigger_id += 1
+        trigger.id = self.trigger_id
+        trigger.rosary = self
+        self.triggers.append(trigger)
+        trigger.fire()
+        return self.trigger_id
 
-                # I didn't want to pass the dispatcher through to the effect
-                # in its initialization because it feels silly to force
-                # Effect writers to always take a dispatcher.
-                # Since we're attaching the rosary after initialization anyway
-                # I'll just hook onto the first iteration of mainloop to
-                # register effects "endpoints" with the dispatcher
-                if not effect.registered:
-                    effect.register_with_dispatcher()
-
-                effect.next(self)
-                if (effect.finished):
-                    self.del_effect(effect.id)
-
-            self.update()
-
-            # Let the triggers figure out for themselves what to do
-            for trigger in self.triggers.values():
-                if trigger.running:
-                    trigger.next()
-
-            time.sleep(self.mainloop_delay)
 
     @dm.expose()
-    def start(self, interactive=True):
+    def add_effect(self, *args, **kwargs):
+        """
+        Expect kwargs to have all the effect initialization args.
+        If it doesn't, fail silently, but gracefully.
+        """
+
+        effect_name = kwargs.get('name')
+        bead_set_name = kwargs.get('bead_set', 'all')
+
+        # Accept either a color name or rgb values
+        color_name = kwargs.get('color', 'white')
+        r = kwargs.get('r', 0.0)
+        g = kwargs.get('g', 0.0)
+        b = kwargs.get('b', 0.0)
+
+        # If you don't pass in a good name I'll pretend I didn't hear you
+        bead_set = self.set_registry.get(bead_set_name.lower(),
+                                         self.set_registry['all'])
+
+        if any([r, g, b]):
+            effect_color = color.Color(r, g, b)
+        else:
+            effect_color = self.color_registry.get(color_name.lower())
+
+        # If all else fails, just pick a random color from the registry
+        while effect_color in (None, color.Color(0,0,0)):
+            effect_color = random.choice(list(self.color_registry.values()))
+
+        # Whether we're overwriting the string or setting for the first time,
+        # it's all the same to us
+        kwargs['bead_set'] = bead_set
+        kwargs['color'] = effect_color
+
+        # I'd rather be fancy and strip out kwargs that won't be accepted
+        # than force people writing effects to take **kwargs /flex
+        requested_effect = self.effect_registry.get(effect_name)
+        requested_effect_args = inspect.getargspec(requested_effect).args
+
+        # Er, "clean up" the kwargs to pass to an effect init method
+        for key in list(kwargs):
+            if key not in requested_effect_args:
+                kwargs.pop(key)
+
+        if requested_effect is not None:
+            return self.add_effect_object(requested_effect(*args, **kwargs))
+        else:
+            return None
+
+
+    @dm.expose()
+    def del_effect(self, id):
+        """Delete an active effect by id."""
+
+        effect = self.effect(id)
+
+        if effect is not None:
+            #effect_paths = [effect.generate_osc_path(fn) for fn in\
+            #                effect.dm.registered_methods.keys()]
+            #self.effect_paths_to_unregister.extend(effect_paths)
+            self.unexpose_effect_knobs(effect)
+            self.effects.remove(effect)
+
+
+    @dm.expose()
+    def clear_effects(self):
+        """Remove all active effects. This stops all activity on the rosary."""
+        # There's some weird race condition where del_effect's call to
+        # self.effects.remove doesn't reorder the list in time if we use
+        # a for loop, so do this instead
+        while self.effects:
+            effect = self.effects[0]
+            self.del_effect(effect.id)
+
+        # I know on the real rosary this is unneccessary, but it's
+        # annoying on the sim: @jdblair is sending 0,0,0 in the real
+        # thing wonky?
+        self.add_effect('set_color', 'all', 0, 0, 0)
+
+
+    @dm.expose()
+    def clear_effects_fade(self):
+        """
+        Just calling clear_effects() is jarring, let's ease it in
+        """
+
+        for eff in self.effects:
+            eff.fade_out(30)
+
+
+    @dm.expose()
+    def clear_triggers(self):
+        """
+        Rudely interrupt any triggers that haven't yet finished
+        what they were doing.
+        """
+        while self.triggers:
+            tr = self.triggers[-1]
+            self.triggers.remove(tr)
+
+
+    @dm.expose()
+    def start(self, interactive=False):
         """Start the animation loop (aka, mainloop()) and create a shell for live interaction."""
         r = self
         if (r.run_mainloop == False):
@@ -379,11 +417,13 @@ class Rosary:
 
                 self.t_mainloop.join()
 
+
     @dm.expose()
     def stop(self):
         """Stop the mainloop and exit the application."""
         self.run_mainloop = False
         exit(0)
+
 
     @dm.expose()
     def pause(self):
@@ -391,28 +431,226 @@ class Rosary:
         if (self.run_mainloop):
             self.run_mainloop = False
 
-    def generate_osc_path(self, fn_name):
-        """
-        I know this is not consistent with the pattern already established
-        in effect.py, but I feel like just calling /rosary is more intuitive
-        ...for now
-        """
 
-        return "/rosary/{}".format(fn_name)
-
-    def register_with_dispatcher(self):
+    ##########################################################################
+    # ROSARY MAIN LOOP RELATED - AUTOMATIC EVERY ITERATION
+    ##########################################################################
+    def unexpose_effect_knobs(self, effect):
         """
-        Maybe I could move this function to the DispatcherMapper class.
-        Mabye another day.
+        Given an effect, find all mappings in self.knobs
+        involving effect, and remove them
         """
 
-        print("* ROSARY PATHS *")
-        for fn_name in self.dm.registered_methods.keys():
+        # NOTE: self.knobs looks like:
+        # {
+        #   'set_color': [
+        #       (<function reference>, <effect instance>),
+        #       (<function reference>, <effect instance>)
+        #   ]
+        # }
 
-            osc_path = self.generate_osc_path(fn_name)
-            print(osc_path)
 
-            self.dispatcher.map(osc_path,
-                                self.dm.invoke_exposed,
-                                fn_name,
-                                self)
+        # Use list instead of self.knobs.keys() to avoid
+        # "RuntimeError: dictionary changed size during iteration"
+        # https://stackoverflow.com/a/11941855
+        for fn_name in list(self.knobs):
+            mappings = self.knobs[fn_name]
+            # Traverse backwards so that we can remove items without
+            # accidentally skipping an item due to timing
+            for mapping in reversed(mappings):
+                mapped_fn = mapping[0]
+                mapped_effect = mapping[1]
+                if effect == mapped_effect:
+                    mappings.remove(mapping)
+
+            # If self.knobs[fn_name] is left with an empty list,
+            # remove `fn_name` from self.knobs as well
+            if len(mappings) < 1:
+                self.knobs.pop(fn_name)
+
+    def expose_effect_knobs(self, effect):
+        """
+        Given an effect, create mappings in self.knobs to effect's
+        `dm.expose()`-ed functions
+        """
+
+        if not effect.registered:
+            for fn_name, fn in effect.dm.exposed_methods.items():
+                if fn_name in self.knobs.keys():
+                    self.knobs[fn_name].append( (fn, effect) )
+                else:
+                    self.knobs[fn_name] = [ (fn, effect) ]
+
+            effect.registered = True
+
+
+    def mainloop(self):
+        """This is the animiation loop. It cycles through all active effects
+        and invokes next() on each effect.
+
+        knobs:
+        * mainloop_delay: how long to wait, in seconds, at the bottom of each loop
+
+        """
+
+        next_frame_time = time.monotonic()
+        
+        # # setup data[] for running average of last 60 time deltas
+        # data = []
+        # for i in range(60):
+        #     data.append(0)
+
+        while (self.run_mainloop):
+            next_frame_time += self.frame_time
+
+            self.beads_set_bgcolor()
+
+            # advance the state of all the effects
+            for effect in self.effects:
+
+                # If any new effects have been added since the last iteration,
+                # add their knobs to the dispatched functikon
+                self.expose_effect_knobs(effect)
+
+                effect.supernext()
+                if (effect.finished):
+                    self.del_effect(effect.id)
+
+            # Let the triggers figure out for themselves what to do
+            #for trigger in self.triggers.values():
+            #    if trigger.running:
+            #        trigger.next()
+
+            # store the time - we will use this to decide how long to sleep
+            now = time.monotonic()
+
+            # drop a frame if we've already passed next_frame_time
+            while (now > next_frame_time):
+                print('frame drop')
+                next_frame_time += self.frame_time
+
+                # "dropping a frame" means calling next() on all the effects w/o updating the LEDs
+                for effect in self.effects:
+                    effect.next(self)
+                    if (effect.finished):
+                        self.del_effect(effect.id)
+
+                now = time.monotonic()
+
+            # # compute a running average of the last 60 time deltas
+            # if (i == 60):
+            #     print(sum(data) / 60)
+            #     i = 0
+            # data[i] = next_frame_time - now
+            # i += 1
+
+            # sleep our estimated drift time
+            time.sleep(next_frame_time - now)
+
+            # update the LEDs
+            # do this last to try to make the updates as regular as possible
+            self.update()
+
+
+
+
+    ##########################################################################
+    # DEFINE OSC DISPATCHER ROUTES
+    ##########################################################################
+    def fire_trigger(self, trigger_name, *args, **kwargs):
+
+        requested_trigger = self.trigger_registry.get(trigger_name)
+        # I really only expect there to be one trigger running at a time,
+        # but just in case, get everyone's names
+        running_trigger_names = [t.name for t in self.triggers]
+
+        # Don't want to restart a running trigger
+        if requested_trigger is not None and \
+           trigger_name not in running_trigger_names:
+
+            # Kill all existing triggers
+            self.clear_triggers()
+
+            # Start fading out all existing effects
+            self.clear_effects_fade()
+
+            self.add_trigger_object(requested_trigger(*args, **kwargs))
+
+
+    def turn_knob(self, knob_name, *args, **kwargs):
+        """
+        For all registered effect instance methods mapped to this knob_name,
+        turn the knob (we're assured they're all running effects)
+        """
+
+        for fn, instance in self.knobs.get(knob_name, []):
+            fn(instance, *args, **kwargs)
+
+
+    def route_osc_call(self, full_path, *args, **kwargs):
+        """
+        Figure out what the OSC path means and, well, do what the
+        runes instruct us to do.
+        """
+
+        osc_args = full_path.split('/')
+        osc_args.remove('')
+
+        # 'rosary', 'effect', 'trigger', etc.
+        namespace = osc_args.pop(0)
+        # The actual function name, in that namespace: 'add_effect', etc.
+        fn_name = osc_args.pop(0)
+
+        # Finally, the rest of the parsed args are expected to actually
+        # represent key/value pairs, so expect there to be an even-numbered
+        # count of items
+        inferred_kwargs = {}
+        for i in range(int(len(osc_args)/2)):
+            implied_arg = osc_args[i*2]
+            implied_val = osc_args[i*2 + 1]
+
+            # Convert strings representing ints to ints and
+            # strings representing floats to floats
+            try:
+                implied_val = ast.literal_eval(implied_val)
+            except ValueError:
+                pass
+
+            inferred_kwargs[implied_arg] = implied_val
+
+        # If we have inferred kwargs, use them
+        # Otherwise, use whatever is in passed args
+        # If nothing, assume a 1 from passed args
+        if namespace == 'rosary':
+            if inferred_kwargs:
+                # We expect to mostly end up here
+                if fn_name in self.dm.exposed_methods.keys():
+                    self.dm.exposed_methods[fn_name](self, **inferred_kwargs)
+                # But in some rare cases, we set some reasonable defaults
+                # even if you're being COMPLETELY lazy
+                else:
+                    self.dm.exposed_methods[fn_name](self, *args)
+
+        elif namespace == 'effect':
+            if inferred_kwargs:
+                self.turn_knob(fn_name, **inferred_kwargs)
+            else:
+                self.turn_knob(fn_name, *args)
+                
+        elif namespace == 'trigger':
+            if inferred_kwargs:
+                self.fire_trigger(fn_name, **inferred_kwargs)
+            else:
+                self.fire_trigger(fn_name, *args)
+                
+
+    def map_to_dispatcher(self):
+        """
+        Register 3 wildcard handlers. But only three. Not THAT wild.
+
+        Less "Wild Things" and more "Where the Wild Things Are."
+        """
+
+        self.dispatcher.map("/rosary/*", self.route_osc_call)
+        self.dispatcher.map("/effect/*", self.route_osc_call)
+        self.dispatcher.map("/trigger/*", self.route_osc_call)

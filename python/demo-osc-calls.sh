@@ -6,19 +6,25 @@
 oscsend localhost 5006 /paths
 
 # Add an effect, trivial case
-oscsend localhost 5006 /rosary/add_effect s bounce
+oscsend localhost 5006 /rosary/add_effect/name/bounce
 
-# Add an effect with color name
-oscsend localhost 5006 /rosary/add_effect sss bounce all red
-
-# Add an effect with rgb
-oscsend localhost 5006 /rosary/add_effect ssiff bounce all 1 .5 .7
-
-# Check paths
+# Paths are updated with available knobs for ALL running effects
 oscsend localhost 5006 /paths
 
-# Clear effects
-oscsend localhost 5006 /rosary/clear_effects
+# Set running bounce's color
+oscsend localhost 5006 /effect/set_color/r/1.0/g/0.0/b/0.0
 
-# Check that paths unregistered
-oscsend localhost 5006 /paths
+# Set running bounce's direction
+oscsend localhost 5006 /effect/set_direction/direction/1
+
+# Fade the bounce out
+oscsend localhost 5006 /effect/fade_out/fade_duration/30
+
+# Add a green casino effect
+oscsend localhost 5006 /rosary/add_effect/name/casino/r/0.0/g/1.0/b/0.0
+
+# Change the color to cyan
+oscsend localhost 5006 /effect/set_color/r/0.0/g/1.0/b/1.0
+
+# Change the direction (and blow up the rosary)
+oscsend localhost 5006 /effect/set_direction/direction/-1
