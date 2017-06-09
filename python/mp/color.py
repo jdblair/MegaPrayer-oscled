@@ -18,10 +18,15 @@ class Color:
         self.b = color.b * intensity
         self.a = color.a
 
-    def set(self, color, intensity=1):
+    def set(self, color, intensity=1, alpha=None):
         """blend the r, g, b and a values in a Color object,
         using the Porter and Duff equation for alpha blending
         intensity is an optional argument."""
+
+        if alpha != None:
+            # overwrite color.a with the supplied alpha value
+            color.a = alpha
+
         self.a = color.a + (self.a * (1 - color.a))
         if self.a == 0:
             self.r = 0

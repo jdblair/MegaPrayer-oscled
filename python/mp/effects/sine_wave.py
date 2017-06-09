@@ -5,7 +5,7 @@ from mp import color
 from mp.effects import effect
 
 class SineWave(effect.Effect):
-    """Sets the intensity of a set of beads by mapping a unit circle to
+    """Sets the alpha value of a set of beads by mapping a unit circle to
     the beads in the bead_list then computing a sine wave. Each step
     advances the angle by 2 * pi / number of beads.
 
@@ -27,8 +27,8 @@ class SineWave(effect.Effect):
         super().next()
         
         for b in (self.bead_list):
-            intensity = (math.sin((2 * math.pi / len(self.bead_list) * self.period) * (b.index + self.offset)) + 1) / 2
-            b.color.set(self.color, intensity)
+            alpha = (math.sin((2 * math.pi / len(self.bead_list) * self.period) * (b.index + self.offset)) + 1) / 2
+            b.color.set(self.color, alpha=alpha)
         self.offset = (self.offset) + self.direction % len(self.bead_list)
 
     @dm.expose()

@@ -41,7 +41,7 @@ class Rosary:
 
     def __init__(self, ip="127.0.0.1", port=5005, dispatcher=None, name="rosary"):
         self.beads = []
-        self.bgcolor = color.Color(0,0,0)
+        self.bgcolor = color.Color(0,0,0,1)  # note opaque alpha channel
         self.effects = []
         self.triggers = {}
         self.osc_ip = ip
@@ -97,16 +97,16 @@ class Rosary:
 
         # some useful predefined colors
         self.color_registry = {
-            'white': color.Color(1,1,1),
-            'red': color.Color(1,0,0),
-            'yellow': color.Color(1,1,0),
-            'green': color.Color(0,1,0),
-            'blue': color.Color(0,0,1),
-            'violet': color.Color(1,0,1),
-            'cyan': color.Color(0,1,1),
+            'white': color.Color(1,1,1,1),
+            'red': color.Color(1,0,0,1),
+            'yellow': color.Color(1,1,0,1),
+            'green': color.Color(0,1,0,1),
+            'blue': color.Color(0,0,1,1),
+            'violet': color.Color(1,0,1,1),
+            'cyan': color.Color(0,1,1,1),
             # It's annoying when the sim picks black and I can't see anything
             # NOTE YUNFAN: Take this out (maybe) going into prod?
-            #'black': color.Color(0,0,0)
+            #'black': color.Color(0,0,0,1)
         }
 
         # Automagically register effects so that they're callable by name
@@ -266,11 +266,6 @@ class Rosary:
         while self.effects:
             effect = self.effects[0]
             self.del_effect(effect.id)
-
-        # I know on the real rosary this is unneccessary, but it's
-        # annoying on the sim: @jdblair is sending 0,0,0 in the real
-        # thing wonky?
-        self.add_effect('set_color', 'all', 0, 0, 0)
 
     @dm.expose()
     def del_effect(self, id):
