@@ -14,5 +14,6 @@ __all__ = [
     'bounce',
     'casino',
     'sparkle',
+    'vibration_fixed',
     'random_fill'
 ]
