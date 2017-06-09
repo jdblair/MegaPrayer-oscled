@@ -17,14 +17,13 @@ class SineWave(effect.Effect):
     # Wish there were a better way than requiring this every time
     dm = copy.deepcopy(effect.Effect.dm)
 
-    def __init__(self, bead_set, color=color.Color(1,1,1), duration=None, period=1, direction=1):
-        super().__init__("sine_wave", bead_set, color=color, duration=duration)
+    def __init__(self, bead_set, color=color.Color(1,1,1), period=1, direction=1, **kwargs):
+        super().__init__(name="sine_wave", bead_set=bead_set, color=color, **kwargs)
         self.offset = 0
         self.period = period
         self.direction = direction
 
-    def next(self, rosary):
-        super().next()
+    def next(self):
         
         for b in (self.bead_list):
             intensity = (math.sin((2 * math.pi / len(self.bead_list) * self.period) * (b.index + self.offset)) + 1) / 2
@@ -61,8 +60,8 @@ class ThreePhaseSineWave(effect.Effect):
     #dm = DispatcherMapper()
     dm = copy.deepcopy(effect.Effect.dm)
 
-    def __init__(self, bead_set, color=color.Color(1,1,1), duration=None, period=1, direction=1):
-        super().__init__("3phase_sine_wave", bead_set, color=color, duration=duration)
+    def __init__(self, bead_set, color=color.Color(1,1,1), period=1, direction=1, **kwargs):
+        super().__init__(name="3phase_sine_wave", bead_set=bead_set, color=color, **kwargs)
         self.offset = 0
         self.period = period
         self.direction = direction
@@ -70,8 +69,7 @@ class ThreePhaseSineWave(effect.Effect):
         self.phase_g = .25
         self.phase_b = .5
 
-    def next(self, rosary):
-        super().next()
+    def next(self):
 
         bead_count = len(self.bead_list)
         phase_r = self.phase_r * bead_count

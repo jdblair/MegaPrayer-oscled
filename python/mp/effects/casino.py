@@ -14,8 +14,8 @@ class Casino(effect.Effect):
     # Wish there were a better way than requiring this every time
     dm = copy.deepcopy(effect.Effect.dm)
 
-    def __init__(self, bead_set, color=color.Color(), duration=None, direction=1):
-        super().__init__("casino", bead_set, color=color, duration=duration)
+    def __init__(self, bead_set, color=color.Color(), duration=None, direction=1, **kwargs):
+        super().__init__(name="casino", bead_set=bead_set, color=color, duration=duration, **kwargs)
         self.direction = direction
         if (self.direction < 0):
             self.current = len(self.bead_list) - 1
@@ -25,8 +25,7 @@ class Casino(effect.Effect):
         self.end_position = len(self.bead_list) - 1
         
 
-    def next(self, rosary):
-        super().next()
+    def next(self):
 
         #turn on all beads from end_position to end of bead set
         for b in range(self.end_position, len(self.bead_list)):
@@ -44,7 +43,7 @@ class Casino(effect.Effect):
         if (self.end_position <= 0):
             #shut off all the beads and start over
             for b in self.bead_list:
-                b.color.set(rosary.bgcolor)
+                b.color.set(self.rosary.bgcolor)
             self.end_position = len(self.bead_list) - 1
             self.current = 0
             #self.last = 0
