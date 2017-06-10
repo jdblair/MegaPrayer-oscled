@@ -16,5 +16,7 @@ __all__ = [
     'sparkle',
     'vibration_fixed',
     'effect_list_demo',
+    'strobe',
+    'cop_lights',
     'random_fill'
 ]
