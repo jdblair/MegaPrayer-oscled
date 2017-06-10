@@ -1,5 +1,6 @@
 import abc
 import copy
+import time
 
 from mp import color
 from mp.dispatcher_mapper import DispatcherMapper
@@ -33,6 +34,7 @@ class Effect(abc.ABC):
         self.color = kwargs.get('color')
         self.duration = kwargs.get('duration')
         self.delay = kwargs.get('delay', 0)
+        self.start_time = time.monotonic()
 
         # For the purposes of `fade_out` and `duration`
         self.time = 0
@@ -119,3 +121,4 @@ class Effect(abc.ABC):
         self.color = color.ColorFade(self.color, color.Color(0,0,0), fade_duration)
         # Begin countdown to self-destruction
         self.duration = self.delay + self.time + fade_duration
+

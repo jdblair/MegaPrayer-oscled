@@ -29,6 +29,89 @@ class Bead:
         self.color = copy.copy(color)
 
 
+class EffectList:
+
+    def __init__(self, rosary):
+        self.effects = []
+        self.effect_id = 0
+        # we need to know about the rosary so we can set effect.rosary in add_effect_object()
+        self.rosary = rosary
+
+    def effect(self, id):
+        """Return the Effect object of an active effect by specifying the Effect id."""
+        for e in self.effects:
+            if e.id == id:
+                return e
+        return None
+
+
+    def add_effect_object(self, effect):
+        """Adds an Effect object to the active Effect list.  Returns the id of
+        the active effect.
+
+        """
+        self.effect_id = self.effect_id + 1
+        effect.id = self.effect_id
+        # Since rosary holds the dispatcher and the effect doesn't
+        # know about rosary on init, we can't map to dispatcher yet either
+        effect.rosary = self.rosary
+        self.effects.append(effect)
+        return self.effect_id
+
+
+#    @dm.expose()
+    def del_effect(self, id):
+        """Delete an active effect by id."""
+
+        effect = self.effect(id)
+
+        if effect is not None:
+            #effect_paths = [effect.generate_osc_path(fn) for fn in\
+            #                effect.dm.registered_methods.keys()]
+            #self.effect_paths_to_unregister.extend(effect_paths)
+            self.unexpose_effect_knobs(effect)
+            self.effects.remove(effect)
+
+
+#    @dm.expose()
+    def clear_effects(self):
+        """Remove all active effects. This stops all activity on the rosary."""
+        # There's some weird race condition where del_effect's call to
+        # self.effects.remove doesn't reorder the list in time if we use
+        # a for loop, so do this instead
+        while self.effects:
+            effect = self.effects[0]
+            self.del_effect(effect.id)
+
+        # I know on the real rosary this is unneccessary, but it's
+        # annoying on the sim: @jdblair is sending 0,0,0 in the real
+        # thing wonky?
+        self.add_effect('set_color', 'all', 0, 0, 0)
+
+
+#    @dm.expose()
+    def clear_effects_fade(self):
+        """
+        Just calling clear_effects() is jarring, let's ease it in
+        """
+
+        for eff in self.effects:
+            eff.fade_out(30)
+
+    def next(self):
+        for effect in self.effects:
+
+            #print("EffectList.next(): ", effect)
+
+            # If any new effects have been added since the last iteration,
+            # add their knobs to the dispatched functikon
+            #self.expose_effect_knobs(effect)
+
+            effect.supernext()
+            if (effect.finished):
+                self.del_effect(effect.id)
+
+
 class Rosary:
     """Rosary represents the whole rosary and the set of effects currently
     running.  It is in charge of animating the rosary by calling
@@ -43,7 +126,7 @@ class Rosary:
     def __init__(self, ip="127.0.0.1", port=5005, dispatcher=None, name="rosary"):
         self.beads = []
         self.bgcolor = color.Color(0,0,0)
-        self.effects = []
+        #self.effects = []
         self.triggers = []
         self.osc_ip = ip
         self.osc_port = port
@@ -59,6 +142,8 @@ class Rosary:
         self.dispatcher = dispatcher
         # Available knobs to turn
         self.knobs = {}
+
+        self.effect_list = EffectList(self)
 
         self.osc_client = udp_client.UDPClient(self.osc_ip, self.osc_port)
 
@@ -265,28 +350,6 @@ class Rosary:
         return None
 
 
-    def effect(self, id):
-        """Return the Effect object of an active effect by specifying the Effect id."""
-        for e in self.effects:
-            if e.id == id:
-                return e
-        return None
-
-
-    def add_effect_object(self, effect):
-        """Adds an Effect object to the active Effect list.  Returns the id of
-        the active effect.
-
-        """
-        self.effect_id = self.effect_id + 1
-        effect.id = self.effect_id
-        # Since rosary holds the dispatcher and the effect doesn't
-        # know about rosary on init, we can't map to dispatcher yet either
-        effect.rosary = self
-        self.effects.append(effect)
-        return self.effect_id
-
-
     def add_trigger_object(self, trigger):
         """
         When we "fire" a trigger, create a new trigger object like we do for
@@ -345,49 +408,9 @@ class Rosary:
                 kwargs.pop(key)
 
         if requested_effect is not None:
-            return self.add_effect_object(requested_effect(*args, **kwargs))
+            return self.effect_list.add_effect_object(requested_effect(*args, **kwargs))
         else:
             return None
-
-
-    @dm.expose()
-    def del_effect(self, id):
-        """Delete an active effect by id."""
-
-        effect = self.effect(id)
-
-        if effect is not None:
-            #effect_paths = [effect.generate_osc_path(fn) for fn in\
-            #                effect.dm.registered_methods.keys()]
-            #self.effect_paths_to_unregister.extend(effect_paths)
-            self.unexpose_effect_knobs(effect)
-            self.effects.remove(effect)
-
-
-    @dm.expose()
-    def clear_effects(self):
-        """Remove all active effects. This stops all activity on the rosary."""
-        # There's some weird race condition where del_effect's call to
-        # self.effects.remove doesn't reorder the list in time if we use
-        # a for loop, so do this instead
-        while self.effects:
-            effect = self.effects[0]
-            self.del_effect(effect.id)
-
-        # I know on the real rosary this is unneccessary, but it's
-        # annoying on the sim: @jdblair is sending 0,0,0 in the real
-        # thing wonky?
-        self.add_effect('set_color', 'all', 0, 0, 0)
-
-
-    @dm.expose()
-    def clear_effects_fade(self):
-        """
-        Just calling clear_effects() is jarring, let's ease it in
-        """
-
-        for eff in self.effects:
-            eff.fade_out(30)
 
 
     @dm.expose()
@@ -468,6 +491,7 @@ class Rosary:
             if len(mappings) < 1:
                 self.knobs.pop(fn_name)
 
+
     def expose_effect_knobs(self, effect):
         """
         Given an effect, create mappings in self.knobs to effect's
@@ -506,15 +530,7 @@ class Rosary:
             self.beads_set_bgcolor()
 
             # advance the state of all the effects
-            for effect in self.effects:
-
-                # If any new effects have been added since the last iteration,
-                # add their knobs to the dispatched functikon
-                self.expose_effect_knobs(effect)
-
-                effect.supernext()
-                if (effect.finished):
-                    self.del_effect(effect.id)
+            self.effect_list.next()
 
             # Let the triggers figure out for themselves what to do
             #for trigger in self.triggers.values():
@@ -528,12 +544,8 @@ class Rosary:
             while (now > next_frame_time):
                 print('frame drop')
                 next_frame_time += self.frame_time
-
                 # "dropping a frame" means calling next() on all the effects w/o updating the LEDs
-                for effect in self.effects:
-                    effect.next(self)
-                    if (effect.finished):
-                        self.del_effect(effect.id)
+                self.effect_list.next()
 
                 now = time.monotonic()
 
