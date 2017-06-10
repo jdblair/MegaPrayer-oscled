@@ -1,9 +1,10 @@
 
 class EffectList:
 
-    def __init__(self, rosary):
+    def __init__(self, rosary, parent_id=None):
         self.effects = []
-        self.effect_id = 0
+        self.parent_id = parent_id
+        self.effect_id_num = 0
         # we need to know about the rosary so we can set effect.rosary in add_effect_object()
         self.rosary = rosary
 
@@ -14,19 +15,31 @@ class EffectList:
                 return e
         return None
 
+    def effect_id(self):
+        print("parent_id", self.parent_id)
+
+        if self.parent_id == None:
+            effect_id = str(self.effect_id_num)
+        else:
+            effect_id = str("{}.{}".format(self.parent_id, self.effect_id_num))
+
+        self.effect_id_num += 1
+        return effect_id
 
     def add_effect_object(self, effect):
         """Adds an Effect object to the active Effect list.  Returns the id of
         the active effect.
 
         """
-        self.effect_id = self.effect_id + 1
-        effect.id = self.effect_id
+        effect.id = self.effect_id()
         # Since rosary holds the dispatcher and the effect doesn't
         # know about rosary on init, we can't map to dispatcher yet either
         effect.rosary = self.rosary
         self.effects.append(effect)
-        return self.effect_id
+
+        print("id", effect.id)
+
+        return effect.id
 
 
 #    @dm.expose()
@@ -80,3 +93,4 @@ class EffectList:
             effect.supernext()
             if (effect.finished):
                 self.del_effect(effect.id)
+

@@ -39,7 +39,7 @@ class Effect(abc.ABC):
         # For the purposes of `fade_out` and `duration`
         self.time = 0
         # id will be assigned when the effect is attached to the mainloop
-        self.id = -1
+        self.id = None
         # the Effect will be removed from effect list if self.finished is true
         self.finished = False
         # Since we're not guaranteed a rosary object on init, we will rely

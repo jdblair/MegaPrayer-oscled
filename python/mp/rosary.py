@@ -12,7 +12,7 @@ from pythonosc import udp_client
 from pythonosc import osc_bundle_builder
 from pythonosc import osc_message_builder
 
-from mp import color, effects, triggers
+from mp import color, effects, effect_list, triggers
 from mp.dispatcher_mapper import DispatcherMapper
 
 class Bead:
@@ -27,89 +27,6 @@ class Bead:
     def copy_color(self, color):
         """Helper function that sets the Bead color by copying a Color object."""
         self.color = copy.copy(color)
-
-
-class EffectList:
-
-    def __init__(self, rosary):
-        self.effects = []
-        self.effect_id = 0
-        # we need to know about the rosary so we can set effect.rosary in add_effect_object()
-        self.rosary = rosary
-
-    def effect(self, id):
-        """Return the Effect object of an active effect by specifying the Effect id."""
-        for e in self.effects:
-            if e.id == id:
-                return e
-        return None
-
-
-    def add_effect_object(self, effect):
-        """Adds an Effect object to the active Effect list.  Returns the id of
-        the active effect.
-
-        """
-        self.effect_id = self.effect_id + 1
-        effect.id = self.effect_id
-        # Since rosary holds the dispatcher and the effect doesn't
-        # know about rosary on init, we can't map to dispatcher yet either
-        effect.rosary = self.rosary
-        self.effects.append(effect)
-        return self.effect_id
-
-
-#    @dm.expose()
-    def del_effect(self, id):
-        """Delete an active effect by id."""
-
-        effect = self.effect(id)
-
-        if effect is not None:
-            #effect_paths = [effect.generate_osc_path(fn) for fn in\
-            #                effect.dm.registered_methods.keys()]
-            #self.effect_paths_to_unregister.extend(effect_paths)
-            self.unexpose_effect_knobs(effect)
-            self.effects.remove(effect)
-
-
-#    @dm.expose()
-    def clear_effects(self):
-        """Remove all active effects. This stops all activity on the rosary."""
-        # There's some weird race condition where del_effect's call to
-        # self.effects.remove doesn't reorder the list in time if we use
-        # a for loop, so do this instead
-        while self.effects:
-            effect = self.effects[0]
-            self.del_effect(effect.id)
-
-        # I know on the real rosary this is unneccessary, but it's
-        # annoying on the sim: @jdblair is sending 0,0,0 in the real
-        # thing wonky?
-        self.add_effect('set_color', 'all', 0, 0, 0)
-
-
-#    @dm.expose()
-    def clear_effects_fade(self):
-        """
-        Just calling clear_effects() is jarring, let's ease it in
-        """
-
-        for eff in self.effects:
-            eff.fade_out(30)
-
-    def next(self):
-        for effect in self.effects:
-
-            #print("EffectList.next(): ", effect)
-
-            # If any new effects have been added since the last iteration,
-            # add their knobs to the dispatched functikon
-            #self.expose_effect_knobs(effect)
-
-            effect.supernext()
-            if (effect.finished):
-                self.del_effect(effect.id)
 
 
 class Rosary:
@@ -130,7 +47,6 @@ class Rosary:
         self.triggers = []
         self.osc_ip = ip
         self.osc_port = port
-        self.effect_id = 0
         self.trigger_id = 0
         self.BEAD_COUNT=60
         self.run_mainloop = False
@@ -143,7 +59,7 @@ class Rosary:
         # Available knobs to turn
         self.knobs = {}
 
-        self.effect_list = EffectList(self)
+        self.effect_list = effect_list.EffectList(self)
 
         self.osc_client = udp_client.UDPClient(self.osc_ip, self.osc_port)
 
