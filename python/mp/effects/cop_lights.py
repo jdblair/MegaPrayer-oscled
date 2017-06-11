@@ -19,8 +19,9 @@ class CopLights(effect.Effect):
 
         self.effects = effect_list.EffectList(self.rosary, self.id)
         self.effects.add_effect_object(looper.Looper(bead_set, color=_color.Color(1, 0, 0), length=6))
-        self.effects.add_effect_object(looper.Looper(bead_set, color=_color.Color(0, 0, 1), length=6, speed=-0.5))
-        self.effects.add_effect_object(looper.Looper(bead_set, color=_color.Color(0, 0, 1), length=6))
+        self.effects.add_effect_object(looper.Looper(bead_set, color=_color.Color(1, 0, 0), length=6, speed=-0.5))
+        self.effects.add_effect_object(looper.Looper(bead_set, color=_color.Color(0, 0, 1), length=6, speed=-0.5, start_offset=20))
+        self.effects.add_effect_object(looper.Looper(bead_set, color=_color.Color(0, 0, 1), length=6, start_offset=20))
         self.effects.add_effect_object(strobe.Strobe(bead_set, color=_color.Color(1, 1, 1)))
 
 
