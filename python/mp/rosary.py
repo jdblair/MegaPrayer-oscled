@@ -339,7 +339,6 @@ class Rosary:
             tr = self.triggers[-1]
             self.triggers.remove(tr)
 
-
     @dm.expose()
     def start(self, interactive=False):
         """Start the animation loop (aka, mainloop()) and create a shell for live interaction."""
@@ -429,7 +428,7 @@ class Rosary:
         and invokes next() on each effect.
 
         knobs:
-        * mainloop_delay: how long to wait, in seconds, at the bottom of each loop
+        * frame_time: how much wall-clock time to allocate to each update
 
         """
 
