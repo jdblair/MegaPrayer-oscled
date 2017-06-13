@@ -2,7 +2,7 @@ import copy
 from mp import color as _color
 from mp.effects import effect, bin, looper, sparkle
 
-class EffectListDemo(effect.Effect):
+class BinDemo(effect.Effect):
     """
     A demonstration of a composite effect.
     """
@@ -11,7 +11,7 @@ class EffectListDemo(effect.Effect):
     dm = copy.deepcopy(effect.Effect.dm)
 
     def __init__(self, bead_set, color=_color.Color(), **kwargs):
-        super().__init__(name="effect_list_demo", bead_set=bead_set, color=color, **kwargs)
+        super().__init__(name="bin_demo", bead_set=bead_set, color=color, **kwargs)
 
         self.count = 0
         self.bin = bin.Bin(bead_set)

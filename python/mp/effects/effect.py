@@ -101,6 +101,9 @@ class Effect(abc.ABC):
 
         self.time += 1
 
+    def set_rosary(self, rosary):
+        self.rosary = rosary
+        
     @abc.abstractmethod
     def next(self):
         """

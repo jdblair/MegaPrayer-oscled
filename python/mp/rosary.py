@@ -120,8 +120,8 @@ class Rosary:
 
         # at the top level we have just one effect: effects.Bin
         # it holds all the other effects.
-        # note that we MUST pass the 'all' bead_set and the rosary argument!
         self.bin = effects.bin.Bin(self.set_registry['all'], rosary=self)
+        self.bin.set_rosary(self)
 
     def beads_set_bgcolor(self):
         for bead in self.beads:

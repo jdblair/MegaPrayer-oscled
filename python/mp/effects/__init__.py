@@ -16,7 +16,7 @@ __all__ = [
     'casino',
     'sparkle',
     'vibration_fixed',
-    'effect_list_demo',
+    'bin_demo',
     'strobe',
     'cop_lights',
     'random_fill'
