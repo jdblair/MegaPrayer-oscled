@@ -188,15 +188,49 @@ void OSCServer::set_all_led(led_t led)
     }
 }
 
+// display an integer value in binary
+void OSCServer::show_value(int value, int total_bits, int bead_offset, led_t color_0, led_t color_1)
+{
+    led_t color(0, 0, 0);
+
+    // avoid a race and wait for update_thread() to spawn for all interfaces
+    for (auto it = m_led_ifaces.begin(); it != m_led_ifaces.end(); ++it) {
+        while (! (*it)->run_update_thread)
+            usleep(100000);
+    }
+
+    //cout << "value: " << value << " ";
+    for (int bit = total_bits - 1; bit >= 0; bit--) {
+        auto n = bit * m_leds_per_bead;
+        if (value & (0x01 << bit)) {
+            color = color_1;
+            //cout << "1";
+        } else {
+            color = color_0;
+            //cout << "0";
+        }
+        for (int led = 0; led < m_leds_per_bead; led++) {
+            set_led(((bead_offset + bit) * m_leds_per_bead) + led, color);
+        }
+    }
+    //cout << endl;
+
+    // call notify_update_thread() on all interfaces
+    for (auto it = m_led_ifaces.begin(); it != m_led_ifaces.end(); ++it) {
+        (*it)->notify_update_thread();
+    }
+}
+
 void OSCServer::test_sequence()
 {
+    // there's probably some c++ way to do this
     const int test_color_len = 7;
     led_t test_color[] = {
         {1, 0, 0},
-        {0, 1, 0},
-        {0, 0, 1},
         {1, 1, 0},
+        {0, 1, 0},
         {0, 1, 1},
+        {0, 0, 1},
         {1, 0, 1},
         {1, 1, 1},
     };
@@ -237,9 +271,6 @@ void OSCServer::test_sequence()
         }
 
     }
-    usleep(10000);
-
-    // display version number
 }
 
 
@@ -390,7 +421,7 @@ OSCServer::led_interface::~led_interface() {
 
 void OSCServer::led_interface::set_led(int offset, led_t led)
 {
-    // cout << "set_led(" << offset << "," << int(led.r)  << "," << int(led.g)  << "," << int(led.b)  << ")" << endl;
+    //cout << "set_led(" << offset << "," << int(led.r)  << "," << int(led.g)  << "," << int(led.b)  << ")" << endl;
 
     lock_guard<mutex> lock(leds_mutex);
     leds.at(offset) = led;
@@ -428,6 +459,3 @@ void OSCServer::led_interface::notify_update_thread()
     unique_lock<mutex> lock(update_mutex);
     update_cv.notify_all();
 }
-
-
-

@@ -46,6 +46,7 @@ class OSCServer {
     int osc_method_update(lo_arg **argv);
     void set_led(int n, led_t led);
     void set_all_led(led_t led);
+    void show_value(int value, int total_bits, int bead_offset, led_t color_0, led_t color_1);
     void test_sequence();
     
     class ILEDDataFormat {

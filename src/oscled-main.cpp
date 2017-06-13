@@ -55,7 +55,17 @@ static void daemonize()
 
 void startup_lightshow(OSCServer &server, OSCLedConfig &config)
 {
+    auto station = config.get_station();
+
     server.test_sequence();
+
+    // display version number
+    server.set_all_led(OSCServer::led_t(0, 0, 0));
+    server.show_value(config.m_version.minor, 4, station.bead_base, OSCServer::led_t(0, 0, 255), OSCServer::led_t(255, 0, 0));
+    server.show_value(config.m_version.major, 4, station.bead_base + 5, OSCServer::led_t(0, 0, 255), OSCServer::led_t(255, 0, 0));
+
+    // give us a chance to see the version number
+    sleep(5);
 }
 
 
@@ -91,12 +101,12 @@ int main(int argc, char **argv)
         daemonize();
     }
 
-    server.start();
-
-    cout << "after server start\n";
-    sleep(1);
     running = 1;
+
     startup_lightshow(server, config);
+
+    server.start();
+    //cout << "after server start\n";
 
     while (running) {
         sleep(1);
