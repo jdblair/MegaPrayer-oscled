@@ -287,6 +287,8 @@ void OSCServer::LEDFormat_APA102::update(vector<led_t> const &leds)
         buf[i + 2] = it->g;
         buf[i + 3] = it->r;
         i += 4;
+
+        printf("%d %d %d %d\n", buf[i + 0], buf[i + 1], buf[i + 2], buf[i + 3]);
     }
 }
 
@@ -298,6 +300,9 @@ OSCServer::led_interface::led_interface(std::shared_ptr<IPlatformSerial> const s
     m_base = cfg.led_base;
     m_len = cfg.led_count;
     m_reverse = cfg.reversed;
+    m_xform = cfg.xform;
+
+    cout << "led_interface::m_xform: r = " << m_xform.r << ", g = " << m_xform.g << ", b = " << m_xform.g << endl;
 
     // initialize leds with zero-value leds
     for (auto i = 0; i < m_len; i++) {
@@ -322,6 +327,10 @@ OSCServer::led_interface::~led_interface() {
 void OSCServer::led_interface::set_led(int offset, led_t led)
 {
     //cout << "set_led(" << offset << "," << int(led.r)  << "," << int(led.g)  << "," << int(led.b)  << ")" << endl;
+
+    led.r *= m_xform.r;
+    led.g *= m_xform.g;
+    led.b *= m_xform.b;
 
     lock_guard<mutex> lock(leds_mutex);
     leds.at(offset) = led;

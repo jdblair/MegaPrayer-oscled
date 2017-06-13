@@ -110,6 +110,7 @@ class OSCServer {
         int m_r_offset;
         int m_g_offset;
         int m_b_offset;
+        struct OSCLedConfig::linear_xform m_xform;
 
         std::vector<led_t> leds;
         uint8_t *led_buf;
