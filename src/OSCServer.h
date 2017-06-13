@@ -43,7 +43,9 @@ class OSCServer {
     int osc_method_bead(lo_arg **argv);
     int osc_method_bead_float(lo_arg **argv);
     int osc_method_update(lo_arg **argv);
+    int osc_method_xform(lo_arg **argv);
     void set_led(int n, led_t led);
+    void set_xform(float r, float g, float b);
     
     class ILEDDataFormat {
     public:
@@ -125,6 +127,7 @@ class OSCServer {
         std::shared_ptr<ILEDDataFormat> m_fmt;
 
         void set_led(int offset, led_t led);
+        void set_xform(float r, float g, float b);
         void notify_update_thread();
     };
 

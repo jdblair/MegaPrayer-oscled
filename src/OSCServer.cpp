@@ -58,6 +58,8 @@ OSCServer::OSCServer(string ip, string port) : m_ip(ip), m_port(port)
                      [this](lo_arg **argv, int)  {this->osc_method_bead_float(argv);});
     m_st->add_method("/update", "",
                      [this](lo_arg **argv, int)  {this->osc_method_update(argv);});
+    m_st->add_method("/led/xform", "fff",
+                     [this](lo_arg **argv, int)  {this->osc_method_xform(argv);});
 
     m_base_bead = 0;
     m_leds_per_bead = 1;
@@ -80,6 +82,15 @@ void OSCServer::set_led(int n, led_t led)
         }
     }
 }
+
+
+void OSCServer::set_xform(float r, float g, float b)
+{
+    for (auto it = m_led_ifaces.begin(); it != m_led_ifaces.end(); ++it) {
+        (*it)->set_xform(r, g, b);
+    }
+}
+
 
 
 int OSCServer::osc_method_led(lo_arg **argv)
@@ -154,6 +165,16 @@ int OSCServer::osc_method_update(lo_arg **argv)
         (*it)->notify_update_thread();
     }
 }
+
+
+int OSCServer::osc_method_xform(lo_arg **argv)
+{
+    set_xform(argv[0]->f, argv[1]->f, argv[2]->f);
+
+    return 0;
+}
+
+
 
 // create an led_interface and added to m_led_ifaces
 int OSCServer::bind(shared_ptr<IPlatformSerial> const ser, OSCLedConfig::interface_config const &cfg)
@@ -334,6 +355,16 @@ void OSCServer::led_interface::set_led(int offset, led_t led)
 
     lock_guard<mutex> lock(leds_mutex);
     leds.at(offset) = led;
+}
+
+
+void OSCServer::led_interface::set_xform(float r, float g, float b)
+{
+    m_xform.r = r;
+    m_xform.g = g;
+    m_xform.b = b;
+
+    cout << "set_xform(" << r << ", " << g << ", " << b << ")" << endl;
 }
 
 
