@@ -4,15 +4,21 @@ from mp.effects import effect
 
 class Bin(effect.Effect):
     """
+    This effect contains a list of other effects. Calling next() invokes the next() method
+    on all the contained effects. Rosary actually only contains this one effect, adding and
+    removing effects to and from it.
+
+    In other words, its turtles all the way down.
     """
 
     # Wish there were a better way than requiring this every time
     dm = copy.deepcopy(effect.Effect.dm)
 
     def __init__(self, bead_set, **kwargs):
-        super().__init__(name="bin", **kwargs)
+        super().__init__(name="bin", bead_set=bead_set, **kwargs)
         self.effects = []
         self.effect_id_num = 0
+
 
     def effect(self, id):
         """Return the Effect object of an active effect by specifying the Effect id."""
@@ -41,10 +47,10 @@ class Bin(effect.Effect):
         return effect.id
 
 
-#    @dm.expose()
+    @dm.expose()
     def del_effect(self, id):
         """Delete an active effect by id."""
-
+        
         effect = self.effect(id)
 
         if effect is not None:
@@ -55,7 +61,7 @@ class Bin(effect.Effect):
             self.effects.remove(effect)
 
 
-#    @dm.expose()
+    @dm.expose()
     def clear_effects(self):
         """Remove all active effects. This stops all activity on the rosary."""
         # There's some weird race condition where del_effect's call to
@@ -65,13 +71,8 @@ class Bin(effect.Effect):
             effect = self.effects[0]
             self.del_effect(effect.id)
 
-        # I know on the real rosary this is unneccessary, but it's
-        # annoying on the sim: @jdblair is sending 0,0,0 in the real
-        # thing wonky?
-        self.add_effect('set_color', 'all', 0, 0, 0)
 
-
-#    @dm.expose()
+    @dm.expose()
     def clear_effects_fade(self):
         """
         Just calling clear_effects() is jarring, let's ease it in
@@ -85,7 +86,7 @@ class Bin(effect.Effect):
 
             # If any new effects have been added since the last iteration,
             # add their knobs to the dispatched functikon
-            #self.expose_effect_knobs(effect)
+            self.rosary.expose_effect_knobs(effect)
 
             effect.supernext()
             if (effect.finished):

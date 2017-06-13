@@ -58,12 +58,6 @@ class Rosary:
         # Available knobs to turn
         self.knobs = {}
 
-        # at the top level we have just one effect: effects.Bin
-        # it holds all the other effects
-        self.bin = effects.bin.Bin(self)
-
-        self.osc_client = udp_client.UDPClient(self.osc_ip, self.osc_port)
-
         for i in range(self.BEAD_COUNT):
             self.beads.append(Bead(i))
 
@@ -113,6 +107,8 @@ class Rosary:
             #'black': color.Color(0,0,0)
         }
 
+        self.osc_client = udp_client.UDPClient(self.osc_ip, self.osc_port)
+
         # Automagically register effects so that they're callable by name
         self.register_written_effects()
 
@@ -121,6 +117,11 @@ class Rosary:
 
         # Map our own exposed methods to the dispatcher
         self.map_to_dispatcher()
+
+        # at the top level we have just one effect: effects.Bin
+        # it holds all the other effects.
+        # note that we MUST pass the 'all' bead_set and the rosary argument!
+        self.bin = effects.bin.Bin(self.set_registry['all'], rosary=self)
 
     def beads_set_bgcolor(self):
         for bead in self.beads:
