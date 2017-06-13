@@ -8,7 +8,7 @@
 ** DONE create command line option and config file parser
 ** DONE change update threads to use condition variable
 ** DONE make "ip" config field work, make sure works with multicast works
-** TODO make oscled blink version number on startup
+** DONE make oscled blink version number on startup
 ** TODO write documentation / doxygen markup
 ** DONE test with multiple separate strings of LEDs
 ** TODO create debian package of oscled
