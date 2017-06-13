@@ -17,6 +17,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <thread>
+#include <atomic>
 
 #include "IPlatformSerial.h"
 #include "OSCLedConfig.hpp"
@@ -33,7 +34,7 @@ class OSCServer {
         uint8_t brightness;  // used by apa102 LEDs, value is 0 to 31
     } led_t;
 
-    OSCServer(std::string ip, std::string port);
+    OSCServer(std::atomic<bool> *running, std::string ip, std::string port);
 
     int bind(std::shared_ptr<IPlatformSerial> const ser, OSCLedConfig::interface_config const &cfg);
     int drop_interfaces();
@@ -44,6 +45,7 @@ class OSCServer {
     int osc_method_bead_float(lo_arg **argv);
     int osc_method_update(lo_arg **argv);
     void set_led(int n, led_t led);
+    void set_all_led(led_t led);
     void test_sequence();
     
     class ILEDDataFormat {
@@ -102,7 +104,6 @@ class OSCServer {
         ~led_interface();
 
         void update_led_buf();
-        void test_sequence();
 
         //int iface;
         std::shared_ptr<IPlatformSerial> m_ser;
@@ -137,6 +138,7 @@ class OSCServer {
  private:
     std::string m_port;
     std::string m_ip;
+    std::atomic<bool> *m_running;
     std::shared_ptr<lo::ServerThread> m_st;
     
     std::atomic<int> received;

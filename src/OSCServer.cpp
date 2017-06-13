@@ -19,7 +19,7 @@ using namespace std;
 
 
 
-OSCServer::OSCServer(string ip, string port) : m_ip(ip), m_port(port)
+OSCServer::OSCServer(atomic<bool> *running, string ip, string port) : m_running(running), m_ip(ip), m_port(port)
 {
     received = 0;
     m_iface_count = 0;
@@ -177,6 +177,17 @@ int OSCServer::drop_interfaces()
 }
 
 
+void OSCServer::set_all_led(led_t led)
+{
+    for (auto it = m_led_ifaces.begin(); it != m_led_ifaces.end(); ++it) {
+        auto iface = *it;
+        for (int led_num = iface->m_base; led_num < iface->m_base + iface->m_len; led_num++) {
+            set_led(led_num, led);
+        }
+        iface->notify_update_thread();
+    }
+}
+
 void OSCServer::test_sequence()
 {
     const int test_color_len = 7;
@@ -198,22 +209,37 @@ void OSCServer::test_sequence()
 
     // show off all our colors
     for (int color = 0; color < test_color_len; color++) {
+
+        // fade in
         for (int brightness = 0; brightness < 255; brightness++) {
-            for (auto it = m_led_ifaces.begin(); it != m_led_ifaces.end(); ++it) {
-                auto iface = *it;
-                for (int led_num = iface->m_base; led_num < iface->m_base + iface->m_len; led_num++) {
-                    set_led(led_num,
-                            led_t(brightness * test_color[color].r,
-                                  brightness * test_color[color].g,
-                                  brightness * test_color[color].b));
-                }
-                iface->notify_update_thread();
-            }
+            set_all_led(led_t(test_color[color].r * brightness,
+                              test_color[color].g * brightness,
+                              test_color[color].b * brightness));
             usleep(6000);
         }
-    }
 
+        usleep(20000);
+
+        // fade out
+        for (int brightness = 255; brightness > 0; brightness--) {
+            set_all_led(led_t(test_color[color].r * brightness,
+                              test_color[color].g * brightness,
+                              test_color[color].b * brightness));
+            usleep(6000);
+        }
+
+        usleep(20000);
+
+        // break out if m_running is false
+        // this is to support SIGTERM handler during test sequence
+        if (! *m_running) {
+            return;
+        }
+
+    }
     usleep(10000);
+
+    // display version number
 }
 
 
@@ -364,7 +390,7 @@ OSCServer::led_interface::~led_interface() {
 
 void OSCServer::led_interface::set_led(int offset, led_t led)
 {
-    //cout << "set_led(" << offset << "," << int(led.r)  << "," << int(led.g)  << "," << int(led.b)  << ")" << endl;
+    // cout << "set_led(" << offset << "," << int(led.r)  << "," << int(led.g)  << "," << int(led.b)  << ")" << endl;
 
     lock_guard<mutex> lock(leds_mutex);
     leds.at(offset) = led;
@@ -404,22 +430,4 @@ void OSCServer::led_interface::notify_update_thread()
 }
 
 
-void OSCServer::led_interface::test_sequence()
-{
-    led_t test_color[] = {
-        {1, 0, 0},
-        {0, 1, 0},
-        {0, 0, 1},
-    };
-
-    for (int color = 0; color < 3; color++) {
-        for (int brightness = 0; brightness < 255; brightness++) {
-            for (int i = 0; i < m_len; i++) {
-                set_led(i, led_t(brightness * test_color[color].r, brightness * test_color[color].g, brightness * test_color[color].b));
-            }
-            notify_update_thread();
-            usleep(5000);
-        }
-    }
-}
 

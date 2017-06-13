@@ -21,7 +21,7 @@ using namespace std;
 
 
 // used to exit the main process on SIGINT and SIGKILL
-static atomic<int> running;
+static atomic<bool> running;
 
 
 void sig_handler(int signo)
@@ -72,7 +72,7 @@ int main(int argc, char **argv)
     config.json_parse();
 
     PlatformSerialFactory ser_factory;
-    OSCServer server(config.get_station().ip, config.get_station().port);
+    OSCServer server(&running, config.get_station().ip, config.get_station().port);
     server.set_base_bead(config.get_station().bead_base);
     server.set_leds_per_bead(config.get_station().leds_per_bead);
 
@@ -89,15 +89,15 @@ int main(int argc, char **argv)
 
     if (config.get_station().daemonize) {
         daemonize();
-    } else {
-        server.start();
     }
+
+    server.start();
 
     cout << "after server start\n";
     sleep(1);
+    running = 1;
     startup_lightshow(server, config);
 
-    running = 1;
     while (running) {
         sleep(1);
     }
