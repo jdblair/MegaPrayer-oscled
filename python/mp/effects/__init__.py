@@ -8,6 +8,7 @@
 
 __all__ = [
     'effect',
+    'bin',
     'set_color',
     'sine_wave',
     'throb',

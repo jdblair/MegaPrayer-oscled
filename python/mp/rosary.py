@@ -12,7 +12,7 @@ from pythonosc import udp_client
 from pythonosc import osc_bundle_builder
 from pythonosc import osc_message_builder
 
-from mp import color, effects, effect_list, triggers
+from mp import color, effects, triggers
 from mp.dispatcher_mapper import DispatcherMapper
 
 class Bead:
@@ -43,7 +43,6 @@ class Rosary:
     def __init__(self, ip="127.0.0.1", port=5005, dispatcher=None, name="rosary"):
         self.beads = []
         self.bgcolor = color.Color(0,0,0)
-        #self.effects = []
         self.triggers = []
         self.osc_ip = ip
         self.osc_port = port
@@ -59,7 +58,9 @@ class Rosary:
         # Available knobs to turn
         self.knobs = {}
 
-        self.effect_list = effect_list.EffectList(self)
+        # at the top level we have just one effect: effects.Bin
+        # it holds all the other effects
+        self.bin = effects.bin.Bin(self)
 
         self.osc_client = udp_client.UDPClient(self.osc_ip, self.osc_port)
 
@@ -324,7 +325,7 @@ class Rosary:
                 kwargs.pop(key)
 
         if requested_effect is not None:
-            return self.effect_list.add_effect_object(requested_effect(*args, **kwargs))
+            return self.bin.add_effect_object(requested_effect(*args, **kwargs))
         else:
             return None
 
@@ -445,7 +446,7 @@ class Rosary:
             self.beads_set_bgcolor()
 
             # advance the state of all the effects
-            self.effect_list.next()
+            self.bin.next()
 
             # Let the triggers figure out for themselves what to do
             #for trigger in self.triggers.values():
@@ -460,7 +461,7 @@ class Rosary:
                 print('frame drop')
                 next_frame_time += self.frame_time
                 # "dropping a frame" means calling next() on all the effects w/o updating the LEDs
-                self.effect_list.next()
+                self.bin.next()
 
                 now = time.monotonic()
 
