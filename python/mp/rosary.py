@@ -137,9 +137,8 @@ class Rosary:
         """
         # instantiate the object so we get get the name
         e = effect(self.set_registry['none'])
-        e.rosary = self
-        print(e.name, e.rosary)
-        self.effect_registry[e.name] = e
+        # note that we are returning effect, a class, not e, an instance!
+        self.effect_registry[e.name] = effect
 
 
     def find_written_effects(self, module_or_class):
@@ -316,8 +315,6 @@ class Rosary:
         kwargs['bead_set'] = bead_set
         kwargs['color'] = effect_color
 
-        print("here")
-
         # I'd rather be fancy and strip out kwargs that won't be accepted
         # than force people writing effects to take **kwargs /flex
         requested_effect = self.effect_registry.get(effect_name)
@@ -331,7 +328,7 @@ class Rosary:
                 kwargs.pop(key)
 
         if requested_effect is not None:
-            return self.bin.add_effect_object(requested_effect(rosary=self, *args, **kwargs))
+            return self.bin.add_effect_object(requested_effect(*args, rosary=self, **kwargs))
         else:
             return None
 

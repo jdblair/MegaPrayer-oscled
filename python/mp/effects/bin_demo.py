@@ -14,8 +14,8 @@ class BinDemo(effect.Effect):
         super().__init__(name="bin_demo", bead_set=bead_set, color=color, **kwargs)
 
         self.count = 0
-        #self.bin = bin.Bin(bead_set, rosary=self.rosary)
-        self.bin = bin.Bin(bead_set)
+        self.bin = bin.Bin(bead_set, rosary=self.rosary)
+        #self.bin = bin.Bin(bead_set)
         self.looper1 = looper.Looper(bead_set, color=_color.Color(1, 0, 0), length=5, speed=0)
         self.bin.add_effect_object(self.looper1)
         self.bin.add_effect_object(looper.Looper(bead_set, color=_color.Color(0, 1, 0), length=4, speed=-.5))

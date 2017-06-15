@@ -28,7 +28,6 @@ class Effect(abc.ABC):
         self.rosary = kwargs.get('rosary')
         # the name is used when the Effect is registered
         self.name = kwargs.get('name')
-        print("effect ", self.name, ": self.rosary = ", self.rosary)
         # the bead_set is a list of beads the Effect is applied to. The order is important!
         self.bead_set = self.set_bead_set(kwargs.get('bead_set', set()))
         # The color of the Effect. This is not always meaningful.

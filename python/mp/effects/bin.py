@@ -38,11 +38,8 @@ x        """
         effect.id = self.effect_id()
         # Since rosary holds the dispatcher and the effect doesn't
         # know about rosary on init, we can't map to dispatcher yet either
-        print("add_effect_object: effect.rosary = ", effect.rosary)
         self.effects.append(effect)
         effect.rosary = self.rosary
-
-        #print("id", effect.id)
 
         return effect.id
 
@@ -96,7 +93,6 @@ x        """
             #if self.rosary != None:
             self.rosary.expose_effect_knobs(effect)
 
-            print("bin: effect = ", effect)
             effect.supernext()
 
             if (effect.finished):
