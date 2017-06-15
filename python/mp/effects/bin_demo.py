@@ -14,6 +14,7 @@ class BinDemo(effect.Effect):
         super().__init__(name="bin_demo", bead_set=bead_set, color=color, **kwargs)
 
         self.count = 0
+        #self.bin = bin.Bin(bead_set, rosary=self.rosary)
         self.bin = bin.Bin(bead_set)
         self.looper1 = looper.Looper(bead_set, color=_color.Color(1, 0, 0), length=5, speed=0)
         self.bin.add_effect_object(self.looper1)
@@ -29,4 +30,7 @@ class BinDemo(effect.Effect):
             # flip direction of speed increase
             self.speed_increment *= -1
         self.looper1.speed += self.speed_increment
+        # make the length longer as the speed increases
+        # this helps the illusion of speed, since otherwise we skip beads entirely
+        # for integer values > 1
         self.looper1.length = abs(int(round(self.looper1.speed))) + 1

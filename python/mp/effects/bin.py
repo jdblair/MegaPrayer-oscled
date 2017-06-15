@@ -18,8 +18,6 @@ class Bin(effect.Effect):
         super().__init__(name="bin", bead_set=bead_set, **kwargs)
         self.effects = []
         self.effect_id_num = 0
-        self.rosary = kwargs.get('rosary')
-        print("rosary", self.rosary)
 
     def effect(self, id):
         """Return the Effect object of an active effect by specifying the Effect id."""
@@ -36,12 +34,13 @@ class Bin(effect.Effect):
         """Adds an Effect object to the active Effect list.  Returns the id of
         the active effect.
 
-        """
+x        """
         effect.id = self.effect_id()
         # Since rosary holds the dispatcher and the effect doesn't
         # know about rosary on init, we can't map to dispatcher yet either
-        effect.set_rosary(self.rosary)
+        print("add_effect_object: effect.rosary = ", effect.rosary)
         self.effects.append(effect)
+        effect.rosary = self.rosary
 
         #print("id", effect.id)
 
@@ -94,9 +93,11 @@ class Bin(effect.Effect):
 
             # If any new effects have been added since the last iteration,
             # add their knobs to the dispatched functikon
-            if self.rosary != None:
-                self.rosary.expose_effect_knobs(effect)
+            #if self.rosary != None:
+            self.rosary.expose_effect_knobs(effect)
 
+            print("bin: effect = ", effect)
             effect.supernext()
+
             if (effect.finished):
                 self.del_effect(effect.id)

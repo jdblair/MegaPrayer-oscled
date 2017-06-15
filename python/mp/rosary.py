@@ -121,7 +121,6 @@ class Rosary:
         # at the top level we have just one effect: effects.Bin
         # it holds all the other effects.
         self.bin = effects.bin.Bin(self.set_registry['all'], rosary=self)
-        self.bin.set_rosary(self)
 
     def beads_set_bgcolor(self):
         for bead in self.beads:
@@ -138,7 +137,9 @@ class Rosary:
         """
         # instantiate the object so we get get the name
         e = effect(self.set_registry['none'])
-        self.effect_registry[e.name] = effect
+        e.rosary = self
+        print(e.name, e.rosary)
+        self.effect_registry[e.name] = e
 
 
     def find_written_effects(self, module_or_class):
@@ -315,10 +316,14 @@ class Rosary:
         kwargs['bead_set'] = bead_set
         kwargs['color'] = effect_color
 
+        print("here")
+
         # I'd rather be fancy and strip out kwargs that won't be accepted
         # than force people writing effects to take **kwargs /flex
         requested_effect = self.effect_registry.get(effect_name)
+        print("requested_effect: ", requested_effect)
         requested_effect_args = inspect.getargspec(requested_effect).args
+        print("requested_effect_args: ", requested_effect_args)
 
         # Er, "clean up" the kwargs to pass to an effect init method
         for key in list(kwargs):
@@ -326,7 +331,7 @@ class Rosary:
                 kwargs.pop(key)
 
         if requested_effect is not None:
-            return self.bin.add_effect_object(requested_effect(*args, **kwargs))
+            return self.bin.add_effect_object(requested_effect(rosary=self, *args, **kwargs))
         else:
             return None
 
