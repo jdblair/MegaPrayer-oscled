@@ -237,7 +237,6 @@ class Rosary:
 
         i = 0
         while (i < self.BEAD_COUNT):
-            #print("bead {}".format(i))
             msg = osc_message_builder.OscMessageBuilder(address = "/beadf")
             msg.add_arg(i)
             msg.add_arg(float(self.beads[i].color.r))
@@ -318,9 +317,7 @@ class Rosary:
         # I'd rather be fancy and strip out kwargs that won't be accepted
         # than force people writing effects to take **kwargs /flex
         requested_effect = self.effect_registry.get(effect_name)
-        print("requested_effect: ", requested_effect)
         requested_effect_args = inspect.getargspec(requested_effect).args
-        print("requested_effect_args: ", requested_effect_args)
 
         # Er, "clean up" the kwargs to pass to an effect init method
         for key in list(kwargs):
