@@ -4,7 +4,7 @@ from mp import color
 
 class Looper(effect.Effect):
     """
-    Sends a line of beads around in a circle. This makes the most sense with the 'right' set.
+    Sends a line of beads around in a circle. This makes the most sense with the 'ring' set.
     """
 
     # Wish there were a better way than requiring this every time
