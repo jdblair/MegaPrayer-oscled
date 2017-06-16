@@ -7,6 +7,7 @@ import time
 import math
 import inspect
 import random
+import struct
 
 from pythonosc import udp_client
 from pythonosc import osc_bundle_builder
@@ -29,12 +30,34 @@ class Bead:
         self.color = copy.copy(color)
 
 
+class Updater:
+    def __init__(self, name='', bead_list=[], osc_client=None):
+        self.name = name
+        self.bead_list = bead_list
+        self.osc_client=osc_client
+        
+    def update(self):
+        msg = osc_message_builder.OscMessageBuilder(address = "/bead/" + self.name)
+        msg.add_arg(int(0))               # base
+        msg.add_arg(int(len(self.bead_list)))  # length
+        
+        payload = bytearray()
+        for bead in self.bead_list:
+            payload.extend(struct.pack('!HHH',
+                                       int(bead.color.r * 0xffff),
+                                       int(bead.color.g * 0xffff),
+                                       int(bead.color.b * 0xffff)))
+
+        msg.add_arg(bytes(payload))
+
+        self.osc_client.send(msg.build())
+
+
 class Rosary:
     """Rosary represents the whole rosary and the set of effects currently
     running.  It is in charge of animating the rosary by calling
     next() in each running active Effect and transmitting the OSC
     commands set the colors of beads.
-
     """
 
     # Can't decorate with @self.r, so need this here
@@ -61,15 +84,29 @@ class Rosary:
         self.dispatcher = dispatcher
         # Available knobs to turn
         self.knobs = {}
+        self.updater_list = []
 
+        self.osc_client = udp_client.UDPClient(self.osc_ip, self.osc_port)
+
+        # create the three classes of LED "beads"
         for i in range(self.BEAD_COUNT):
-            self.beads.append(Bead(i + 100))
+            self.beads.append(Bead(i))
+        self.updater_list.append(Updater(name='rosary',
+                                         bead_list=self.beads,
+                                         osc_client=self.osc_client))
 
         for i in range(self.BASE_COUNT):
-            self.bases.append(Bead(i + 100))
+            self.bases.append(Bead(i))
+        self.updater_list.append(Updater(name='base',
+                                         bead_list=self.bases,
+                                         osc_client=self.osc_client))
 
         for i in range(self.CROSS_LED_COUNT):
-            self.cross.append(Bead(i + 1000))
+            self.cross.append(Bead(i))
+        self.updater_list.append(Updater(name='cross',
+                                         bead_list=self.cross,
+                                         osc_client=self.osc_client))
+
 
         # some useful predefined sets of beads
         self.set_registry = {
@@ -118,9 +155,7 @@ class Rosary:
             # NOTE YUNFAN: Take this out (maybe) going into prod?
             #'black': color.Color(0,0,0)
         }
-
-        self.osc_client = udp_client.UDPClient(self.osc_ip, self.osc_port)
-
+                                    
         # Automagically register effects so that they're callable by name
         self.register_written_effects()
 
@@ -248,22 +283,15 @@ class Rosary:
         #bundle = osc_bundle_builder.OscBundleBuilder(osc_bundle_builder.IMMEDIATELY)
 
         i = int(0)
-        # while (i < int(len(bead_list))):
-        #     msg = osc_message_builder.OscMessageBuilder(address = "/beadf")
-        #     msg.add_arg(i)
-        #     msg.add_arg(float(bead_list[i].color.r))
-        #     msg.add_arg(float(bead_list[i].color.g))
-        #     msg.add_arg(float(bead_list[i].color.b))
-        #     msg = msg.build()
-        #     bundle.add_content(msg)
-        #     i = i + 1
 
-        msg = osc_message_builder.OscMessageBuilder(address = "/bead/binary")
+        msg = osc_message_builder.OscMessageBuilder(address = "/bead/")
         msg.add_arg(int(0))    # base
         msg.add_arg(int(len(bead_list)))  # length
 
         payload = bytearray()
         for bead in bead_list:
+
+
             payload.append((int(bead.color.r * 255)))
             payload.append((int(bead.color.g * 255)))
             payload.append((int(bead.color.b * 255)))
@@ -369,25 +397,17 @@ class Rosary:
             tr = self.triggers[-1]
             self.triggers.remove(tr)
 
-
     @dm.expose()
     def start(self, interactive=False):
         """Start the animation loop (aka, mainloop()) and create a shell for live interaction."""
         r = self
         if (r.run_mainloop == False):
             r.run_mainloop = True
-#            self.t_mainloop_beads = threading.Thread(name='beads_mainloop', target=self.mainloop, kwargs={'bead_list': self.beads, 'name': 'beads'})
-#            self.t_mainloop_beads.start()
-
-            self.t_mainloop_cross = threading.Thread(name='cross_mainloop', target=self.mainloop, kwargs={'bead_list': self.cross, 'name': 'cross', 'frame_time': 1/30})
-            self.t_mainloop_cross.start()
-
-#            self.t_mainloop_bases = threading.Thread(name='bases_mainloop', target=self.mainloop, kwargs={'bead_list': self.bases, 'name': 'bases'})
-#            self.t_mainloop_bases.start()
+            self.t_mainloop = threading.Thread(name='mainloop', target=self.mainloop)
+            self.t_mainloop.start()
 
             if interactive:
                 code.interact(local=locals())
-
 
     @dm.expose()
     def stop(self):
@@ -465,6 +485,8 @@ class Rosary:
 
         """
 
+        print('mainloop')
+
         frame_time = kwargs.get('frame_time', self.frame_time)
 
         print(kwargs.get('name'), 'frame_time', frame_time)
@@ -481,7 +503,8 @@ class Rosary:
 
             bead_list = kwargs.get('bead_list')
 
-            self.beads_set_bgcolor(bead_list)
+            for updater in self.updater_list:
+                self.beads_set_bgcolor(updater.bead_list)
 
             # advance the state of all the effects
             self.bin.next()
@@ -515,8 +538,8 @@ class Rosary:
 
             # update the LEDs
             # do this last to try to make the updates as regular as possible
-            self.update(bead_list)
-
+            for updater in self.updater_list:
+                updater.update()
 
 
 
