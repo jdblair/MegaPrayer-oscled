@@ -18,7 +18,7 @@ from mp.dispatcher_mapper import DispatcherMapper
 class Bead:
     """Bead represents a single rosary bead."""
     def __init__(self, index=0):
-        self.index = index
+        self.index = int(index)
         self.color = color.Color()
         
     def __repr__(self):
@@ -63,7 +63,7 @@ class Rosary:
         self.knobs = {}
 
         for i in range(self.BEAD_COUNT):
-            self.beads.append(Bead(i))
+            self.beads.append(Bead(i + 100))
 
         for i in range(self.BASE_COUNT):
             self.bases.append(Bead(i + 100))
@@ -245,26 +245,43 @@ class Rosary:
     ##########################################################################
     def update(self, bead_list):
         """Transmit the OSC message to update all beads on the rosary."""
-        bundle = osc_bundle_builder.OscBundleBuilder(osc_bundle_builder.IMMEDIATELY)
+        #bundle = osc_bundle_builder.OscBundleBuilder(osc_bundle_builder.IMMEDIATELY)
 
-        i = 0
-        while (i < len(bead_list)):
-            msg = osc_message_builder.OscMessageBuilder(address = "/beadf")
-            msg.add_arg(i)
-            msg.add_arg(float(bead_list[i].color.r))
-            msg.add_arg(float(bead_list[i].color.g))
-            msg.add_arg(float(bead_list[i].color.b))
-            msg = msg.build()
-            bundle.add_content(msg)
-            i = i + 1
-            
-        msg = osc_message_builder.OscMessageBuilder(address = "/update")
-        msg = msg.build()
-        bundle.add_content(msg)
-            
-        bundle = bundle.build()
-        self.osc_client.send(bundle)
+        i = int(0)
+        # while (i < int(len(bead_list))):
+        #     msg = osc_message_builder.OscMessageBuilder(address = "/beadf")
+        #     msg.add_arg(i)
+        #     msg.add_arg(float(bead_list[i].color.r))
+        #     msg.add_arg(float(bead_list[i].color.g))
+        #     msg.add_arg(float(bead_list[i].color.b))
+        #     msg = msg.build()
+        #     bundle.add_content(msg)
+        #     i = i + 1
 
+        msg = osc_message_builder.OscMessageBuilder(address = "/bead/binary")
+        msg.add_arg(int(0))    # base
+        msg.add_arg(int(len(bead_list)))  # length
+
+        payload = bytearray()
+        for bead in bead_list:
+            payload.append((int(bead.color.r * 255)))
+            payload.append((int(bead.color.g * 255)))
+            payload.append((int(bead.color.b * 255)))
+
+        #print(bytes(payload))
+
+        #print('len(bead_list)', len(bead_list), 'len(payload)', len(payload))
+        
+        msg.add_arg(bytes(payload))
+            
+        # msg = osc_message_builder.OscMessageBuilder(address = "/update")
+
+        #bundle.add_content(msg)
+            
+        #bundle = bundle.build()
+        #self.osc_client.send(bundle)
+        self.osc_client.send(msg.build())
+        
         # If we need to unregister effects' paths from the dispatcher,
         # do it here
 #        while self.effect_paths_to_unregister:
@@ -359,14 +376,14 @@ class Rosary:
         r = self
         if (r.run_mainloop == False):
             r.run_mainloop = True
-            self.t_mainloop_beads = threading.Thread(name='beads_mainloop', target=self.mainloop, kwargs={'bead_list': self.beads, 'name': 'beads'})
-            self.t_mainloop_beads.start()
+#            self.t_mainloop_beads = threading.Thread(name='beads_mainloop', target=self.mainloop, kwargs={'bead_list': self.beads, 'name': 'beads'})
+#            self.t_mainloop_beads.start()
 
-            self.t_mainloop_cross = threading.Thread(name='cross_mainloop', target=self.mainloop, kwargs={'bead_list': self.cross, 'name': 'cross', 'frame_time': 1/5})
+            self.t_mainloop_cross = threading.Thread(name='cross_mainloop', target=self.mainloop, kwargs={'bead_list': self.cross, 'name': 'cross', 'frame_time': 1/30})
             self.t_mainloop_cross.start()
 
-            self.t_mainloop_bases = threading.Thread(name='bases_mainloop', target=self.mainloop, kwargs={'bead_list': self.bases, 'name': 'bases'})
-            self.t_mainloop_bases.start()
+#            self.t_mainloop_bases = threading.Thread(name='bases_mainloop', target=self.mainloop, kwargs={'bead_list': self.bases, 'name': 'bases'})
+#            self.t_mainloop_bases.start()
 
             if interactive:
                 code.interact(local=locals())
