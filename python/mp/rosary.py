@@ -42,12 +42,16 @@ class Rosary:
 
     def __init__(self, ip="127.0.0.1", port=5005, dispatcher=None, name="rosary"):
         self.beads = []
+        self.bases = []
+        self.cross = []
         self.bgcolor = color.Color(0,0,0)
         self.triggers = []
         self.osc_ip = ip
         self.osc_port = port
         self.trigger_id = 0
         self.BEAD_COUNT=60
+        self.BASE_COUNT=9
+        self.CROSS_LED_COUNT=480
         self.run_mainloop = False
         self.frame_time = 1 / 30   # reciprocal of fps
         self.effect_registry = {}
@@ -60,6 +64,12 @@ class Rosary:
 
         for i in range(self.BEAD_COUNT):
             self.beads.append(Bead(i))
+
+        for i in range(self.BASE_COUNT):
+            self.bases.append(Bead(i + 100))
+
+        for i in range(self.CROSS_LED_COUNT):
+            self.cross.append(Bead(i + 1000))
 
         # some useful predefined sets of beads
         self.set_registry = {
@@ -82,7 +92,9 @@ class Rosary:
             'even_all': frozenset(self.beads[0:60:2]),
             'even_ring': frozenset(self.beads[4:60:2]),
             'odd_all': frozenset(self.beads[1:60:2]),
-            'odd_ring': frozenset(self.beads[5:60:2])
+            'odd_ring': frozenset(self.beads[5:60:2]),
+            'base': frozenset(self.bases[0:self.BASE_COUNT]),
+            'cross': frozenset(self.cross[0:self.CROSS_LED_COUNT])
         }
         self.set_registry['half01'] = self.set_registry['quadrent0'].\
                                            union(self.set_registry['quadrent1'])
@@ -122,8 +134,8 @@ class Rosary:
         # it holds all the other effects.
         self.bin = effects.bin.Bin(self.set_registry['all'], rosary=self)
 
-    def beads_set_bgcolor(self):
-        for bead in self.beads:
+    def beads_set_bgcolor(self, beads):
+        for bead in beads:
             bead.color.set(self.bgcolor)
 
     ##########################################################################
@@ -231,17 +243,17 @@ class Rosary:
     ##########################################################################
     # ROSARY CONTROL - RUNTIME HUMAN INTERFACES
     ##########################################################################
-    def update(self):
+    def update(self, bead_list):
         """Transmit the OSC message to update all beads on the rosary."""
         bundle = osc_bundle_builder.OscBundleBuilder(osc_bundle_builder.IMMEDIATELY)
 
         i = 0
-        while (i < self.BEAD_COUNT):
+        while (i < len(bead_list)):
             msg = osc_message_builder.OscMessageBuilder(address = "/beadf")
             msg.add_arg(i)
-            msg.add_arg(float(self.beads[i].color.r))
-            msg.add_arg(float(self.beads[i].color.g))
-            msg.add_arg(float(self.beads[i].color.b))
+            msg.add_arg(float(bead_list[i].color.r))
+            msg.add_arg(float(bead_list[i].color.g))
+            msg.add_arg(float(bead_list[i].color.b))
             msg = msg.build()
             bundle.add_content(msg)
             i = i + 1
@@ -340,21 +352,24 @@ class Rosary:
             tr = self.triggers[-1]
             self.triggers.remove(tr)
 
+
     @dm.expose()
     def start(self, interactive=False):
         """Start the animation loop (aka, mainloop()) and create a shell for live interaction."""
         r = self
         if (r.run_mainloop == False):
             r.run_mainloop = True
-            self.t_mainloop = threading.Thread(name='rosary_mainloop', target=self.mainloop)
-            self.t_mainloop.start()
+            self.t_mainloop_beads = threading.Thread(name='beads_mainloop', target=self.mainloop, kwargs={'bead_list': self.beads, 'name': 'beads'})
+            self.t_mainloop_beads.start()
 
-            # Don't join the thread if being called from server
+            self.t_mainloop_cross = threading.Thread(name='cross_mainloop', target=self.mainloop, kwargs={'bead_list': self.cross, 'name': 'cross', 'frame_time': 1/5})
+            self.t_mainloop_cross.start()
+
+            self.t_mainloop_bases = threading.Thread(name='bases_mainloop', target=self.mainloop, kwargs={'bead_list': self.bases, 'name': 'bases'})
+            self.t_mainloop_bases.start()
+
             if interactive:
-
                 code.interact(local=locals())
-
-                self.t_mainloop.join()
 
 
     @dm.expose()
@@ -424,7 +439,7 @@ class Rosary:
             effect.registered = True
 
 
-    def mainloop(self):
+    def mainloop(self, *args, **kwargs):
         """This is the animiation loop. It cycles through all active effects
         and invokes next() on each effect.
 
@@ -432,6 +447,10 @@ class Rosary:
         * frame_time: how much wall-clock time to allocate to each update
 
         """
+
+        frame_time = kwargs.get('frame_time', self.frame_time)
+
+        print(kwargs.get('name'), 'frame_time', frame_time)
 
         next_frame_time = time.monotonic()
         
@@ -443,7 +462,9 @@ class Rosary:
         while (self.run_mainloop):
             next_frame_time += self.frame_time
 
-            self.beads_set_bgcolor()
+            bead_list = kwargs.get('bead_list')
+
+            self.beads_set_bgcolor(bead_list)
 
             # advance the state of all the effects
             self.bin.next()
@@ -458,7 +479,7 @@ class Rosary:
 
             # drop a frame if we've already passed next_frame_time
             while (now > next_frame_time):
-                print('frame drop')
+                print(kwargs.get('name', 'no-name'), 'frame drop')
                 next_frame_time += self.frame_time
                 # "dropping a frame" means calling next() on all the effects w/o updating the LEDs
                 self.bin.next()
@@ -477,7 +498,7 @@ class Rosary:
 
             # update the LEDs
             # do this last to try to make the updates as regular as possible
-            self.update()
+            self.update(bead_list)
 
 
 
