@@ -21,7 +21,6 @@ class Casino(effect.Effect):
             self.current = len(self.bead_list) - 1
         else:
             self.current = 0
-        #self.last = self.current
         self.end_position = len(self.bead_list) - 1
         
 
@@ -32,14 +31,11 @@ class Casino(effect.Effect):
         for b in range(self.end_position, len(self.bead_list)):
             self.bead_list[b].color.set(self.color)
         
-        #self.bead_list[self.last].color.set(rosary.bgcolor)
         self.current += self.direction
-        #self.last = self.current
         self.bead_list[self.current].color.set(self.color)
 
         if (self.current >= self.end_position):
             self.current = 0
-            #self.last = 0
             self.end_position = self.end_position - 1
         if (self.end_position <= 0):
             #shut off all the beads and start over
@@ -47,7 +43,6 @@ class Casino(effect.Effect):
                 b.color.set(rosary.bgcolor)
             self.end_position = len(self.bead_list) - 1
             self.current = 0
-            #self.last = 0
 
 
     @dm.expose()
