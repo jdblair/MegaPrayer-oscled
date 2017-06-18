@@ -15,5 +15,6 @@ __all__ = [
     'casino',
     'sparkle',
     'vibration_fixed',
+    'looper',
     'random_fill'
 ]
