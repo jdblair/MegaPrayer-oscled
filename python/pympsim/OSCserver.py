@@ -19,7 +19,7 @@ def print_update(addr, args):
     queue = args[0]
     global beadblob
     queue.put(beadblob)
-    beadblob = []
+    beadblob =[]
 
 def print_bead_rosary(addr, args, base, length, blob):
     global beadblob

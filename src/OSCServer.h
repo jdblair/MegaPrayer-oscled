@@ -35,6 +35,10 @@ class OSCServer {
 
     OSCServer(std::string ip, std::string port);
 
+    static const int BEAD_ROSARY;
+    static const int BEAD_BASES;
+    static const int BEAD_CROSS;
+
     int bind(std::shared_ptr<IPlatformSerial> const ser, OSCLedConfig::interface_config const &cfg);
     int drop_interfaces();
     void start() { m_st->start(); };
@@ -43,6 +47,7 @@ class OSCServer {
     int osc_method_bead(lo_arg **argv);
     int osc_method_bead_float(lo_arg **argv);
     int osc_method_update(lo_arg **argv);
+    int osc_method_blob(lo_arg **argv);
     void set_led(int n, led_t led);
     
     class ILEDDataFormat {

@@ -16,5 +16,3 @@ class SetColor(effect.Effect):
 
         for bead in (self.bead_list):
             bead.copy_color(self.color)
-
-        self.finished = True

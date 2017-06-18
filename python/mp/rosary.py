@@ -519,7 +519,7 @@ class Rosary:
 
             # drop a frame if we've already passed next_frame_time
             while (now > next_frame_time):
-                print(kwargs.get('name', 'no-name'), 'frame drop')
+                print('frame drop')
                 next_frame_time += self.frame_time
                 # "dropping a frame" means calling next() on all the effects w/o updating the LEDs
                 self.bin.next()
