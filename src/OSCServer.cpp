@@ -171,21 +171,6 @@ int OSCServer::osc_method_blob(lo_arg **argv)
     char *data = &argv[2]->blob.data;
     int size = argv[2]->blob.size;
 
-    //printf("base = %d, count = %d\n", base, count);
-    
-    //printf("sizeof(data[1]) = %d\n", sizeof(data[1]));
-
-    // for (int i; i < size; i++) {
-    //     if (i % 6 == 0) {
-    //         printf("%02d: ", i/6);
-    //     }
-    //     printf("%02x ", data[i]);
-    //     if ((i + 1) % 6 == 0) {
-    //         printf("\n");
-    //     }
-    // }
-    // printf("\n");
-
     struct __attribute__ ((__packed__)) packed_led {
         uint16_t r;
         uint16_t g;
@@ -199,6 +184,10 @@ int OSCServer::osc_method_blob(lo_arg **argv)
         printf("%s: short data blob!", __FUNCTION__);
     }
 
+    // its kind of silly to read in the 16 bit values, flip the byte order
+    // then bitshift to get just the high-order byte, but doing it this way
+    // preserves our abstractions and should make this easier to maintain.
+    // plus, its an obviuous place to optimize if we have a performance issue.
     struct packed_led *packed_led;
     for (size_t bead = 0; bead < count; bead++) {
         packed_led = reinterpret_cast <struct packed_led*>(data + (bead * bead_size));
@@ -214,21 +203,9 @@ int OSCServer::osc_method_blob(lo_arg **argv)
             set_led(((bead + base) * m_leds_per_bead) + led_offset, led_t(packed_led->r, packed_led->g, packed_led->b));
         }        
 
-        //printf("%d: %d, %d, %d\n", bead, packed_led->r, packed_led->g, packed_led->b);
     }
 
-    /* here we cheat a little bit, and instead of extracting all the
-       shorts, we just peek at the high order byte. */
-    // for (int i = base; i < base + count; i++) {
-    //     int offset = i * bead_size;
-    //     printf("%i: %02x %02x %02x\n", i, data[offset + 0], data[offset + 2], data[offset + 4]);
-    //     set_led(i, led_t(data[offset + 0],
-    //                      data[offset + 2],
-    //                      data[offset + 4]));
-    // }
-
     for (auto it = m_led_ifaces.begin(); it != m_led_ifaces.end(); ++it) {
-        //printf("iface: %d, %d\n", (*it)->m_base, (*it)->m_len);
         (*it)->notify_update_thread();
     }
 }
@@ -404,16 +381,13 @@ void OSCServer::led_interface::set_led(int offset, led_t led)
 
     lock_guard<mutex> lock(leds_mutex);
     leds.at(offset) = led;
-    //printf("led_set(): %d: %d, %d %d\n", offset, led.r, led.g, led.b);
 }
 
 
 void OSCServer::led_interface::update_led_buf()
 {
-    //printf("led_interface: top\n");
     {
         lock_guard<mutex> lock(leds_mutex);
-        //printf("led_interface: after mutex\n");
         m_fmt->update(leds);
     }
     m_ser->send(m_fmt->buf, m_fmt->buf_len);
@@ -438,7 +412,6 @@ void OSCServer::led_interface::update_thread()
 
 void OSCServer::led_interface::notify_update_thread()
 {
-    //printf("notify_update_thread()\n");
     unique_lock<mutex> lock(update_mutex);
     update_cv.notify_all();
 }
