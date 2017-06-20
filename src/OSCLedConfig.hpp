@@ -36,6 +36,7 @@ public:
         std::string byte_order;
         std::string led_type;
         int brightness;
+        std::string iface_class;
     };
 
     struct station_config {
@@ -86,6 +87,7 @@ public:
     static const std::string KEY_IFACE_BYTE_ORDER;
     static const std::string KEY_IFACE_LED_TYPE;
     static const std::string KEY_IFACE_BRIGHTNESS;
+    static const std::string KEY_IFACE_CLASS;
     
 private:
     OSCLedConfig();

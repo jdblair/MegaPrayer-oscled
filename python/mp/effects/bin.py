@@ -61,7 +61,7 @@ x        """
             #effect_paths = [effect.generate_osc_path(fn) for fn in\
             #                effect.dm.registered_methods.keys()]
             #self.effect_paths_to_unregister.extend(effect_paths)
-            self.unexpose_effect_knobs(effect)
+            self.rosary.unexpose_effect_knobs(effect)
             self.effects.remove(effect)
 
 

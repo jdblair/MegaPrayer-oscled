@@ -59,7 +59,7 @@ class App:
             blob = bd[2]
             for i in range(0, len(blob), 6):
                 #print(blob[i:i+6])
-                (r, g, b) = unpack('!HHH', blob[i:i+6])
+                (r, g, b, brightness) = unpack('!HHHH', blob[i:i+6])
                 tk_rgb = "#%02x%02x%02x" % (r >> 8, g >> 8, b >> 8)
                 self.canvas.itemconfig(self.beads[num], fill=tk_rgb)
                 num += 1

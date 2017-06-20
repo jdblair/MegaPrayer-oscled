@@ -37,6 +37,7 @@ const string OSCLedConfig::KEY_IFACE_REVERSED = "reversed";
 const string OSCLedConfig::KEY_IFACE_BYTE_ORDER = "byte_order";
 const string OSCLedConfig::KEY_IFACE_BRIGHTNESS = "brightness";
 const string OSCLedConfig::KEY_IFACE_LED_TYPE = "led_type";
+const string OSCLedConfig::KEY_IFACE_CLASS = "class";
 
 OSCLedConfig::OSCLedConfig()
 {
@@ -141,6 +142,9 @@ bool OSCLedConfig::json_parse_station_values(Json::Value s, OSCLedConfig::statio
             iface_ptr->led_type = i->get(KEY_IFACE_LED_TYPE, "ws2801").asString();
             iface_ptr->byte_order = i->get(KEY_IFACE_BYTE_ORDER, "rgb").asString();
             iface_ptr->brightness = i->get(KEY_IFACE_BRIGHTNESS, 31).asInt();
+            iface_ptr->iface_class = i->get(KEY_IFACE_CLASS, "bead").asString();
+
+            cout << "iface_class: " << iface_ptr->iface_class << endl;
 
             // normalize strings to lower case
             transform(iface_ptr->byte_order.begin(), iface_ptr->byte_order.end(), iface_ptr->byte_order.begin(), ::tolower);

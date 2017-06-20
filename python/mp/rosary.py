@@ -43,10 +43,12 @@ class Updater:
         
         payload = bytearray()
         for bead in self.bead_list:
-            payload.extend(struct.pack('!HHH',
+            payload.extend(struct.pack('!HHHH',
                                        int(bead.color.r * 0xffff),
                                        int(bead.color.g * 0xffff),
-                                       int(bead.color.b * 0xffff)))
+                                       int(bead.color.b * 0xffff),
+                                       int(bead.color.brightness)
+            ))
 
         msg.add_arg(bytes(payload))
 

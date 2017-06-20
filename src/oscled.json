@@ -14,15 +14,24 @@
             "interface": [
                 {
                     "id": 0,
+                    "class": "rosary",
                     "led_base" : 0,
                     "led_count" : 40,
                     "reversed" : true
                 },
                 {
                     "id": 1,
+                    "class": "rosary",
                     "led_base" : 40,
                     "led_count" : 40,
                     "reversed" : false
+                },
+                {
+                    "id": 2,
+                    "class": "base",
+                    "led_base": 0,
+                    "led_count": 8,
+                    "reversed": false
                 }
             ]
         },
