@@ -61,20 +61,12 @@ OSCServer::OSCServer(string ip, string port) : m_ip(ip), m_port(port)
     m_st->add_method("/update", "",
                      [this](lo_arg **argv, int)  {this->osc_method_update(argv);});
 
-    m_st->add_method("/bead/rosary", "iib",
-                     [this](lo_arg **argv, int)  {this->osc_method_bead_rosary(argv);});
-    m_st->add_method("/bead/base", "iib",
-                     [this](lo_arg **argv, int)  {this->osc_method_bead_base(argv);});
-    m_st->add_method("/bead/cross", "iib",
-                     [this](lo_arg **argv, int)  {this->osc_method_bead_cross(argv);});
-
-    // m_st->add_method("/bead", "iiii", 
-    //                  [this](lo_arg **argv, int)  {this->osc_method_bead(argv);
-
+    m_st->add_method("/bead", "siib", 
+                     [this](lo_arg **argv, int)  {this->osc_method_bead(argv);});
+                         
     m_base_bead = 0;
     m_leds_per_bead = 1;
 }
-
 
 
 
@@ -127,23 +119,6 @@ int OSCServer::osc_method_led_float(lo_arg **argv)
 }
 
 
-int OSCServer::osc_method_bead(lo_arg **argv)
-{
-    // cout << "/bead (" << ++received << "): "
-    //      << argv[0]->i << ", " 
-    //      << argv[1]->i << ", " 
-    //      << argv[2]->i << ", "
-    //      << argv[3]->i << endl;
-    
-    auto n = argv[0]->i * m_leds_per_bead;
-    for (int offset = 0; offset < m_leds_per_bead; offset++) {
-        set_led(string("bead"), n + offset, led_t(argv[1]->i, argv[2]->i, argv[3]->i));
-    }        
-
-    return 0;
-}
-
-
 int OSCServer::osc_method_bead_float(lo_arg **argv)
 {
     // cout << "/beadf (" << ++received << "): "
@@ -169,29 +144,15 @@ int OSCServer::osc_method_update(lo_arg **argv)
 }
 
 
-int OSCServer::osc_method_bead_rosary(lo_arg **argv)
+int OSCServer::osc_method_bead(lo_arg **argv)
 {
-    return this->osc_bead_blob_handler(string("rosary"), argv);
-}
+    string iface_class(&(argv[0]->s));
+    int base = argv[1]->i;
+    int count = argv[2]->i;
+    char *data = &argv[3]->blob.data;
+    int size = argv[3]->blob.size;
 
-int OSCServer::osc_method_bead_base(lo_arg **argv)
-{
-    return this->osc_bead_blob_handler(string("base"), argv);
-}
-
-int OSCServer::osc_method_bead_cross(lo_arg **argv)
-{
-    return this->osc_bead_blob_handler(string("cross"), argv);
-}
-
-
-
-int OSCServer::osc_bead_blob_handler(string iface_class, lo_arg **argv)
-{
-    int base = argv[0]->i;
-    int count = argv[1]->i;
-    char *data = &argv[2]->blob.data;
-    int size = argv[2]->blob.size;
+    printf(".");
 
     struct __attribute__ ((__packed__)) packed_led {
         uint16_t r;
@@ -225,16 +186,19 @@ int OSCServer::osc_bead_blob_handler(string iface_class, lo_arg **argv)
 
         // set all the LEDs on the bead
         for (int led_offset = 0; led_offset < m_leds_per_bead; led_offset++) {
+            // this is another opportunity for future optimization
+            // all the LEDs in a blob are in the same interface class, so it makes sense
+            // to find a way to avoid matching the class name for every LED
             set_led(iface_class,
                     ((bead + base) * m_leds_per_bead) + led_offset,
                     led_t(packed_led->r,
                           packed_led->g,
                           packed_led->b,
                           packed_led->brightness));
-        }        
-
+        }
     }
 
+    // actually transmit the data to the LEDs
     for (auto it = m_led_ifaces.begin(); it != m_led_ifaces.end(); ++it) {
         (*it)->notify_update_thread();
     }

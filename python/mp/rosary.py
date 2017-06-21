@@ -37,8 +37,9 @@ class Updater:
         self.osc_client=osc_client
         
     def update(self):
-        msg = osc_message_builder.OscMessageBuilder(address = "/bead/" + self.name)
-        msg.add_arg(int(0))               # base
+        msg = osc_message_builder.OscMessageBuilder(address = "/bead")
+        msg.add_arg(self.name)                 # name (class)
+        msg.add_arg(int(0))                    # base
         msg.add_arg(int(len(self.bead_list)))  # length
         
         payload = bytearray()
