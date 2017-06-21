@@ -152,8 +152,6 @@ int OSCServer::osc_method_bead(lo_arg **argv)
     char *data = &argv[3]->blob.data;
     int size = argv[3]->blob.size;
 
-    printf(".");
-
     struct __attribute__ ((__packed__)) packed_led {
         uint16_t r;
         uint16_t g;
