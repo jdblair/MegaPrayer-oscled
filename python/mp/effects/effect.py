@@ -113,7 +113,6 @@ class Effect(abc.ABC):
 
     @dm.expose()
     def set_color(self, r, g, b):
-        print("set_color", r, g, b)
         self.color.set(color.Color(r, g, b))
 
     @dm.expose()

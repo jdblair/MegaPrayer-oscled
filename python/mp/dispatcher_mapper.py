@@ -5,7 +5,6 @@ class DispatcherMapper:
 
     def expose(self):
         def decorator(fn):
-            print("expose", fn.__name__)
             self.exposed_methods[fn.__name__] = fn
             return fn
         return decorator

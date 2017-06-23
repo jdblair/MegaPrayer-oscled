@@ -329,6 +329,13 @@ class Rosary:
         else:
             return None
 
+    @dm.expose()
+    def del_effect(self, id):
+        self.bin.del_effect(id)
+
+    @dm.expose()
+    def clear_effects(self):
+        self.bin.clear_effects()
 
     @dm.expose()
     def clear_triggers(self):
@@ -416,7 +423,6 @@ class Rosary:
 
         if not effect.registered:
             for fn_name, fn in effect.dm.exposed_methods.items():
-                print("effect knob:", fn_name)
                 if fn_name in self.knobs.keys():
                     self.knobs[fn_name].append( (fn, effect) )
                 else:

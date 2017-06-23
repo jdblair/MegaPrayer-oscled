@@ -51,7 +51,6 @@ class Bin(effect.Effect):
             effect.set_rosary(rosary)
             super().set_rosary(rosary)
 
-    @dm.expose()
     def del_effect(self, id):
         """Delete an active effect by id."""
         effect = self.effect(id)
@@ -63,8 +62,6 @@ class Bin(effect.Effect):
             self.rosary.unexpose_effect_knobs(effect)
             self.effects.remove(effect)
 
-
-    @dm.expose()
     def clear_effects(self):
         """Remove all active effects. This stops all activity on the rosary."""
         # There's some weird race condition where del_effect's call to
@@ -74,8 +71,6 @@ class Bin(effect.Effect):
             effect = self.effects[0]
             self.del_effect(effect.id)
 
-
-    @dm.expose()
     def clear_effects_fade(self):
         """
         Just calling clear_effects() is jarring, let's ease it in
