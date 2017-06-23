@@ -43,11 +43,9 @@ class Rosary:
     def __init__(self, ip="127.0.0.1", port=5005, dispatcher=None, name="rosary"):
         self.beads = []
         self.bgcolor = color.Color(0,0,0)
-        self.effects = []
         self.triggers = []
         self.osc_ip = ip
         self.osc_port = port
-        self.effect_id = 0
         self.trigger_id = 0
         self.BEAD_COUNT=60
         self.run_mainloop = False
@@ -59,8 +57,6 @@ class Rosary:
         self.dispatcher = dispatcher
         # Available knobs to turn
         self.knobs = {}
-
-        self.osc_client = udp_client.UDPClient(self.osc_ip, self.osc_port)
 
         for i in range(self.BEAD_COUNT):
             self.beads.append(Bead(i))
@@ -111,6 +107,8 @@ class Rosary:
             #'black': color.Color(0,0,0)
         }
 
+        self.osc_client = udp_client.UDPClient(self.osc_ip, self.osc_port)
+
         # Automagically register effects so that they're callable by name
         self.register_written_effects()
 
@@ -119,6 +117,10 @@ class Rosary:
 
         # Map our own exposed methods to the dispatcher
         self.map_to_dispatcher()
+
+        # at the top level we have just one effect: effects.Bin
+        # it holds all the other effects.
+        self.bin = effects.bin.Bin(self.set_registry['all'], rosary=self)
 
     def beads_set_bgcolor(self):
         for bead in self.beads:
@@ -135,6 +137,7 @@ class Rosary:
         """
         # instantiate the object so we get get the name
         e = effect(self.set_registry['none'])
+        # note that we are returning effect, a class, not e, an instance!
         self.effect_registry[e.name] = effect
 
 
@@ -234,7 +237,6 @@ class Rosary:
 
         i = 0
         while (i < self.BEAD_COUNT):
-            #print("bead {}".format(i))
             msg = osc_message_builder.OscMessageBuilder(address = "/beadf")
             msg.add_arg(i)
             msg.add_arg(float(self.beads[i].color.r))
@@ -263,28 +265,6 @@ class Rosary:
             if t.id == id:
                 return t
         return None
-
-
-    def effect(self, id):
-        """Return the Effect object of an active effect by specifying the Effect id."""
-        for e in self.effects:
-            if e.id == id:
-                return e
-        return None
-
-
-    def add_effect_object(self, effect):
-        """Adds an Effect object to the active Effect list.  Returns the id of
-        the active effect.
-
-        """
-        self.effect_id = self.effect_id + 1
-        effect.id = self.effect_id
-        # Since rosary holds the dispatcher and the effect doesn't
-        # know about rosary on init, we can't map to dispatcher yet either
-        effect.rosary = self
-        self.effects.append(effect)
-        return self.effect_id
 
 
     def add_trigger_object(self, trigger):
@@ -345,45 +325,26 @@ class Rosary:
                 kwargs.pop(key)
 
         if requested_effect is not None:
-            return self.add_effect_object(requested_effect(*args, **kwargs))
+            return self.bin.add_effect_object(requested_effect(*args, rosary=self, **kwargs))
         else:
             return None
 
-
     @dm.expose()
     def del_effect(self, id):
-        """Delete an active effect by id."""
-
-        effect = self.effect(id)
-
-        if effect is not None:
-            #effect_paths = [effect.generate_osc_path(fn) for fn in\
-            #                effect.dm.registered_methods.keys()]
-            #self.effect_paths_to_unregister.extend(effect_paths)
-            self.unexpose_effect_knobs(effect)
-            self.effects.remove(effect)
-
+        self.bin.del_effect(id)
 
     @dm.expose()
     def clear_effects(self):
-        """Remove all active effects. This stops all activity on the rosary."""
-        # There's some weird race condition where del_effect's call to
-        # self.effects.remove doesn't reorder the list in time if we use
-        # a for loop, so do this instead
-        while self.effects:
-            effect = self.effects[0]
-            self.del_effect(effect.id)
-
-
+        self.bin.clear_effects()
+        
     @dm.expose()
     def clear_effects_fade(self):
         """
         Just calling clear_effects() is jarring, let's ease it in
         """
 
-        for eff in self.effects:
+        for eff in self.bin.effects:
             eff.fade_out(30)
-
 
     @dm.expose()
     def clear_triggers(self):
@@ -394,7 +355,6 @@ class Rosary:
         while self.triggers:
             tr = self.triggers[-1]
             self.triggers.remove(tr)
-
 
     @dm.expose()
     def start(self, interactive=False):
@@ -463,6 +423,7 @@ class Rosary:
             if len(mappings) < 1:
                 self.knobs.pop(fn_name)
 
+
     def expose_effect_knobs(self, effect):
         """
         Given an effect, create mappings in self.knobs to effect's
@@ -484,7 +445,7 @@ class Rosary:
         and invokes next() on each effect.
 
         knobs:
-        * mainloop_delay: how long to wait, in seconds, at the bottom of each loop
+        * frame_time: how much wall-clock time to allocate to each update
 
         """
 
@@ -501,15 +462,7 @@ class Rosary:
             self.beads_set_bgcolor()
 
             # advance the state of all the effects
-            for effect in self.effects:
-
-                # If any new effects have been added since the last iteration,
-                # add their knobs to the dispatched functikon
-                self.expose_effect_knobs(effect)
-
-                effect.supernext()
-                if (effect.finished):
-                    self.del_effect(effect.id)
+            self.bin.next()
 
             # Let the triggers figure out for themselves what to do
             #for trigger in self.triggers.values():
@@ -523,12 +476,8 @@ class Rosary:
             while (now > next_frame_time):
                 print('frame drop')
                 next_frame_time += self.frame_time
-
                 # "dropping a frame" means calling next() on all the effects w/o updating the LEDs
-                for effect in self.effects:
-                    effect.next()
-                    if (effect.finished):
-                        self.del_effect(effect.id)
+                self.bin.next()
 
                 now = time.monotonic()
 
