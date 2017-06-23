@@ -19,5 +19,6 @@ __all__ = [
     'bin_demo',
     'strobe',
     'cop_lights',
+    'looper',
     'random_fill'
 ]

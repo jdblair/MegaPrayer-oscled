@@ -336,6 +336,15 @@ class Rosary:
     @dm.expose()
     def clear_effects(self):
         self.bin.clear_effects()
+        
+    @dm.expose()
+    def clear_effects_fade(self):
+        """
+        Just calling clear_effects() is jarring, let's ease it in
+        """
+
+        for eff in self.bin.effects:
+            eff.fade_out(30)
 
     @dm.expose()
     def clear_triggers(self):

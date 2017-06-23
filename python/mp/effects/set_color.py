@@ -12,9 +12,6 @@ class SetColor(effect.Effect):
         super().__init__(name="set_color", bead_set=bead_set, color=color, **kwargs)
 
     def next(self):
-        super().next()
-
         for bead in (self.bead_list):
             bead.copy_color(self.color)
 
-        self.finished = True
