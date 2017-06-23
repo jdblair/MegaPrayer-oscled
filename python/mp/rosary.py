@@ -416,6 +416,7 @@ class Rosary:
 
         if not effect.registered:
             for fn_name, fn in effect.dm.exposed_methods.items():
+                print("effect knob:", fn_name)
                 if fn_name in self.knobs.keys():
                     self.knobs[fn_name].append( (fn, effect) )
                 else:

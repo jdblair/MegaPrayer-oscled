@@ -97,7 +97,7 @@ class Effect(abc.ABC):
             self.next()
 
         if self.duration is not None and self.time >= self.duration + (self.delay or 0):
-            self.rosary.del_effect(self.id)
+            self.rosary.bin.del_effect(self.id)
 
         self.time += 1
 
@@ -113,7 +113,8 @@ class Effect(abc.ABC):
 
     @dm.expose()
     def set_color(self, r, g, b):
-        self.color = color.Color(r, g, b)
+        print("set_color", r, g, b)
+        self.color.set(color.Color(r, g, b))
 
     @dm.expose()
     def set_duration(self, sec):
