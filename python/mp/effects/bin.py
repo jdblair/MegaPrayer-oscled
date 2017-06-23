@@ -34,7 +34,7 @@ class Bin(effect.Effect):
         """Adds an Effect object to the active Effect list.  Returns the id of
         the active effect.
 
-x        """
+        """
         effect.id = self.effect_id()
         # Since rosary holds the dispatcher and the effect doesn't
         # know about rosary on init, we can't map to dispatcher yet either
@@ -89,7 +89,6 @@ x        """
 
             # If any new effects have been added since the last iteration,
             # add their knobs to the dispatched functikon
-            #if self.rosary != None:
             self.rosary.expose_effect_knobs(effect)
 
             effect.supernext()
