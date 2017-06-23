@@ -374,11 +374,6 @@ class Rosary:
             effect = self.effects[0]
             self.del_effect(effect.id)
 
-        # I know on the real rosary this is unneccessary, but it's
-        # annoying on the sim: @jdblair is sending 0,0,0 in the real
-        # thing wonky?
-        self.add_effect('set_color', 'all', 0, 0, 0)
-
 
     @dm.expose()
     def clear_effects_fade(self):
@@ -531,7 +526,7 @@ class Rosary:
 
                 # "dropping a frame" means calling next() on all the effects w/o updating the LEDs
                 for effect in self.effects:
-                    effect.next(self)
+                    effect.next()
                     if (effect.finished):
                         self.del_effect(effect.id)
 
