@@ -15,8 +15,8 @@ class VibrationFixed(effect.Effect):
     # Wish there were a better way than requiring this every time
     dm = copy.deepcopy(effect.Effect.dm)
 
-    def __init__(self, bead_set, color=color.Color(1,1,1), duration=None, ym=1, k=.25, w=1):
-        super().__init__("vibration_fixed", bead_set, color=color, duration=duration)
+    def __init__(self, bead_set, color=color.Color(1,1,1), duration=None, ym=1, k=.25, w=1, **kwargs):
+        super().__init__(name='vibration_fixed', bead_set=bead_set, color=color, duration=duration)
         self.ym = ym
         self.k = k
         self.w = w
@@ -25,7 +25,7 @@ class VibrationFixed(effect.Effect):
         self.min = 0
         self.t = 0
 
-    def next(self, rosary):
+    def next(self):
         super().next()
         
         for b in (self.bead_list):

@@ -1,5 +1,6 @@
 import abc
 import copy
+import time
 
 from mp import color
 from mp.dispatcher_mapper import DispatcherMapper
@@ -20,26 +21,29 @@ class Effect(abc.ABC):
     # Can't decorate with @self.r, so need this here
     dm = DispatcherMapper()
 
-    def __init__(self, name, set, color=color.Color(1,1,1), duration=None):
+    def __init__(self, *args, **kwargs):
+
+        # Introducing...the option to pass a rosary on init instead of
+        # assigning it afterwards
+        self.rosary = kwargs.get('rosary')
         # the name is used when the Effect is registered
-        self.name = name
+        self.name = kwargs.get('name')
         # the bead_set is a list of beads the Effect is applied to. The order is important!
-        self.bead_set = self.set_bead_set(set)
+        self.bead_set = self.set_bead_set(kwargs.get('bead_set', set()))
         # The color of the Effect. This is not always meaningful.
-        self.color = copy.copy(color)
-        self.duration = duration
+        self.color = kwargs.get('color')
+        self.duration = kwargs.get('duration')
+        self.delay = kwargs.get('delay', 0)
+        self.start_time = time.monotonic()
+
+        # For the purposes of `fade_out` and `duration`
         self.time = 0
         # id will be assigned when the effect is attached to the mainloop
-        self.id = -1
+        self.id = None
         # the Effect will be removed from effect list if self.finished is true
         self.finished = False
-        # Want to be sure that self.rosary exists, even if it's none, see
-        # the "register_with_dispatcher" method
-        self.rosary = None
         # Since we're not guaranteed a rosary object on init, we will rely
-        # on the rosary to call our "register_with_dispatcher" method on every
-        # update loop and signal back to the rosary that we did it
-        # (p.s. I do like rosary attaching itself to the effect after init)
+        # on the rosary to look at our exposed methods (via `@dm.expose())
         self.registered = False
 
     def __eq__(self, other):
@@ -77,27 +81,39 @@ class Effect(abc.ABC):
         """Returns the name of the Effect."""
         return self.name
 
-    @abc.abstractmethod
-    def next(self):
+    def supernext(self):
         """
         Invoked for every mainloop cycle.
-        This method _must_ be invoked by every Effect's next() method.
-        """
-        self.color.next()
 
-        #print("DURATION: {}, TIME: {}".format(self.duration, self.time))
-        if self.duration is not None and self.time >= self.duration:
-            print("I MUST GO NOW MY PEOPLE NEED ME")
-            # Is this redundant?
-            # NOTE: Figure out who's responsible for this: rosary? effect?
-            #self.unregister_with_dispatcher()
-            self.rosary.del_effect(self.id)
+        Having the rosary call this method, and having this method call
+        the actual `next()` method lets me make generically implement `delay`
+        without forcing every effect to re-implement it.
+        """
+
+        # In refactoring triggers, I wanted an alternate way to "script"
+        # sequences - if delay is passed, don't start "nexting" until it's over
+        if self.time > self.delay:
+            self.color.next()
+            self.next()
+
+        if self.duration is not None and self.time >= self.duration + (self.delay or 0):
+            self.rosary.bin.del_effect(self.id)
 
         self.time += 1
 
+    def set_rosary(self, rosary):
+        self.rosary = rosary
+        
+    @abc.abstractmethod
+    def next(self):
+        """
+        This method _must_ be invoked by every Effect's next() method.
+        """
+        pass
+
     @dm.expose()
     def set_color(self, r, g, b):
-        self.color = color.Color(r, g, b)
+        self.color.set(color.Color(r, g, b))
 
     @dm.expose()
     def set_duration(self, sec):
@@ -106,39 +122,6 @@ class Effect(abc.ABC):
     @dm.expose()
     def fade_out(self, fade_duration):
         self.color = color.ColorFade(self.color, color.Color(0,0,0), fade_duration)
+        # Begin countdown to self-destruction
+        self.duration = self.delay + self.time + fade_duration
 
-    def generate_osc_path(self, fn_name):
-        """
-        Centralize the dispatcher path name creation
-        """
-
-        return "/{}/effect/{}/{}".format(self.rosary.name,
-                                         self.id,
-                                         fn_name)
-
-    def unregister_with_dispatcher(self):
-        if self.rosary is not None:
-            for fn_name in self.dm.registered_methods.keys():
-                osc_path = self.generate_osc_path(fn_name)
-                self.rosary.dispatcher._map.pop(osc_path)
-
-    def register_with_dispatcher(self):
-        """
-        Make some paths, son
-        """
-        print("Effect {} registering following with dispatcher".format(self))
-        print(self.dm.registered_methods)
-
-        # If we instantiate an Effect anywhere but in Rosary's add_effect
-        # method and then call this, just exit gracefully
-        if self.rosary is not None:
-            for fn_name in self.dm.registered_methods.keys():
-
-                osc_path = self.generate_osc_path(fn_name)
-                print(osc_path)
-
-                self.rosary.dispatcher.map(osc_path,
-                                           self.dm.invoke_exposed,
-                                           fn_name,
-                                           self)
-            self.registered = True
