@@ -296,13 +296,16 @@ class Rosary:
         r = kwargs.get('r', 0.0)
         g = kwargs.get('g', 0.0)
         b = kwargs.get('b', 0.0)
+        a = kwargs.get('a', 0.0)
 
         # If you don't pass in a good name I'll pretend I didn't hear you
         bead_set = self.set_registry.get(bead_set_name.lower(),
                                          self.set_registry['all'])
 
         if any([r, g, b]):
-            effect_color = color.Color(r, g, b)
+            effect_color = color.Color(r, g, b, a)
+        elif issubclass(type(effect_color), color.Color):
+            effect_color = color
         else:
             effect_color = self.color_registry.get(color_name.lower())
 

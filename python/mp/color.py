@@ -1,7 +1,7 @@
 class Color:
     """Color represents the color of an individual bead."""
     
-    def __init__(self, r=0, g=0, b=0, a=0, name='color'):
+    def __init__(self, r=0.0, g=0.0, b=0.0, a=1.0, name='color'):
         self.r = r  # red
         self.g = g  # green
         self.b = b  # blue
@@ -23,19 +23,22 @@ class Color:
         using the Porter and Duff equation for alpha blending
         intensity is an optional argument."""
 
-        if alpha != None:
-            # overwrite color.a with the supplied alpha value
-            color.a = alpha
+        if alpha == None:
+            # take alpha from supplied color object
+            alpha = color.a
 
-        self.a = color.a + (self.a * (1 - color.a))
+        # this part is the porter-duff equation
+        self.a = alpha + (self.a * (1 - alpha))
         if self.a == 0:
             self.r = 0
             self.g = 0
             self.b = 0
         else:
-            self.r = (((color.r * color.a) + (self.r * (1 - color.a))) / self.a) * intensity
-            self.g = (((color.g * color.a) + (self.g * (1 - color.a))) / self.a) * intensity
-            self.b = (((color.b * color.a) + (self.b * (1 - color.a))) / self.a) * intensity
+            self.r = (((color.r * alpha) + (self.r * (1 - alpha))) / self.a) * intensity
+            self.g = (((color.g * alpha) + (self.g * (1 - alpha))) / self.a) * intensity
+            self.b = (((color.b * alpha) + (self.b * (1 - alpha))) / self.a) * intensity
+
+        self.a = alpha
 
     def next(self):
         """No-op in most cases. This is used by child objects that implement
@@ -50,7 +53,7 @@ class ColorFade(Color):
     time: number of steps to complete one color fade
     """
 
-    def __init__(self, start=Color(0,0,0), finish=Color(1,1,1), time=30):
+    def __init__(self, start=Color(0.0, 0.0, 0.0), finish=Color(1.0, 1.0, 1.0), time=30):
         super().__init__(r=start.r, g=start.g, b=start.b, a=start.a, name='color_fade')
         self.start = start
         self.finish = finish
