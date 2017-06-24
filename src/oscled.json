@@ -5,6 +5,7 @@
         "leds_per_bead": 8,
         "bead_count": 10,
         "byte_order": "brg",
+        "brightness": 30,
         "led_type": "WS201"
     },
     "station": [
@@ -14,6 +15,7 @@
             "interface": [
                 {
                     "id": 0,
+                    "xform": { "r": 1.0, "g": 1.0, "b": 1.0 },
                     "class": "rosary",
                     "led_base" : 0,
                     "led_count" : 40,
@@ -21,6 +23,7 @@
                 },
                 {
                     "id": 1,
+                    "xform": { "r": 1.0, "g": 1.0, "b": 1.0 },
                     "class": "rosary",
                     "led_base" : 40,
                     "led_count" : 40,
@@ -31,6 +34,7 @@
                     "class": "base",
                     "led_base": 0,
                     "led_count": 8,
+                    "byte_order": "rgb",
                     "reversed": false
                 }
             ]
@@ -41,17 +45,7 @@
             "interface": [
                 {
                     "id": 0,
-                    "led_base" : 0,
-                    "led_count" : 40,
-                    "reversed" : true
-                },
-                {
-                    "id": 1,
-                    "led_base" : 40,
-                    "led_count" : 40,
-                    "reversed" : false
-                }
-            ]
-        }
-    ]
-}
+                    "xform": { "r": 1.0, "g": 1.0, "b": 1.0 },
+                    "class": "rosary",
+                    "led_base" : 80,
+          
