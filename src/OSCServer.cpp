@@ -16,7 +16,9 @@
 
 using namespace std;
 
-
+const int OSCServer::BEAD_ROSARY = 0;
+const int OSCServer::BEAD_BASES = 1;
+const int OSCServer::BEAD_CROSS = 2;
 
 
 OSCServer::OSCServer(atomic<bool> *running, string ip, string port) : m_running(running), m_ip(ip), m_port(port)
@@ -50,28 +52,33 @@ OSCServer::OSCServer(atomic<bool> *running, string ip, string port) : m_running(
 
     m_st->add_method("/led", "iiii", 
                      [this](lo_arg **argv, int)  {this->osc_method_led(argv);});
+
     m_st->add_method("/ledf", "ifff", 
                      [this](lo_arg **argv, int)  {this->osc_method_led_float(argv);});
-    m_st->add_method("/bead", "iiii", 
-                     [this](lo_arg **argv, int)  {this->osc_method_bead(argv);});
+
     m_st->add_method("/beadf", "ifff", 
                      [this](lo_arg **argv, int)  {this->osc_method_bead_float(argv);});
     m_st->add_method("/update", "",
                      [this](lo_arg **argv, int)  {this->osc_method_update(argv);});
+    m_st->add_method("/led/xform", "fff",
+                     [this](lo_arg **argv, int)  {this->osc_method_xform(argv);});
 
+    m_st->add_method("/bead", "siib", 
+                     [this](lo_arg **argv, int)  {this->osc_method_bead(argv);});
+                         
     m_base_bead = 0;
     m_leds_per_bead = 1;
 }
 
 
 
-
-void OSCServer::set_led(int n, led_t led)
+void OSCServer::set_led(string const &iface_class, int n, led_t led)
 {
     // search for correct led_interface, set leds
     for (auto it = m_led_ifaces.begin(); it != m_led_ifaces.end(); ++it) {
         auto iface = *it;
-        if ((n >= iface->m_base) & (n < (iface->m_base + iface->m_len))) {
+        if ((iface_class == iface->m_iface_class) &&
+            ((n >= iface->m_base) & (n < (iface->m_base + iface->m_len)))) {
             n -= iface->m_base;  // normalize to vector offset
             if (iface->m_reverse) {
                 n = iface->m_len - 1 - n;  // reverse
@@ -80,6 +87,15 @@ void OSCServer::set_led(int n, led_t led)
         }
     }
 }
+
+
+void OSCServer::set_xform(float r, float g, float b)
+{
+    for (auto it = m_led_ifaces.begin(); it != m_led_ifaces.end(); ++it) {
+        (*it)->set_xform(r, g, b);
+    }
+}
+
 
 
 int OSCServer::osc_method_led(lo_arg **argv)
@@ -91,7 +107,7 @@ int OSCServer::osc_method_led(lo_arg **argv)
     //      << argv[3]->i << endl;
     
     auto n = argv[0]->i;
-    set_led(n, led_t(argv[1]->i, argv[2]->i, argv[3]->i));
+    set_led(string("bead"), n, led_t(argv[1]->i, argv[2]->i, argv[3]->i));
 
     return 0;
 }
@@ -106,26 +122,9 @@ int OSCServer::osc_method_led_float(lo_arg **argv)
     //      << argv[3]->f << endl;
     
     auto n = argv[0]->i;
-    set_led(n, led_t(argv[1]->f * 255,
+    set_led(string("bead"), n, led_t(argv[1]->f * 255,
                      argv[2]->f * 255,
                      argv[3]->f * 255));
-
-    return 0;
-}
-
-
-int OSCServer::osc_method_bead(lo_arg **argv)
-{
-    // cout << "/bead (" << ++received << "): "
-    //      << argv[0]->i << ", " 
-    //      << argv[1]->i << ", " 
-    //      << argv[2]->i << ", "
-    //      << argv[3]->i << endl;
-    
-    auto n = argv[0]->i * m_leds_per_bead;
-    for (int offset = 0; offset < m_leds_per_bead; offset++) {
-        set_led(n + offset, led_t(argv[1]->i, argv[2]->i, argv[3]->i));
-    }        
 
     return 0;
 }
@@ -141,7 +140,7 @@ int OSCServer::osc_method_bead_float(lo_arg **argv)
     
     auto n = argv[0]->i * m_leds_per_bead;
     for (int offset = 0; offset < m_leds_per_bead; offset++) {
-        set_led(n + offset, led_t(argv[1]->f * 255, argv[2]->f * 255, argv[3]->f * 255));
+        set_led(string("bead"), n + offset, led_t(argv[1]->f * 255, argv[2]->f * 255, argv[3]->f * 255));
     }        
 
     return 0;
@@ -155,7 +154,76 @@ int OSCServer::osc_method_update(lo_arg **argv)
     }
 }
 
+
+int OSCServer::osc_method_xform(lo_arg **argv)
+{
+    set_xform(argv[0]->f, argv[1]->f, argv[2]->f);
+
+    return 0;
+}
+
+
 // create an led_interface and added to m_led_ifaces
+int OSCServer::osc_method_bead(lo_arg **argv)
+{
+    string iface_class(&(argv[0]->s));
+    int base = argv[1]->i;
+    int count = argv[2]->i;
+    char *data = &argv[3]->blob.data;
+    int size = argv[3]->blob.size;
+
+    struct __attribute__ ((__packed__)) packed_led {
+        uint16_t r;
+        uint16_t g;
+        uint16_t b;
+        uint16_t brightness;
+    };
+
+    /* each bead takes 6 bytes. make sure our data is the right length */
+    const int bead_size = sizeof(packed_led);
+    if (size < (count * bead_size)) {
+        count = (size / bead_size);
+        printf("%s: short data blob!", __FUNCTION__);
+    }
+
+    // its kind of silly to read in the 16 bit values, flip the byte order
+    // then bitshift to get just the high-order byte, but doing it this way
+    // preserves our abstractions and should make this easier to maintain.
+    // plus, its an obviuous place to optimize if we have a performance issue.
+    struct packed_led *packed_led;
+    for (size_t bead = 0; bead < count; bead++) {
+        packed_led = reinterpret_cast <struct packed_led*>(data + (bead * bead_size));
+        packed_led->r = ntohs(packed_led->r);
+        packed_led->r >>= 8;
+        packed_led->g = ntohs(packed_led->g);
+        packed_led->g >>= 8;
+        packed_led->b = ntohs(packed_led->b);
+        packed_led->b >>= 8;
+        packed_led->brightness = ntohs(packed_led->brightness);
+        packed_led->brightness &= 0x00ff;  // bit-shifting not required
+
+        // set all the LEDs on the bead
+        for (int led_offset = 0; led_offset < m_leds_per_bead; led_offset++) {
+            // this is another opportunity for future optimization
+            // all the LEDs in a blob are in the same interface class, so it makes sense
+            // to find a way to avoid matching the class name for every LED
+            set_led(iface_class,
+                    ((bead + base) * m_leds_per_bead) + led_offset,
+                    led_t(packed_led->r,
+                          packed_led->g,
+                          packed_led->b,
+                          packed_led->brightness));
+        }
+    }
+
+    // actually transmit the data to the LEDs
+    for (auto it = m_led_ifaces.begin(); it != m_led_ifaces.end(); ++it) {
+        (*it)->notify_update_thread();
+    }
+}
+
+
+// create an led_interface and add to m_led_ifaces
 int OSCServer::bind(shared_ptr<IPlatformSerial> const ser, OSCLedConfig::interface_config const &cfg)
 {
     shared_ptr<led_interface> led_iface(new led_interface(ser, cfg));
@@ -182,7 +250,7 @@ void OSCServer::set_all_led(led_t led)
     for (auto it = m_led_ifaces.begin(); it != m_led_ifaces.end(); ++it) {
         auto iface = *it;
         for (int led_num = iface->m_base; led_num < iface->m_base + iface->m_len; led_num++) {
-            set_led(led_num, led);
+            set_led(iface->m_iface_class, led_num, led);
         }
         iface->notify_update_thread();
     }
@@ -210,7 +278,8 @@ void OSCServer::show_value(int value, int total_bits, int bead_offset, led_t col
             //cout << "0";
         }
         for (int led = 0; led < m_leds_per_bead; led++) {
-            set_led(((bead_offset + bit) * m_leds_per_bead) + led, color);
+            // FIXME: version is only displayed on the rosary
+            set_led(string("rosary"), ((bead_offset + bit) * m_leds_per_bead) + led, color);
         }
     }
     //cout << endl;
@@ -224,7 +293,7 @@ void OSCServer::show_value(int value, int total_bits, int bead_offset, led_t col
 void OSCServer::test_sequence()
 {
     // there's probably some c++ way to do this
-    const int test_color_len = 7;
+    const int test_color_len = 1;
     led_t test_color[] = {
         {1, 0, 0},
         {1, 1, 0},
@@ -385,6 +454,8 @@ void OSCServer::LEDFormat_APA102::update(vector<led_t> const &leds)
         buf[i + 2] = it->g;
         buf[i + 3] = it->r;
         i += 4;
+
+        printf("%d %d %d %d\n", buf[i + 0], buf[i + 1], buf[i + 2], buf[i + 3]);
     }
 }
 
@@ -398,6 +469,10 @@ OSCServer::led_interface::led_interface(std::shared_ptr<IPlatformSerial> const s
     m_base = cfg.led_base;
     m_len = cfg.led_count;
     m_reverse = cfg.reversed;
+    m_xform = cfg.xform;
+
+    // cout << "led_interface::m_xform: r = " << m_xform.r << ", g = " << m_xform.g << ", b = " << m_xform.g << endl;
+    m_iface_class = cfg.iface_class;
 
     // initialize leds with zero-value leds
     for (auto i = 0; i < m_len; i++) {
@@ -421,10 +496,24 @@ OSCServer::led_interface::~led_interface() {
 
 void OSCServer::led_interface::set_led(int offset, led_t led)
 {
-    //cout << "set_led(" << offset << "," << int(led.r)  << "," << int(led.g)  << "," << int(led.b)  << ")" << endl;
+    // cout << "set_led(" << offset << "," << int(led.r)  << "," << int(led.g)  << "," << int(led.b)  << ")" << endl;
+
+    led.r *= m_xform.r;
+    led.g *= m_xform.g;
+    led.b *= m_xform.b;
 
     lock_guard<mutex> lock(leds_mutex);
     leds.at(offset) = led;
+}
+
+
+void OSCServer::led_interface::set_xform(float r, float g, float b)
+{
+    m_xform.r = r;
+    m_xform.g = g;
+    m_xform.b = b;
+
+    cout << "set_xform(" << r << ", " << g << ", " << b << ")" << endl;
 }
 
 

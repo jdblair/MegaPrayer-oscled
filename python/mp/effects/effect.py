@@ -1,5 +1,6 @@
 import abc
 import copy
+import time
 
 from mp import color
 from mp.dispatcher_mapper import DispatcherMapper
@@ -22,7 +23,7 @@ class Effect(abc.ABC):
 
     def __init__(self, *args, **kwargs):
 
-        # Introducting...the option to pass a rosary on init instead of
+        # Introducing...the option to pass a rosary on init instead of
         # assigning it afterwards
         self.rosary = kwargs.get('rosary')
         # the name is used when the Effect is registered
@@ -33,11 +34,12 @@ class Effect(abc.ABC):
         self.color = kwargs.get('color')
         self.duration = kwargs.get('duration')
         self.delay = kwargs.get('delay', 0)
+        self.start_time = time.monotonic()
 
         # For the purposes of `fade_out` and `duration`
         self.time = 0
         # id will be assigned when the effect is attached to the mainloop
-        self.id = -1
+        self.id = None
         # the Effect will be removed from effect list if self.finished is true
         self.finished = False
         # Since we're not guaranteed a rosary object on init, we will rely
@@ -99,6 +101,9 @@ class Effect(abc.ABC):
 
         self.time += 1
 
+    def set_rosary(self, rosary):
+        self.rosary = rosary
+        
     @abc.abstractmethod
     def next(self):
         """
@@ -119,3 +124,4 @@ class Effect(abc.ABC):
         self.color = color.ColorFade(self.color, color.Color(0,0,0), fade_duration)
         # Begin countdown to self-destruction
         self.duration = self.delay + self.time + fade_duration
+

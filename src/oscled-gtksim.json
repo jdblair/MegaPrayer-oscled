@@ -13,12 +13,14 @@
             "interface": [
                 {
                     "id": 0,
+                    "class" : "rosary",
                     "led_base" : 0,
                     "led_count" : 240,
                     "reversed" : true
                 },
                 {
                     "id": 1,
+                    "class" : "rosary",
                     "led_base" : 240,
                     "led_count" : 240,
                     "reversed" : false

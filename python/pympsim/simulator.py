@@ -6,6 +6,7 @@ from tkinter import *
 from math import pi
 from math import cos
 from math import sin
+from struct import unpack
 
 
 class App:
@@ -41,15 +42,28 @@ class App:
 
         self.canvas.pack()
 
+    # def updateBeads(self, beadData):
+    #     for bd in beadData:
+    #         bead = bd[0]
+    #         r = int(bd[1] * 255)
+    #         g = int(bd[2] * 255)
+    #         b = int(bd[3] * 255)
+    #         print(r,g,b)
+    #         tk_rgb = "#%02x%02x%02x" % (r, g, b)
+    #         self.canvas.itemconfig(self.beads[bead], fill=tk_rgb)
+
     def updateBeads(self, beadData):
         for bd in beadData:
-            bead = bd[0]
-            r = int(bd[1] * 255)
-            g = int(bd[2] * 255)
-            b = int(bd[3] * 255)
-            print(r,g,b)
-            tk_rgb = "#%02x%02x%02x" % (r, g, b)
-            self.canvas.itemconfig(self.beads[bead], fill=tk_rgb)
+            num = bd[0]
+            length = bd[1]
+            blob = bd[2]
+            for i in range(0, len(blob), 6):
+                #print(blob[i:i+6])
+                (r, g, b, brightness) = unpack('!HHHH', blob[i:i+6])
+                tk_rgb = "#%02x%02x%02x" % (r >> 8, g >> 8, b >> 8)
+                self.canvas.itemconfig(self.beads[num], fill=tk_rgb)
+                num += 1
+
 
 
 def main(queue):
