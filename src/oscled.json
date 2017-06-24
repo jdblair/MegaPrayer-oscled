@@ -16,6 +16,7 @@
                 {
                     "id": 0,
                     "xform": { "r": 1.1, "g": 0.9, "b": 0.5 },
+                    "class": "rosary",
                     "led_base" : 0,
                     "led_count" : 40,
                     "reversed" : true
@@ -23,9 +24,17 @@
                 {
                     "id": 1,
                     "xform": { "r": 1.1, "g": 0.9, "b": 0.5 },
+                    "class": "rosary",
                     "led_base" : 40,
                     "led_count" : 40,
                     "reversed" : false
+                },
+                {
+                    "id": 2,
+                    "class": "base",
+                    "led_base": 0,
+                    "led_count": 8,
+                    "reversed": false
                 }
             ]
         },

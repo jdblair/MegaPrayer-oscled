@@ -23,7 +23,7 @@ class Effect(abc.ABC):
 
     def __init__(self, *args, **kwargs):
 
-        # Introducting...the option to pass a rosary on init instead of
+        # Introducing...the option to pass a rosary on init instead of
         # assigning it afterwards
         self.rosary = kwargs.get('rosary')
         # the name is used when the Effect is registered
@@ -101,6 +101,9 @@ class Effect(abc.ABC):
 
         self.time += 1
 
+    def set_rosary(self, rosary):
+        self.rosary = rosary
+        
     @abc.abstractmethod
     def next(self):
         """

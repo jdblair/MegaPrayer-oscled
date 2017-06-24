@@ -1,62 +1,71 @@
+import copy
+from mp import color
+from mp.effects import effect
 
-class EffectList:
+class Bin(effect.Effect):
+    """
+    This effect contains a list of other effects. Calling next() invokes the next() method
+    on all the contained effects. Rosary actually only contains this one effect, adding and
+    removing effects to and from it.
 
-    def __init__(self, rosary, parent_id=None):
+    In other words, its turtles all the way down.
+    """
+
+    # Wish there were a better way than requiring this every time
+    dm = copy.deepcopy(effect.Effect.dm)
+
+    def __init__(self, bead_set, **kwargs):
+        super().__init__(name="bin", bead_set=bead_set, **kwargs)
         self.effects = []
-        self.parent_id = parent_id
         self.effect_id_num = 0
-        # we need to know about the rosary so we can set effect.rosary in add_effect_object()
-        self.rosary = rosary
 
     def effect(self, id):
         """Return the Effect object of an active effect by specifying the Effect id."""
         for e in self.effects:
             if e.id == id:
                 return e
-        return None
+        return None    
 
     def effect_id(self):
-        print("parent_id", self.parent_id)
-
-        if self.parent_id == None:
-            effect_id = str(self.effect_id_num)
-        else:
-            effect_id = str("{}.{}".format(self.parent_id, self.effect_id_num))
-
         self.effect_id_num += 1
-        return effect_id
+        return self.effect_id_num
 
     def add_effect_object(self, effect):
         """Adds an Effect object to the active Effect list.  Returns the id of
         the active effect.
 
-        """
+x        """
         effect.id = self.effect_id()
         # Since rosary holds the dispatcher and the effect doesn't
         # know about rosary on init, we can't map to dispatcher yet either
-        effect.rosary = self.rosary
         self.effects.append(effect)
-
-        print("id", effect.id)
+        effect.rosary = self.rosary
 
         return effect.id
 
+    def set_rosary(self, rosary):
+        """
+        Make sure rosary is set in all contained effects.
+        """
+        for effect in self.effects:
+            effect.set_rosary(rosary)
+            super().set_rosary(rosary)
 
-#    @dm.expose()
+    @dm.expose()
     def del_effect(self, id):
         """Delete an active effect by id."""
-
+        
         effect = self.effect(id)
 
         if effect is not None:
             #effect_paths = [effect.generate_osc_path(fn) for fn in\
             #                effect.dm.registered_methods.keys()]
             #self.effect_paths_to_unregister.extend(effect_paths)
-            self.unexpose_effect_knobs(effect)
+            self.rosary.unexpose_effect_knobs(effect)
             self.effects.remove(effect)
 
 
-#    @dm.expose()
+    @dm.expose()
     def clear_effects(self):
         """Remove all active effects. This stops all activity on the rosary."""
         # There's some weird race condition where del_effect's call to
@@ -66,13 +75,8 @@ class EffectList:
             effect = self.effects[0]
             self.del_effect(effect.id)
 
-        # I know on the real rosary this is unneccessary, but it's
-        # annoying on the sim: @jdblair is sending 0,0,0 in the real
-        # thing wonky?
-        self.add_effect('set_color', 'all', 0, 0, 0)
 
-
-#    @dm.expose()
+    @dm.expose()
     def clear_effects_fade(self):
         """
         Just calling clear_effects() is jarring, let's ease it in
@@ -84,13 +88,12 @@ class EffectList:
     def next(self):
         for effect in self.effects:
 
-            #print("EffectList.next(): ", effect)
-
             # If any new effects have been added since the last iteration,
             # add their knobs to the dispatched functikon
-            #self.expose_effect_knobs(effect)
+            #if self.rosary != None:
+            self.rosary.expose_effect_knobs(effect)
 
             effect.supernext()
+
             if (effect.finished):
                 self.del_effect(effect.id)
-

@@ -43,6 +43,7 @@ public:
         std::string led_type;
         int brightness;
         struct linear_xform xform;
+        std::string iface_class;
     };
 
     struct station_config {
@@ -100,6 +101,7 @@ public:
     static const std::string KEY_IFACE_XFORM_R;
     static const std::string KEY_IFACE_XFORM_G;
     static const std::string KEY_IFACE_XFORM_B;
+    static const std::string KEY_IFACE_CLASS;
     
 private:
     OSCLedConfig();

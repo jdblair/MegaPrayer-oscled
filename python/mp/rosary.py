@@ -7,18 +7,19 @@ import time
 import math
 import inspect
 import random
+import struct
 
 from pythonosc import udp_client
 from pythonosc import osc_bundle_builder
 from pythonosc import osc_message_builder
 
-from mp import color, effects, effect_list, triggers
+from mp import color, effects, triggers
 from mp.dispatcher_mapper import DispatcherMapper
 
 class Bead:
     """Bead represents a single rosary bead."""
     def __init__(self, index=0):
-        self.index = index
+        self.index = int(index)
         self.color = color.Color()
         
     def __repr__(self):
@@ -29,12 +30,37 @@ class Bead:
         self.color = copy.copy(color)
 
 
+class Updater:
+    def __init__(self, name='', bead_list=[], osc_client=None):
+        self.name = name
+        self.bead_list = bead_list
+        self.osc_client=osc_client
+        
+    def update(self):
+        msg = osc_message_builder.OscMessageBuilder(address = "/bead")
+        msg.add_arg(self.name)                 # name (class)
+        msg.add_arg(int(0))                    # base
+        msg.add_arg(int(len(self.bead_list)))  # length
+        
+        payload = bytearray()
+        for bead in self.bead_list:
+            payload.extend(struct.pack('!HHHH',
+                                       int(bead.color.r * 0xffff),
+                                       int(bead.color.g * 0xffff),
+                                       int(bead.color.b * 0xffff),
+                                       int(bead.color.brightness)
+            ))
+
+        msg.add_arg(bytes(payload))
+
+        self.osc_client.send(msg.build())
+
+
 class Rosary:
     """Rosary represents the whole rosary and the set of effects currently
     running.  It is in charge of animating the rosary by calling
     next() in each running active Effect and transmitting the OSC
     commands set the colors of beads.
-
     """
 
     # Can't decorate with @self.r, so need this here
@@ -42,13 +68,16 @@ class Rosary:
 
     def __init__(self, ip="127.0.0.1", port=5005, dispatcher=None, name="rosary"):
         self.beads = []
+        self.bases = []
+        self.cross = []
         self.bgcolor = color.Color(0,0,0)
-        #self.effects = []
         self.triggers = []
         self.osc_ip = ip
         self.osc_port = port
         self.trigger_id = 0
         self.BEAD_COUNT=60
+        self.BASE_COUNT=9
+        self.CROSS_LED_COUNT=480
         self.run_mainloop = False
         self.frame_time = 1 / 30   # reciprocal of fps
         self.effect_registry = {}
@@ -58,13 +87,29 @@ class Rosary:
         self.dispatcher = dispatcher
         # Available knobs to turn
         self.knobs = {}
-
-        self.effect_list = effect_list.EffectList(self)
+        self.updater_list = []
 
         self.osc_client = udp_client.UDPClient(self.osc_ip, self.osc_port)
 
+        # create the three classes of LED "beads"
         for i in range(self.BEAD_COUNT):
             self.beads.append(Bead(i))
+        self.updater_list.append(Updater(name='rosary',
+                                         bead_list=self.beads,
+                                         osc_client=self.osc_client))
+
+        for i in range(self.BASE_COUNT):
+            self.bases.append(Bead(i))
+        self.updater_list.append(Updater(name='base',
+                                         bead_list=self.bases,
+                                         osc_client=self.osc_client))
+
+        for i in range(self.CROSS_LED_COUNT):
+            self.cross.append(Bead(i))
+        self.updater_list.append(Updater(name='cross',
+                                         bead_list=self.cross,
+                                         osc_client=self.osc_client))
+
 
         # some useful predefined sets of beads
         self.set_registry = {
@@ -87,7 +132,9 @@ class Rosary:
             'even_all': frozenset(self.beads[0:60:2]),
             'even_ring': frozenset(self.beads[4:60:2]),
             'odd_all': frozenset(self.beads[1:60:2]),
-            'odd_ring': frozenset(self.beads[5:60:2])
+            'odd_ring': frozenset(self.beads[5:60:2]),
+            'base': frozenset(self.bases[0:self.BASE_COUNT]),
+            'cross': frozenset(self.cross[0:self.CROSS_LED_COUNT])
         }
         self.set_registry['half01'] = self.set_registry['quadrent0'].\
                                            union(self.set_registry['quadrent1'])
@@ -111,7 +158,7 @@ class Rosary:
             # NOTE YUNFAN: Take this out (maybe) going into prod?
             #'black': color.Color(0,0,0)
         }
-
+                                    
         # Automagically register effects so that they're callable by name
         self.register_written_effects()
 
@@ -121,8 +168,12 @@ class Rosary:
         # Map our own exposed methods to the dispatcher
         self.map_to_dispatcher()
 
-    def beads_set_bgcolor(self):
-        for bead in self.beads:
+        # at the top level we have just one effect: effects.Bin
+        # it holds all the other effects.
+        self.bin = effects.bin.Bin(self.set_registry['all'], rosary=self)
+
+    def beads_set_bgcolor(self, beads):
+        for bead in beads:
             bead.color.set(self.bgcolor)
 
     ##########################################################################
@@ -136,6 +187,7 @@ class Rosary:
         """
         # instantiate the object so we get get the name
         e = effect(self.set_registry['none'])
+        # note that we are returning effect, a class, not e, an instance!
         self.effect_registry[e.name] = effect
 
 
@@ -229,29 +281,38 @@ class Rosary:
     ##########################################################################
     # ROSARY CONTROL - RUNTIME HUMAN INTERFACES
     ##########################################################################
-    def update(self):
+    def update(self, bead_list):
         """Transmit the OSC message to update all beads on the rosary."""
-        bundle = osc_bundle_builder.OscBundleBuilder(osc_bundle_builder.IMMEDIATELY)
+        #bundle = osc_bundle_builder.OscBundleBuilder(osc_bundle_builder.IMMEDIATELY)
 
-        i = 0
-        while (i < self.BEAD_COUNT):
-            #print("bead {}".format(i))
-            msg = osc_message_builder.OscMessageBuilder(address = "/beadf")
-            msg.add_arg(i)
-            msg.add_arg(float(self.beads[i].color.r))
-            msg.add_arg(float(self.beads[i].color.g))
-            msg.add_arg(float(self.beads[i].color.b))
-            msg = msg.build()
-            bundle.add_content(msg)
-            i = i + 1
-            
-        msg = osc_message_builder.OscMessageBuilder(address = "/update")
-        msg = msg.build()
-        bundle.add_content(msg)
-            
-        bundle = bundle.build()
-        self.osc_client.send(bundle)
+        i = int(0)
 
+        msg = osc_message_builder.OscMessageBuilder(address = "/bead/")
+        msg.add_arg(int(0))    # base
+        msg.add_arg(int(len(bead_list)))  # length
+
+        payload = bytearray()
+        for bead in bead_list:
+
+
+            payload.append((int(bead.color.r * 255)))
+            payload.append((int(bead.color.g * 255)))
+            payload.append((int(bead.color.b * 255)))
+
+        #print(bytes(payload))
+
+        #print('len(bead_list)', len(bead_list), 'len(payload)', len(payload))
+        
+        msg.add_arg(bytes(payload))
+            
+        # msg = osc_message_builder.OscMessageBuilder(address = "/update")
+
+        #bundle.add_content(msg)
+            
+        #bundle = bundle.build()
+        #self.osc_client.send(bundle)
+        self.osc_client.send(msg.build())
+        
         # If we need to unregister effects' paths from the dispatcher,
         # do it here
 #        while self.effect_paths_to_unregister:
@@ -324,7 +385,7 @@ class Rosary:
                 kwargs.pop(key)
 
         if requested_effect is not None:
-            return self.effect_list.add_effect_object(requested_effect(*args, **kwargs))
+            return self.bin.add_effect_object(requested_effect(*args, rosary=self, **kwargs))
         else:
             return None
 
@@ -345,16 +406,11 @@ class Rosary:
         r = self
         if (r.run_mainloop == False):
             r.run_mainloop = True
-            self.t_mainloop = threading.Thread(name='rosary_mainloop', target=self.mainloop)
+            self.t_mainloop = threading.Thread(name='mainloop', target=self.mainloop)
             self.t_mainloop.start()
 
-            # Don't join the thread if being called from server
             if interactive:
-
                 code.interact(local=locals())
-
-                self.t_mainloop.join()
-
 
     @dm.expose()
     def stop(self):
@@ -423,7 +479,7 @@ class Rosary:
             effect.registered = True
 
 
-    def mainloop(self):
+    def mainloop(self, *args, **kwargs):
         """This is the animiation loop. It cycles through all active effects
         and invokes next() on each effect.
 
@@ -431,6 +487,12 @@ class Rosary:
         * frame_time: how much wall-clock time to allocate to each update
 
         """
+
+        print('mainloop')
+
+        frame_time = kwargs.get('frame_time', self.frame_time)
+
+        print(kwargs.get('name'), 'frame_time', frame_time)
 
         next_frame_time = time.monotonic()
         
@@ -442,10 +504,13 @@ class Rosary:
         while (self.run_mainloop):
             next_frame_time += self.frame_time
 
-            self.beads_set_bgcolor()
+            bead_list = kwargs.get('bead_list')
+
+            for updater in self.updater_list:
+                self.beads_set_bgcolor(updater.bead_list)
 
             # advance the state of all the effects
-            self.effect_list.next()
+            self.bin.next()
 
             # Let the triggers figure out for themselves what to do
             #for trigger in self.triggers.values():
@@ -460,7 +525,7 @@ class Rosary:
                 print('frame drop')
                 next_frame_time += self.frame_time
                 # "dropping a frame" means calling next() on all the effects w/o updating the LEDs
-                self.effect_list.next()
+                self.bin.next()
 
                 now = time.monotonic()
 
@@ -476,8 +541,8 @@ class Rosary:
 
             # update the LEDs
             # do this last to try to make the updates as regular as possible
-            self.update()
-
+            for updater in self.updater_list:
+                updater.update()
 
 
 

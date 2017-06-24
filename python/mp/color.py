@@ -6,6 +6,7 @@ class Color:
         self.g = g  # green
         self.b = b  # blue
         self.a = a  # alpha channel (not yet used)
+        self.brightness = 0xff;  # brightness used by APA102 LED module
 
     def __repr__(self):
         return "Color({}, {}, {}, {})".format(self.r, self.g, self.b, self.a)

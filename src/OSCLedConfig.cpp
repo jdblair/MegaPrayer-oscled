@@ -41,6 +41,7 @@ const string OSCLedConfig::KEY_IFACE_XFORM = "xform";
 const string OSCLedConfig::KEY_IFACE_XFORM_R = "r";
 const string OSCLedConfig::KEY_IFACE_XFORM_G = "g";
 const string OSCLedConfig::KEY_IFACE_XFORM_B = "b";
+const string OSCLedConfig::KEY_IFACE_CLASS = "class";
 
 OSCLedConfig::OSCLedConfig()
 {
@@ -174,6 +175,12 @@ bool OSCLedConfig::json_parse_station_values(Json::Value s, OSCLedConfig::statio
             if (i->isMember(KEY_IFACE_XFORM)) {
                 json_parse_linear_xform(i->get(KEY_IFACE_XFORM, ""), iface_ptr->xform);
             }
+            iface_ptr->led_type = i->get(KEY_IFACE_LED_TYPE, "ws2801").asString();
+            iface_ptr->byte_order = i->get(KEY_IFACE_BYTE_ORDER, "rgb").asString();
+            iface_ptr->brightness = i->get(KEY_IFACE_BRIGHTNESS, 31).asInt();
+            iface_ptr->iface_class = i->get(KEY_IFACE_CLASS, "bead").asString();
+
+            // cout << "iface_class: " << iface_ptr->iface_class << endl;
 
             // normalize strings to lower case
             transform(iface_ptr->byte_order.begin(), iface_ptr->byte_order.end(), iface_ptr->byte_order.begin(), ::tolower);
