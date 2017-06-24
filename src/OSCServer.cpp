@@ -224,7 +224,6 @@ int OSCServer::osc_method_bead(lo_arg **argv)
 
 
 // create an led_interface and add to m_led_ifaces
->>>>>>> jdb-the-great-expansion
 int OSCServer::bind(shared_ptr<IPlatformSerial> const ser, OSCLedConfig::interface_config const &cfg)
 {
     shared_ptr<led_interface> led_iface(new led_interface(ser, cfg));
