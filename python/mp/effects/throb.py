@@ -27,9 +27,9 @@ class Throb(effect.Effect):
     def next(self):
         super().next()
 
-        intensity = (math.sin(self.x * math.pi * self.period) + 1) / 2
+        alpha = (math.sin(self.x * math.pi * self.period) + 1) / 2
         for bead in (self.bead_list):
-            bead.color.set(self.color, intensity=intensity)
+            bead.color.set(self.color, alpha=alpha)
         self.x += self.step
 
     @dm.expose()

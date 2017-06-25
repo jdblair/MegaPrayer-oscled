@@ -68,10 +68,16 @@ class Rosary:
 
     def __init__(self, ip="127.0.0.1", port=5005, dispatcher=None, name="rosary"):
         self.beads = []
+<<<<<<< HEAD
         self.bases = []
         self.cross = []
         self.bgcolor = color.Color(0,0,0)
         self.triggers = []
+=======
+        self.bgcolor = color.Color(0,0,0,1)  # note opaque alpha channel
+        self.effects = []
+        self.triggers = {}
+>>>>>>> jdb-alpha-channel
         self.osc_ip = ip
         self.osc_port = port
         self.trigger_id = 0
@@ -147,16 +153,16 @@ class Rosary:
 
         # some useful predefined colors
         self.color_registry = {
-            'white': color.Color(1,1,1),
-            'red': color.Color(1,0,0),
-            'yellow': color.Color(1,1,0),
-            'green': color.Color(0,1,0),
-            'blue': color.Color(0,0,1),
-            'violet': color.Color(1,0,1),
-            'cyan': color.Color(0,1,1),
+            'white': color.Color(1,1,1,1),
+            'red': color.Color(1,0,0,1),
+            'yellow': color.Color(1,1,0,1),
+            'green': color.Color(0,1,0,1),
+            'blue': color.Color(0,0,1,1),
+            'violet': color.Color(1,0,1,1),
+            'cyan': color.Color(0,1,1,1),
             # It's annoying when the sim picks black and I can't see anything
             # NOTE YUNFAN: Take this out (maybe) going into prod?
-            #'black': color.Color(0,0,0)
+            #'black': color.Color(0,0,0,1)
         }
                                     
         # Automagically register effects so that they're callable by name
@@ -355,13 +361,14 @@ class Rosary:
         r = kwargs.get('r', 0.0)
         g = kwargs.get('g', 0.0)
         b = kwargs.get('b', 0.0)
+        a = kwargs.get('a', 0.0)
 
         # If you don't pass in a good name I'll pretend I didn't hear you
         bead_set = self.set_registry.get(bead_set_name.lower(),
                                          self.set_registry['all'])
 
         if any([r, g, b]):
-            effect_color = color.Color(r, g, b)
+            effect_color = color.Color(r, g, b, a)
         else:
             effect_color = self.color_registry.get(color_name.lower())
 
@@ -385,10 +392,28 @@ class Rosary:
                 kwargs.pop(key)
 
         if requested_effect is not None:
-            return self.bin.add_effect_object(requested_effect(*args, rosary=self, **kwargs))
+            effect_id = self.bin.add_effect_object(requested_effect(*args, rosary=self, **kwargs))
+            self.expose_effect_knobs(requested_effect)
+            return effect_id
         else:
             return None
 
+    @dm.expose()
+    def del_effect(self, id):
+        self.bin.del_effect(id)
+
+    @dm.expose()
+    def clear_effects(self):
+        self.bin.clear_effects()
+        
+    @dm.expose()
+    def clear_effects_fade(self):
+        """
+        Just calling clear_effects() is jarring, let's ease it in
+        """
+
+        for eff in self.bin.effects:
+            eff.fade_out(30)
 
     @dm.expose()
     def clear_triggers(self):
@@ -469,14 +494,14 @@ class Rosary:
         `dm.expose()`-ed functions
         """
 
-        if not effect.registered:
-            for fn_name, fn in effect.dm.exposed_methods.items():
-                if fn_name in self.knobs.keys():
-                    self.knobs[fn_name].append( (fn, effect) )
-                else:
-                    self.knobs[fn_name] = [ (fn, effect) ]
+        #if not effect.registered:
+        for fn_name, fn in effect.dm.exposed_methods.items():
+            if fn_name in self.knobs.keys():
+                self.knobs[fn_name].append( (fn, effect) )
+            else:
+                self.knobs[fn_name] = [ (fn, effect) ]
 
-            effect.registered = True
+        effect.registered = True
 
 
     def mainloop(self, *args, **kwargs):
