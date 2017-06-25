@@ -68,16 +68,10 @@ class Rosary:
 
     def __init__(self, ip="127.0.0.1", port=5005, dispatcher=None, name="rosary"):
         self.beads = []
-<<<<<<< HEAD
         self.bases = []
         self.cross = []
-        self.bgcolor = color.Color(0,0,0)
         self.triggers = []
-=======
         self.bgcolor = color.Color(0,0,0,1)  # note opaque alpha channel
-        self.effects = []
-        self.triggers = {}
->>>>>>> jdb-alpha-channel
         self.osc_ip = ip
         self.osc_port = port
         self.trigger_id = 0
