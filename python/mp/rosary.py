@@ -507,11 +507,7 @@ class Rosary:
 
         """
 
-        print('mainloop')
-
         frame_time = kwargs.get('frame_time', self.frame_time)
-
-        print(kwargs.get('name'), 'frame_time', frame_time)
 
         next_frame_time = time.monotonic()
         
