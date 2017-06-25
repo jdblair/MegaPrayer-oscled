@@ -20,5 +20,6 @@ __all__ = [
     'strobe',
     'cop_lights',
     'looper',
-    'random_fill'
+    'random_fill',
+    'trigger_override_demo'
 ]

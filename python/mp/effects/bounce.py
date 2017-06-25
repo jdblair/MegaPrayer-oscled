@@ -27,6 +27,8 @@ class Bounce(effect.Effect):
         else:
             self.current = self.length
 
+        print("IN BOUNCE, WHAT IS MY ROSARY? {}".format(self.rosary))
+
     def next(self):
         for i in range(0,self.length):
             self.bead_list[int(round(self.current - i))].color.set(self.color)
