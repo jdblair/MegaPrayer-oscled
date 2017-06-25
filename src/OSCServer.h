@@ -35,6 +35,10 @@ class OSCServer {
 
     OSCServer(std::string ip, std::string port);
 
+    static const int BEAD_ROSARY;
+    static const int BEAD_BASES;
+    static const int BEAD_CROSS;
+
     int bind(std::shared_ptr<IPlatformSerial> const ser, OSCLedConfig::interface_config const &cfg);
     int drop_interfaces();
     void start() { m_st->start(); };
@@ -43,7 +47,15 @@ class OSCServer {
     int osc_method_bead(lo_arg **argv);
     int osc_method_bead_float(lo_arg **argv);
     int osc_method_update(lo_arg **argv);
+    int osc_method_xform(lo_arg **argv);
     void set_led(int n, led_t led);
+    void set_xform(float r, float g, float b);
+    void set_led(std::string const &iface_class, int n, led_t led);
+
+    int osc_method_bead_rosary(lo_arg **argv);
+    int osc_method_bead_base(lo_arg **argv);
+    int osc_method_bead_cross(lo_arg **argv);
+    int osc_bead_blob_handler(std::string iface_class, lo_arg **argv);
     
     class ILEDDataFormat {
     public:
@@ -110,6 +122,9 @@ class OSCServer {
         int m_r_offset;
         int m_g_offset;
         int m_b_offset;
+        struct OSCLedConfig::linear_xform m_xform;
+
+        std::string m_iface_class;
 
         std::vector<led_t> leds;
         uint8_t *led_buf;
@@ -124,6 +139,7 @@ class OSCServer {
         std::shared_ptr<ILEDDataFormat> m_fmt;
 
         void set_led(int offset, led_t led);
+        void set_xform(float r, float g, float b);
         void notify_update_thread();
     };
 

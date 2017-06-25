@@ -40,6 +40,7 @@ class Bin(effect.Effect):
         # know about rosary on init, we can't map to dispatcher yet either
         self.effects.append(effect)
         effect.rosary = self.rosary
+        effect.my_bin = self
 
         return effect.id
 
@@ -81,11 +82,6 @@ class Bin(effect.Effect):
 
     def next(self):
         for effect in self.effects:
-
-            # If any new effects have been added since the last iteration,
-            # add their knobs to the dispatched functikon
-            self.rosary.expose_effect_knobs(effect)
-
             effect.supernext()
 
             if (effect.finished):

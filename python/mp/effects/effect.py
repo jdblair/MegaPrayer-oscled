@@ -28,8 +28,15 @@ class Effect(abc.ABC):
         self.rosary = kwargs.get('rosary')
         # the name is used when the Effect is registered
         self.name = kwargs.get('name')
-        # the bead_set is a list of beads the Effect is applied to. The order is important!
-        self.bead_set = self.set_bead_set(kwargs.get('bead_set', set()))
+
+        if 'bead_set' in kwargs:
+            # the bead_set is a list of beads the Effect is applied to. The order is important!
+            self.set_bead_set(kwargs.get('bead_set', set()))
+
+        if 'bead_list' in kwargs:
+            # alternately, the sorted bead_list may be passed directly
+            self.bead_list = kwargs.get('bead_list')
+
         # The color of the Effect. This is not always meaningful.
         self.color = kwargs.get('color')
         self.duration = kwargs.get('duration')
@@ -97,7 +104,7 @@ class Effect(abc.ABC):
             self.next()
 
         if self.duration is not None and self.time >= self.duration + (self.delay or 0):
-            self.rosary.bin.del_effect(self.id)
+            self.my_bin.del_effect(self.id)
 
         self.time += 1
 

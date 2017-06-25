@@ -28,6 +28,12 @@ public:
         bool port_set;
     };
 
+    struct linear_xform {
+        float r;
+        float g;
+        float b;
+    };
+
     struct interface_config {
         int id;
         int led_base;
@@ -36,6 +42,8 @@ public:
         std::string byte_order;
         std::string led_type;
         int brightness;
+        struct linear_xform xform;
+        std::string iface_class;
     };
 
     struct station_config {
@@ -48,14 +56,17 @@ public:
         bool daemonize;
         std::string byte_order;
         std::string led_type;
+        int brightness;
         std::vector<std::shared_ptr<struct interface_config>> interface;
+        struct linear_xform xform;
     };
 
     bool getopt(int argc, char * const argv[]);
     bool json_parse();
     bool json_parse_station();
+    
     bool json_parse_station_values(Json::Value s, OSCLedConfig::station_config &config);
-
+    bool json_parse_linear_xform(Json::Value s, OSCLedConfig::linear_xform &xfor);
     const Json::Value json_interface(int const num);
 
     Json::Value json_root;
@@ -86,6 +97,11 @@ public:
     static const std::string KEY_IFACE_BYTE_ORDER;
     static const std::string KEY_IFACE_LED_TYPE;
     static const std::string KEY_IFACE_BRIGHTNESS;
+    static const std::string KEY_IFACE_XFORM;
+    static const std::string KEY_IFACE_XFORM_R;
+    static const std::string KEY_IFACE_XFORM_G;
+    static const std::string KEY_IFACE_XFORM_B;
+    static const std::string KEY_IFACE_CLASS;
     
 private:
     OSCLedConfig();

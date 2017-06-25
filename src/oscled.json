@@ -5,6 +5,7 @@
         "leds_per_bead": 8,
         "bead_count": 10,
         "byte_order": "brg",
+        "brightness": 30,
         "led_type": "WS201"
     },
     "station": [
@@ -14,15 +15,27 @@
             "interface": [
                 {
                     "id": 0,
+                    "xform": { "r": 1.0, "g": 1.0, "b": 1.0 },
+                    "class": "rosary",
                     "led_base" : 0,
                     "led_count" : 40,
                     "reversed" : true
                 },
                 {
                     "id": 1,
+                    "xform": { "r": 1.0, "g": 1.0, "b": 1.0 },
+                    "class": "rosary",
                     "led_base" : 40,
                     "led_count" : 40,
                     "reversed" : false
+                },
+                {
+                    "id": 2,
+                    "class": "base",
+                    "led_base": 0,
+                    "led_count": 8,
+                    "byte_order": "rgb",
+                    "reversed": false
                 }
             ]
         },
@@ -32,17 +45,166 @@
             "interface": [
                 {
                     "id": 0,
-                    "led_base" : 0,
+                    "xform": { "r": 1.0, "g": 1.0, "b": 1.0 },
+                    "class": "rosary",
+                    "led_base" : 80,
                     "led_count" : 40,
                     "reversed" : true
                 },
                 {
                     "id": 1,
-                    "led_base" : 40,
+                    "xform": { "r": 1.0, "g": 1.0, "b": 1.0 },
+                    "class": "rosary",
+                    "led_base" : 120,
                     "led_count" : 40,
+                    "reversed" : false
+                },
+                {
+                    "id": 2,
+                    "class": "base",
+                    "led_base": 16,
+                    "led_count": 8,
+                    "byte_order": "rgb",
+                    "reversed": false
+                }
+            ]
+        },
+        {
+            "id": 2,
+            "bead_base": 20,
+            "interface": [
+                {
+                    "id": 0,
+                    "xform": { "r": 1.0, "g": 1.0, "b": 1.0 },
+                    "class": "rosary",
+                    "led_base" : 160,
+                    "led_count" : 40,
+                    "reversed" : true
+                },
+                {
+                    "id": 1,
+                    "xform": { "r": 1.0, "g": 1.0, "b": 1.0 },
+                    "class": "rosary",
+                    "led_base" : 200,
+                    "led_count" : 40,
+                    "reversed" : false
+                },
+                {
+                    "id": 2,
+                    "class": "base",
+                    "led_base": 24,
+                    "led_count": 8,
+                    "byte_order": "rgb",
+                    "reversed": false
+                }
+            ]
+        },
+        {
+            "id": 3,
+            "bead_base": 30,
+            "interface": [
+                {
+                    "id": 0,
+                    "xform": { "r": 1.0, "g": 1.0, "b": 1.0 },
+                    "class": "rosary",
+                    "led_base" : 240,
+                    "led_count" : 40,
+                    "reversed" : true
+                },
+                {
+                    "id": 1,
+                    "xform": { "r": 1.0, "g": 1.0, "b": 1.0 },
+                    "class": "rosary",
+                    "led_base" : 280,
+                    "led_count" : 40,
+                    "reversed" : false
+                },
+                {
+                    "id": 2,
+                    "class": "base",
+                    "led_base": 32,
+                    "led_count": 8,
+                    "byte_order": "rgb",
+                    "reversed": false
+                }
+            ]
+        },
+        {
+            "id": 4,
+            "bead_base": 40,
+            "interface": [
+                {
+                    "id": 0,
+                    "xform": { "r": 1.0, "g": 1.0, "b": 1.0 },
+                    "class": "rosary",
+                    "led_base" : 320,
+                    "led_count" : 40,
+                    "reversed" : true
+                },
+                {
+                    "id": 1,
+                    "xform": { "r": 1.0, "g": 1.0, "b": 1.0 },
+                    "class": "rosary",
+                    "led_base" : 360,
+                    "led_count" : 40,
+                    "reversed" : false
+                },
+                {
+                    "id": 2,
+                    "class": "base",
+                    "led_base": 40,
+                    "led_count": 8,
+                    "byte_order": "rgb",
+                    "reversed": false
+                }
+            ]
+        },
+        {
+            "id": 5,
+            "bead_base": 50,
+            "interface": [
+                {
+                    "id": 0,
+                    "xform": { "r": 1.0, "g": 1.0, "b": 1.0 },
+                    "class": "rosary",
+                    "led_base" : 400,
+                    "led_count" : 40,
+                    "reversed" : true
+                },
+                {
+                    "id": 1,
+                    "xform": { "r": 1.0, "g": 1.0, "b": 1.0 },
+                    "class": "rosary",
+                    "led_base" : 440,
+                    "led_count" : 40,
+                    "reversed" : false
+                },
+                {
+                    "id": 2,
+                    "class": "base",
+                    "led_base": 48,
+                    "led_count": 8,
+                    "byte_order": "rgb",
+                    "reversed": false
+                }
+            ]
+        },
+        {
+            "id": 6,
+            "bead_base": 0,
+            "leds_per_bead": 1,
+            "interface": [
+                {
+                    "id": 0,
+                    "led_type": "apa102",
+                    "xform": { "r": 1.0, "g": 1.0, "b": 1.0 },
+                    "class": "cross",
+                    "led_base" : 0,
+                    "led_count" : 480,
                     "reversed" : false
                 }
             ]
-        }
+        },
+
     ]
 }

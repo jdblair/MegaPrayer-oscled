@@ -29,8 +29,8 @@ class VibrationFixed(effect.Effect):
         super().next()
         
         for b in (self.bead_list):
-            intensity = (((self.ym * math.sin(self.k * b.index - self.w * self.t)) + (self.ym * math.sin(self.k * b.index + self.w * self.t))) + 2) / 4
-            b.color.set(self.color, intensity)
+            alpha = (((self.ym * math.sin(self.k * b.index - self.w * self.t)) + (self.ym * math.sin(self.k * b.index + self.w * self.t))) + 2) / 4
+            b.color.set(self.color, alpha=alpha)
             # if self.max < intensity:
             #     self.max = intensity
             #     print("max", self.max)
