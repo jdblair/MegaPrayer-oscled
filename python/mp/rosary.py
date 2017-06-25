@@ -304,8 +304,6 @@ class Rosary:
 
         if any([r, g, b]):
             effect_color = color.Color(r, g, b, a)
-        elif issubclass(type(effect_color), color.Color):
-            effect_color = color
         else:
             effect_color = self.color_registry.get(color_name.lower())
 
@@ -329,7 +327,9 @@ class Rosary:
                 kwargs.pop(key)
 
         if requested_effect is not None:
-            return self.bin.add_effect_object(requested_effect(*args, rosary=self, **kwargs))
+            effect_id = self.bin.add_effect_object(requested_effect(*args, rosary=self, **kwargs))
+            self.expose_effect_knobs(requested_effect)
+            return effect_id
         else:
             return None
 
@@ -434,14 +434,14 @@ class Rosary:
         `dm.expose()`-ed functions
         """
 
-        if not effect.registered:
-            for fn_name, fn in effect.dm.exposed_methods.items():
-                if fn_name in self.knobs.keys():
-                    self.knobs[fn_name].append( (fn, effect) )
-                else:
-                    self.knobs[fn_name] = [ (fn, effect) ]
+        #if not effect.registered:
+        for fn_name, fn in effect.dm.exposed_methods.items():
+            if fn_name in self.knobs.keys():
+                self.knobs[fn_name].append( (fn, effect) )
+            else:
+                self.knobs[fn_name] = [ (fn, effect) ]
 
-            effect.registered = True
+        effect.registered = True
 
 
     def mainloop(self):

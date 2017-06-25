@@ -104,7 +104,7 @@ class Effect(abc.ABC):
             self.next()
 
         if self.duration is not None and self.time >= self.duration + (self.delay or 0):
-            self.rosary.bin.del_effect(self.id)
+            self.my_bin.del_effect(self.id)
 
         self.time += 1
 

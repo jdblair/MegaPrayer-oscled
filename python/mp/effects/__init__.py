@@ -21,5 +21,7 @@ __all__ = [
     'strobe',
     'cop_lights',
     'looper',
+    'wheel',
+    'roulette',
     'random_fill'
 ]
