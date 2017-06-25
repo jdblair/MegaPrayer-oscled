@@ -115,6 +115,7 @@ class Rosary:
         self.set_registry = {
             'none': frozenset(),
             'all': frozenset(self.beads),
+            'rosary': frozenset(self.beads),
             'stem': frozenset(self.beads[0:4]),
             'ring': frozenset(self.beads[4:60]),
             'eighth0': frozenset(self.beads[4:11]),
@@ -293,8 +294,6 @@ class Rosary:
 
         payload = bytearray()
         for bead in bead_list:
-
-
             payload.append((int(bead.color.r * 255)))
             payload.append((int(bead.color.g * 255)))
             payload.append((int(bead.color.b * 255)))
