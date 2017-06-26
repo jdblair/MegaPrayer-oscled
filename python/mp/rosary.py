@@ -282,41 +282,6 @@ class Rosary:
     ##########################################################################
     # ROSARY CONTROL - RUNTIME HUMAN INTERFACES
     ##########################################################################
-    def update(self, bead_list):
-        """Transmit the OSC message to update all beads on the rosary."""
-        #bundle = osc_bundle_builder.OscBundleBuilder(osc_bundle_builder.IMMEDIATELY)
-
-        i = int(0)
-
-        msg = osc_message_builder.OscMessageBuilder(address = "/bead/")
-        msg.add_arg(int(0))    # base
-        msg.add_arg(int(len(bead_list)))  # length
-
-        payload = bytearray()
-        for bead in bead_list:
-            payload.append((int(bead.color.r * 255)))
-            payload.append((int(bead.color.g * 255)))
-            payload.append((int(bead.color.b * 255)))
-
-        #print(bytes(payload))
-
-        #print('len(bead_list)', len(bead_list), 'len(payload)', len(payload))
-        
-        msg.add_arg(bytes(payload))
-            
-        # msg = osc_message_builder.OscMessageBuilder(address = "/update")
-
-        #bundle.add_content(msg)
-            
-        #bundle = bundle.build()
-        #self.osc_client.send(bundle)
-        self.osc_client.send(msg.build())
-        
-        # If we need to unregister effects' paths from the dispatcher,
-        # do it here
-#        while self.effect_paths_to_unregister:
-#            self.dispatcher._map.pop(self.effect_paths_to_unregister.pop())
-
 
     # TODO: HOW MUCH DO I NEED THIS?
     def trigger(self, id):
