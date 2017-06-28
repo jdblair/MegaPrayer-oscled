@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 import ast
 import code
 import copy
@@ -12,6 +11,7 @@ import struct
 from pythonosc import udp_client
 from pythonosc import osc_bundle_builder
 from pythonosc import osc_message_builder
+from pythonosc import osc_server
 
 from mp import color, effects, triggers
 from mp.dispatcher_mapper import DispatcherMapper
@@ -66,7 +66,13 @@ class Rosary:
     # Can't decorate with @self.r, so need this here
     dm = DispatcherMapper()
 
-    def __init__(self, ip="127.0.0.1", port=5005, dispatcher=None, name="rosary"):
+    def __init__(self,
+                 ip="127.0.0.1",
+                 port=5005,
+                 dispatcher=None,
+                 name="rosary",
+                 server_ip="127.0.0.1",
+                 server_port=5006):
         self.beads = []
         self.bases = []
         self.cross = []
@@ -88,6 +94,8 @@ class Rosary:
         # Available knobs to turn
         self.knobs = {}
         self.updater_list = []
+        self.osc_server_ip=server_ip
+        self.osc_server_port=server_port
 
         self.osc_client = udp_client.UDPClient(self.osc_ip, self.osc_port)
 
@@ -173,9 +181,22 @@ class Rosary:
         # it holds all the other effects.
         self.bin = effects.bin.Bin(self.set_registry['all'], rosary=self)
 
+        print("self.osc_server_ip:", self.osc_server_ip)
+        print("self.osc_server_port:", self.osc_server_port)
+
+        self.osc_server = osc_server.ThreadingOSCUDPServer(
+            (self.osc_server_ip, self.osc_server_port), self.dispatcher)
+
+
     def beads_set_bgcolor(self, beads):
         for bead in beads:
             bead.color.set(self.bgcolor)
+
+
+    def osc_server_main(self):
+        print("Serving on {}".format(self.osc_server.server_address))
+        self.osc_server.serve_forever()
+
 
     ##########################################################################
     # INITIALIZATION STUFF - DISCOVER WRITTEN MODULES
@@ -265,7 +286,7 @@ class Rosary:
                 classes.add(obj)
 
         return classes
-        
+
 
     def register_written_triggers(self):
         """
@@ -363,7 +384,7 @@ class Rosary:
     @dm.expose()
     def clear_effects(self):
         self.bin.clear_effects()
-        
+
     @dm.expose()
     def clear_effects_fade(self):
         """
@@ -392,6 +413,9 @@ class Rosary:
             self.t_mainloop = threading.Thread(name='mainloop', target=self.mainloop)
             self.t_mainloop.start()
 
+            self.t_osc_server = threading.Thread(name='osc_server', target=self.osc_server_main)
+            self.t_osc_server.start()
+
             if interactive:
                 code.interact(local=locals())
 
@@ -399,6 +423,7 @@ class Rosary:
     def stop(self):
         """Stop the mainloop and exit the application."""
         self.run_mainloop = False
+        self.osc_server.shutdown()
         exit(0)
 
 
@@ -474,7 +499,7 @@ class Rosary:
         frame_time = kwargs.get('frame_time', self.frame_time)
 
         next_frame_time = time.monotonic()
-        
+
         # # setup data[] for running average of last 60 time deltas
         # data = []
         # for i in range(60):
@@ -607,13 +632,13 @@ class Rosary:
                 self.turn_knob(fn_name, **inferred_kwargs)
             else:
                 self.turn_knob(fn_name, *args)
-                
+
         elif namespace == 'trigger':
             if inferred_kwargs:
                 self.fire_trigger(fn_name, **inferred_kwargs)
             else:
                 self.fire_trigger(fn_name, *args)
-                
+
 
     def map_to_dispatcher(self):
         """
