@@ -50,7 +50,6 @@ if __name__ == "__main__":
     d = dispatcher.Dispatcher()
     # Since the Rosary itself won't be instantiated often, I don't feel
     # bad about requiring that the dispatcher be passed
-    #r = rosary.Rosary(args.ip, args.port, d)
     r = rosary.Rosary(ip=args.ip, port=args.port, dispatcher=d, server_ip=args.listen_ip, server_port=args.listen_port)
 
     # Since basically all the paths will be dynamically generated,

@@ -142,7 +142,7 @@ class Rosary:
             'even_ring': frozenset(self.beads[4:60:2]),
             'odd_all': frozenset(self.beads[1:60:2]),
             'odd_ring': frozenset(self.beads[5:60:2]),
-            'base': frozenset(self.bases[0:self.BASE_COUNT]),
+            'bases': frozenset(self.bases[0:self.BASE_COUNT]),
             'cross': frozenset(self.cross[0:self.CROSS_LED_COUNT])
         }
         self.set_registry['half01'] = self.set_registry['quadrent0'].\
@@ -180,6 +180,11 @@ class Rosary:
         # at the top level we have just one effect: effects.Bin
         # it holds all the other effects.
         self.bin = effects.bin.Bin(self.set_registry['all'], rosary=self)
+
+        # just kidding
+        # now we also have a bin dedicated to the bases
+        # this is because these lights are special and always need to be on
+        self.base_bin = effects.bin.Bin(self.set_registry['bases'], rosary=self)
 
         print("self.osc_server_ip:", self.osc_server_ip)
         print("self.osc_server_port:", self.osc_server_port)
@@ -334,6 +339,7 @@ class Rosary:
 
         effect_name = kwargs.get('name')
         bead_set_name = kwargs.get('bead_set', 'all')
+        bin = kwargs.get('bin', self.bin)
 
         # Accept either a color name or rgb values
         color_name = kwargs.get('color', 'white')
@@ -371,7 +377,7 @@ class Rosary:
                 kwargs.pop(key)
 
         if requested_effect is not None:
-            effect_id = self.bin.add_effect_object(requested_effect(*args, rosary=self, **kwargs))
+            effect_id = bin.add_effect_object(requested_effect(*args, rosary=self, **kwargs))
             self.expose_effect_knobs(requested_effect)
             return effect_id
         else:
@@ -477,7 +483,6 @@ class Rosary:
         `dm.expose()`-ed functions
         """
 
-        #if not effect.registered:
         for fn_name, fn in effect.dm.exposed_methods.items():
             if fn_name in self.knobs.keys():
                 self.knobs[fn_name].append( (fn, effect) )
@@ -515,11 +520,7 @@ class Rosary:
 
             # advance the state of all the effects
             self.bin.next()
-
-            # Let the triggers figure out for themselves what to do
-            #for trigger in self.triggers.values():
-            #    if trigger.running:
-            #        trigger.next()
+            self.base_bin.next()
 
             # store the time - we will use this to decide how long to sleep
             now = time.monotonic()
