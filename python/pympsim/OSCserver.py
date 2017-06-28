@@ -25,10 +25,9 @@ def print_bead_rosary(addr, args, iface_class, base, length, blob):
     global beadblob
     queue = args[0]
 
-    if (iface_class == 'rosary'):
-        beadblob.append([base, length, blob])
-        queue.put(beadblob)
-        beadblob = []
+    beadblob.append([iface_class, base, length, blob])
+    queue.put(beadblob)
+    beadblob = []
 
 def main(queue):
     parser = argparse.ArgumentParser()
