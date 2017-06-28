@@ -26,6 +26,7 @@ class App:
         x_offset = radius + (stem_spacing * 4) + 50
         y_offset = 325
         self.beads = []
+        self.bases = []
         #make the stem
         for i in range(0, 4):
             x = (x_offset - radius - stem_spacing * 4) + (stem_spacing * i)
@@ -38,7 +39,18 @@ class App:
             x = x_offset + radius * cos(angle)
             y = y_offset + radius * sin(angle)
             self.beads.append(self.canvas.create_oval(x, y, x+(2*bead_radius), y+(2*bead_radius), fill="#128192200", width=2))
+
+        #make the bases
+        for i in range(0, 9):
+            angle = (pi * 2 / 9 * (i - 4)) - pi
+            x = x_offset + (radius - (bead_radius * 3)) * cos(angle)
+            y = y_offset + (radius - (bead_radius * 3)) * sin(angle)
+            self.bases.append(self.canvas.create_oval(x, y, x+(2*bead_radius), y+(2*bead_radius), fill="#128192200", width=2))
+
+
         ##########################################################
+
+        
 
         self.canvas.pack()
 
@@ -55,14 +67,18 @@ class App:
     def updateBeads(self, beadData):
         bead_len = 8
         for bd in beadData:
-            num = bd[0]
-            length = bd[1]
-            blob = bd[2]
+            iface_class = bd[0]
+            num = bd[1]
+            length = bd[2]
+            blob = bd[3]
             for i in range(0, len(blob), bead_len):
                 #print(blob[i:i+6])
                 (r, g, b, brightness) = unpack('!HHHH', blob[i:i+bead_len])
                 tk_rgb = "#%02x%02x%02x" % (r >> 8, g >> 8, b >> 8)
-                self.canvas.itemconfig(self.beads[num], fill=tk_rgb)
+                if (iface_class == 'rosary'):
+                    self.canvas.itemconfig(self.beads[num], fill=tk_rgb)
+                if (iface_class == 'base'):
+                    self.canvas.itemconfig(self.bases[num], fill=tk_rgb)
                 num += 1
 
 
