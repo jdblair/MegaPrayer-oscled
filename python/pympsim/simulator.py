@@ -50,19 +50,8 @@ class App:
 
         ##########################################################
 
-        
-
         self.canvas.pack()
 
-    # def updateBeads(self, beadData):
-    #     for bd in beadData:
-    #         bead = bd[0]
-    #         r = int(bd[1] * 255)
-    #         g = int(bd[2] * 255)
-    #         b = int(bd[3] * 255)
-    #         print(r,g,b)
-    #         tk_rgb = "#%02x%02x%02x" % (r, g, b)
-    #         self.canvas.itemconfig(self.beads[bead], fill=tk_rgb)
 
     def updateBeads(self, beadData):
         bead_len = 8
