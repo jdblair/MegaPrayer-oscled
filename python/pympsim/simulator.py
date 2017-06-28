@@ -45,7 +45,15 @@ class App:
             angle = (pi * 2 / 9 * (i - 4)) - pi
             x = x_offset + (radius - (bead_radius * 3)) * cos(angle)
             y = y_offset + (radius - (bead_radius * 3)) * sin(angle)
-            self.bases.append(self.canvas.create_oval(x, y, x+(2*bead_radius), y+(2*bead_radius), fill="#128192200", width=2))
+
+
+            self.bases.append(
+                self.canvas.create_polygon((x + bead_radius, y,
+                                            x, y + (2 * bead_radius),
+                                            x + (2 * bead_radius), y + (2 * bead_radius)),
+                                           fill="#128192200", width=2))
+
+#self.canvas.create_oval(x, y, x+(2*bead_radius), y+(2*bead_radius), fill="#128192200", width=2))
 
 
         ##########################################################
