@@ -57,15 +57,36 @@ ColorMapStep = namedtuple('ColorMapStep', 'step color')
 
 class ColorMap(Color):
     """
-    Defines a linear color map, mapping a range to a color.
-    By convention I expect we will use the range (0,1) but any range is possible.
+    ColorMap is a special case of Color() that defines a linear color map, mapping a range to a color.
+    By convention I expect we will use the range (0,1) but any range is actually possible.
 
-    The map is defined as an array of ColorMapStep, which maps a value to a color.
+    The map is defined as a list of ColorMapStep, which maps a value to a color.
     If the value we map is between two ColorMapStep the linear interpolation is calculated.
 
     The ColorMap is a Color object - you can set r, g, b and a just like any other Color object.
     However, it is intended that the color is set using map(), which maps a value in the
     defined range to a color.
+
+    e.g.:
+    # default color map is black to 100% white
+    cm = ColorMap()
+    # set bead.color to 43% gray
+    bead.color.set(cm.map(0.43))
+
+    Example colormap covering all possible RGB colors, with both 0 and 1 set to 100% blue:
+    [
+      ColorMapStep(step=0,   color=Color(1, 0, 0)),
+      ColorMapStep(step=1/3, color=Color(0, 1, 0)),
+      ColorMapStep(step=2/3, color=Color(0, 0, 1)),
+      ColorMapStep(step=1,   color=Color(1, 0, 0))
+    ]                                                                           
+
+    Alpha channel can also be defined in the colormap.
+    For example, to map a range from 100% transparent to 100% opaque, do this:
+    [
+      ColorMapStep(step=0, color=Color(0, 0, 0, 0)),
+      ColorMapStep(step=1, color=Color(0, 0, 0, 1))
+    ]
     """
 
     def __init__(self, colormap=[ColorMapStep(0, Color(0, 0, 0)), ColorMapStep(1, Color(1, 1, 1))]):
@@ -114,6 +135,9 @@ class ColorMap(Color):
 
 
 class ColorMapFade(Color):
+    """
+    ColorMapFade() is a dynamic Color() which cycles through a provided ColorMap() over time steps.
+    """
     def __init__(self, colormap=ColorMap(colormap=[ColorMapStep(0, Color(0, 0, 0)), ColorMapStep(1, Color(1, 1, 1))]), time=30, name='color_map_fade'):
         super().__init__(r=colormap.colormap[0].color.r,
                          g=colormap.colormap[0].color.g,
@@ -137,6 +161,7 @@ class ColorMapFade(Color):
 
 class ColorFade(ColorMapFade):
     """Represents a dynamic Color that fades linearly over time between to specificed colors.
+    This is now implemented as a trivial case of ColorMapFade.
 
     knobs:
     time: number of steps to complete one color fade
