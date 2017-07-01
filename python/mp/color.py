@@ -94,7 +94,7 @@ class ColorMap(Color):
         self.colormap = colormap
 
     def __repr__(self):
-        return "ColorMap(color=Color(r={}, g={}, b={}, a={}), colormap={})".format(self.r, self.g, self.b, self.a, self.colormap)
+        return "ColorMap(r={}, g={}, b={}, a={}, colormap={})".format(self.r, self.g, self.b, self.a, self.colormap)
 
 
     def map(self, value):
@@ -149,7 +149,7 @@ class ColorMapFade(Color):
         self.delta_t = 1 / time
 
     def __repr__(self):
-        return "ColorMap(color=Color(r={}, g={}, b={}, a={}), colormap={}, time={})".format(self.r, self.g, self.b, self.a, self.colormap, self.time)
+        return "ColorMap(r={}, g={}, b={}, a={}, colormap={}, time={})".format(self.r, self.g, self.b, self.a, self.colormap, self.time)
 
     def next(self):
         self.delta += self.delta_t
@@ -180,3 +180,5 @@ class ColorFade(ColorMapFade):
     def next(self):
         super().next()
 
+
+rainbow_map = [ColorMapStep(0, Color(1, 0, 0)), ColorMapStep(1/3, Color(0, 1, 0)), ColorMapStep(2/3, Color(0, 0, 1)), ColorMapStep(1, Color(1, 0, 0))]
