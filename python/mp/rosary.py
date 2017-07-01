@@ -383,6 +383,9 @@ class Rosary:
         else:
             return None
 
+    def add_effect_object(self, effect):
+        self.bin.add_effect_object(effect)
+
     @dm.expose()
     def del_effect(self, id):
         self.bin.del_effect(id)
@@ -438,6 +441,12 @@ class Rosary:
         """Stop the animation loop without exiting."""
         if (self.run_mainloop):
             self.run_mainloop = False
+
+
+    @dm.expose()
+    def resume(self):
+        """Restart the animation loop."""
+        self.run_mainloop = True
 
 
     ##########################################################################
@@ -556,22 +565,24 @@ class Rosary:
     ##########################################################################
     def fire_trigger(self, trigger_name, *args, **kwargs):
 
+        print("fire_trigger: ", trigger_name)
+
         requested_trigger = self.trigger_registry.get(trigger_name)
         # I really only expect there to be one trigger running at a time,
         # but just in case, get everyone's names
         running_trigger_names = [t.name for t in self.triggers]
 
         # Don't want to restart a running trigger
-        if requested_trigger is not None and \
-           trigger_name not in running_trigger_names:
+        # if requested_trigger is not None and \
+        #    trigger_name not in running_trigger_names:
 
-            # Kill all existing triggers
-            self.clear_triggers()
+        #     # Kill all existing triggers
+        #     self.clear_triggers()
 
-            # Start fading out all existing effects
-            self.clear_effects_fade()
+        #     # Start fading out all existing effects
+        #     self.clear_effects_fade()
 
-            self.add_trigger_object(requested_trigger(*args, **kwargs))
+        #     self.add_trigger_object(requested_trigger(*args, **kwargs))
 
 
     def turn_knob(self, knob_name, *args, **kwargs):
