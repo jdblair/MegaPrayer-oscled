@@ -153,6 +153,8 @@ class Rosary:
                                            union(self.set_registry['quadrent3'])
         self.set_registry['half30'] = self.set_registry['quadrent3'].\
                                            union(self.set_registry['quadrent0'])
+        self.set_registry['stem+half'] = self.set_registry['half01'].\
+                                         union(self.set_registry['stem'])
 
         # some useful predefined colors
         self.color_registry = {
@@ -354,7 +356,7 @@ class Rosary:
         bead_set = self.set_registry.get(bead_set_name.lower(),
                                          self.set_registry['all'])
 
-        if any([r, g, b]):
+        if any([r, g, b, a]):
             effect_color = color.Color(r, g, b, a)
         else:
             effect_color = self.color_registry.get(color_name.lower())
