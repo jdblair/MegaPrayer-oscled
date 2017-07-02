@@ -159,6 +159,9 @@ class Rosary:
         # some useful predefined colors
         self.color_registry = {
             'white': color.Color(1,1,1,1),
+            'tungsten100': color.Color(1, 214/255, 170/255),
+            'tungsten40': color.Color(1, 197/255, 143/255),
+            'candle': color.Color(1, 147/255, 41/255),
             'red': color.Color(1,0,0,1),
             'yellow': color.Color(1,1,0,1),
             'green': color.Color(0,1,0,1),
