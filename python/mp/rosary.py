@@ -582,7 +582,7 @@ class Rosary:
         #     # Start fading out all existing effects
         #     self.clear_effects_fade()
 
-        #     self.add_trigger_object(requested_trigger(*args, **kwargs))
+        self.add_trigger_object(requested_trigger(*args, **kwargs))
 
 
     def turn_knob(self, knob_name, *args, **kwargs):
@@ -630,14 +630,13 @@ class Rosary:
         # Otherwise, use whatever is in passed args
         # If nothing, assume a 1 from passed args
         if namespace == 'rosary':
-            if inferred_kwargs:
-                # We expect to mostly end up here
-                if fn_name in self.dm.exposed_methods.keys():
-                    self.dm.exposed_methods[fn_name](self, **inferred_kwargs)
-                # But in some rare cases, we set some reasonable defaults
-                # even if you're being COMPLETELY lazy
-                else:
-                    self.dm.exposed_methods[fn_name](self, *args)
+            # We expect to mostly end up here
+            if fn_name in self.dm.exposed_methods.keys():
+                self.dm.exposed_methods[fn_name](self, **inferred_kwargs)
+            # But in some rare cases, we set some reasonable defaults
+            # even if you're being COMPLETELY lazy
+            else:
+                self.dm.exposed_methods[fn_name](self, *args)
 
         elif namespace == 'effect':
             if inferred_kwargs:
