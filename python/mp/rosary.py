@@ -312,7 +312,8 @@ class Rosary:
         """
 
         effect_name = kwargs.get('name')
-        bead_set_name = kwargs.get('bead_set', 'all')
+        bead_set_name = kwargs.get('bead_set', 'rosary')
+        bead_set_sort = kwargs.get('bead_set_sort', 'cw')
 
         # Accept either a color name or rgb values
         color_name = kwargs.get('color', 'white')
@@ -338,11 +339,15 @@ class Rosary:
         # it's all the same to us
         kwargs['bead_set'] = bead_set
         kwargs['color'] = effect_color
+        kwargs['bead_set_sort'] = bead_set_sort
 
         # I'd rather be fancy and strip out kwargs that won't be accepted
         # than force people writing effects to take **kwargs /flex
         requested_effect = self.effect_registry.get(effect_name)
         requested_effect_args = inspect.getargspec(requested_effect).args
+        # I don't want to add this to all the effects that are already written, but this
+        # solution feels like a gross hack
+        requested_effect_args.append('bead_set_sort')
 
         # Er, "clean up" the kwargs to pass to an effect init method
         for key in list(kwargs):
