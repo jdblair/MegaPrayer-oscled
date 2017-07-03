@@ -14,31 +14,9 @@ class TriggerHijack(effect.Effect):
     # Wish there were a better way than requiring this every time
     dm = copy.deepcopy(effect.Effect.dm)
 
-    def left_hijack(self):
-        print("Left nail hijack: BEAD #{}".format(self.red_looper.current))
-        # I dunno, some black magic: https://stackoverflow.com/a/18994210
-        if self.red_looper.current >= LEFT_HIJACK - 1 and \
-           self.red_looper.current <= LEFT_HIJACK + 1:
-
-            self.red_looper.set_speed(-1)
-
-    def right_hijack(self):
-        print("Right nail hijack: BEAD #{}".format(self.red_looper.current))
-        if self.red_looper.current >= RIGHT_HIJACK - 1 and \
-           self.red_looper.current <= RIGHT_HIJACK + 1:
-
-            self.red_looper.set_speed(1)
-
-    # If this effect is running and one of these triggers is fired,
-    # execute associated method instead of what trigger would ordinarily do
-    trigger_hijacks = {
-        'left_nail': left_hijack,
-        'right_nail': right_hijack
-    }
-
     def __init__(self, bead_set, color=_color.Color(), **kwargs):
         bead_set = kwargs.get('rosary').set_registry['ring']
-        super().__init__(name="trigger_hijack", bead_set=bead_set, color=color, **kwargs)
+        super().__init__(name="trigger_hijack_demo", bead_set=bead_set, color=color, **kwargs)
 
         # This effect uses 2 separate effects, so let's copy bin_demo.py
         self.bin = bin.Bin(bead_set, rosary=self.rosary)
@@ -53,9 +31,41 @@ class TriggerHijack(effect.Effect):
         self.hijacked_beads = set_color.SetColor(bead_set=frozenset([self.rosary.beads[11], self.rosary.beads[25]]), color=_color.Color(1,1,1), **kwargs)
         self.bin.add_effect_object(self.hijacked_beads)
 
-        for k, v in self.trigger_hijacks.items():
-            print("Hijacking rosary trigger {} with method {}".format(k, v))
-            self.rosary.trigger_hijacks.setdefault(k, []).append((self,v))
+        # NOTE: THIS IS THE MAIN ATTRACTION HERE!!!
+        self.trigger_hijacks = {
+            'left_nail': self.left_hijack,
+            'right_nail': self.right_hijack
+        }
+        # The base Effect class will check self.trigger_hijacks and
+        # modify the rosary's behavior
+        self.hijack_triggers()
+
+
+    def left_hijack(self):
+        """
+        If the 'left_nail' trigger is fired when the red_looper is on
+        a sepcific set of beads, loop CCW
+        """
+
+        print("Left nail hijack: BEAD #{}".format(self.red_looper.current))
+        if self.red_looper.current >= LEFT_HIJACK - 1 and \
+           self.red_looper.current <= LEFT_HIJACK + 1:
+
+            self.red_looper.set_speed(-1)
+
+
+    def right_hijack(self):
+        """
+        If the 'right_nail' trigger is fired when the red_looper is on
+        a sepcific set of beads, loop CW
+        """
+
+        print("Right nail hijack: BEAD #{}".format(self.red_looper.current))
+        if self.red_looper.current >= RIGHT_HIJACK - 1 and \
+           self.red_looper.current <= RIGHT_HIJACK + 1:
+
+            self.red_looper.set_speed(1)
+
 
     def next(self):
         self.bin.next()

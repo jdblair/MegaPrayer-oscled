@@ -139,6 +139,9 @@ class Rosary:
         """
         # instantiate the object so we get get the name
         e = effect(bead_set=self.set_registry['none'], rosary=self)
+        # Argh, because of the way we're doing the above line,
+        # trigger_hijacks actually WILL hijack right now, so undo that
+        e.unhijack_triggers()
         # note that we are returning effect, a class, not e, an instance!
         self.effect_registry[e.name] = effect
 
@@ -430,6 +433,14 @@ class Rosary:
         """
         Given an effect, create mappings in self.knobs to effect's
         `dm.expose()`-ed functions
+
+        FUN FACT: Why is this here and not on the effect itself?
+            - We wanted to play around with decorators
+            - Decorators run at "compile-time" and not "run-time"
+            - We don't know which knobs an effect has at initilization
+            - We need to expose the knobs after the effect is created
+            - Our first opportunity is the first mainloop() after
+            - This method is called in bin.py's next()
         """
 
         if not effect.registered:
@@ -517,7 +528,7 @@ class Rosary:
 
             print("Trigger {} hijacked by {}".format(trigger_name,
                                                      hijacked_effect))
-            hijacked_method(hijacked_effect)
+            hijacked_method()
 
         else:
 
