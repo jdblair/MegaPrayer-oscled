@@ -7,6 +7,7 @@ import time
 import math
 import inspect
 import random
+import struct
 
 from pythonosc import udp_client
 from pythonosc import osc_bundle_builder
@@ -18,7 +19,7 @@ from mp.dispatcher_mapper import DispatcherMapper
 class Bead:
     """Bead represents a single rosary bead."""
     def __init__(self, index=0):
-        self.index = index
+        self.index = int(index)
         self.color = color.Color()
         
     def __repr__(self):
@@ -29,12 +30,37 @@ class Bead:
         self.color = copy.copy(color)
 
 
+class Updater:
+    def __init__(self, name='', bead_list=[], osc_client=None):
+        self.name = name
+        self.bead_list = bead_list
+        self.osc_client=osc_client
+        
+    def update(self):
+        msg = osc_message_builder.OscMessageBuilder(address = "/bead")
+        msg.add_arg(self.name)                 # name (class)
+        msg.add_arg(int(0))                    # base
+        msg.add_arg(int(len(self.bead_list)))  # length
+        
+        payload = bytearray()
+        for bead in self.bead_list:
+            payload.extend(struct.pack('!HHHH',
+                                       int(bead.color.r * 0xffff),
+                                       int(bead.color.g * 0xffff),
+                                       int(bead.color.b * 0xffff),
+                                       int(bead.color.brightness)
+            ))
+
+        msg.add_arg(bytes(payload))
+
+        self.osc_client.send(msg.build())
+
+
 class Rosary:
     """Rosary represents the whole rosary and the set of effects currently
     running.  It is in charge of animating the rosary by calling
     next() in each running active Effect and transmitting the OSC
     commands set the colors of beads.
-
     """
 
     # Can't decorate with @self.r, so need this here
@@ -42,12 +68,16 @@ class Rosary:
 
     def __init__(self, ip="127.0.0.1", port=5005, dispatcher=None, name="rosary"):
         self.beads = []
-        self.bgcolor = color.Color(0,0,0)
+        self.bases = []
+        self.cross = []
         self.triggers = []
+        self.bgcolor = color.Color(0,0,0,1)  # note opaque alpha channel
         self.osc_ip = ip
         self.osc_port = port
         self.trigger_id = 0
         self.BEAD_COUNT=60
+        self.BASE_COUNT=9
+        self.CROSS_LED_COUNT=480
         self.run_mainloop = False
         self.frame_time = 1 / 30   # reciprocal of fps
         self.effect_registry = {}
@@ -59,14 +89,35 @@ class Rosary:
         self.dispatcher = dispatcher
         # Available knobs to turn
         self.knobs = {}
+        self.updater_list = []
 
+        self.osc_client = udp_client.UDPClient(self.osc_ip, self.osc_port)
+
+        # create the three classes of LED "beads"
         for i in range(self.BEAD_COUNT):
             self.beads.append(Bead(i))
+        self.updater_list.append(Updater(name='rosary',
+                                         bead_list=self.beads,
+                                         osc_client=self.osc_client))
+
+        for i in range(self.BASE_COUNT):
+            self.bases.append(Bead(i))
+        self.updater_list.append(Updater(name='base',
+                                         bead_list=self.bases,
+                                         osc_client=self.osc_client))
+
+        for i in range(self.CROSS_LED_COUNT):
+            self.cross.append(Bead(i))
+        self.updater_list.append(Updater(name='cross',
+                                         bead_list=self.cross,
+                                         osc_client=self.osc_client))
+
 
         # some useful predefined sets of beads
         self.set_registry = {
             'none': frozenset(),
             'all': frozenset(self.beads),
+            'rosary': frozenset(self.beads),
             'stem': frozenset(self.beads[0:4]),
             'ring': frozenset(self.beads[4:60]),
             'eighth0': frozenset(self.beads[4:11]),
@@ -84,7 +135,9 @@ class Rosary:
             'even_all': frozenset(self.beads[0:60:2]),
             'even_ring': frozenset(self.beads[4:60:2]),
             'odd_all': frozenset(self.beads[1:60:2]),
-            'odd_ring': frozenset(self.beads[5:60:2])
+            'odd_ring': frozenset(self.beads[5:60:2]),
+            'base': frozenset(self.bases[0:self.BASE_COUNT]),
+            'cross': frozenset(self.cross[0:self.CROSS_LED_COUNT])
         }
         self.set_registry['half01'] = self.set_registry['quadrent0'].\
                                            union(self.set_registry['quadrent1'])
@@ -97,20 +150,18 @@ class Rosary:
 
         # some useful predefined colors
         self.color_registry = {
-            'white': color.Color(1,1,1),
-            'red': color.Color(1,0,0),
-            'yellow': color.Color(1,1,0),
-            'green': color.Color(0,1,0),
-            'blue': color.Color(0,0,1),
-            'violet': color.Color(1,0,1),
-            'cyan': color.Color(0,1,1),
+            'white': color.Color(1,1,1,1),
+            'red': color.Color(1,0,0,1),
+            'yellow': color.Color(1,1,0,1),
+            'green': color.Color(0,1,0,1),
+            'blue': color.Color(0,0,1,1),
+            'violet': color.Color(1,0,1,1),
+            'cyan': color.Color(0,1,1,1),
             # It's annoying when the sim picks black and I can't see anything
             # NOTE YUNFAN: Take this out (maybe) going into prod?
-            #'black': color.Color(0,0,0)
+            #'black': color.Color(0,0,0,1)
         }
-
-        self.osc_client = udp_client.UDPClient(self.osc_ip, self.osc_port)
-
+                                    
         # Automagically register effects so that they're callable by name
         self.register_written_effects()
 
@@ -124,8 +175,8 @@ class Rosary:
         # it holds all the other effects.
         self.bin = effects.bin.Bin(self.set_registry['all'], rosary=self)
 
-    def beads_set_bgcolor(self):
-        for bead in self.beads:
+    def beads_set_bgcolor(self, beads):
+        for bead in beads:
             bead.color.set(self.bgcolor)
 
     ##########################################################################
@@ -236,33 +287,6 @@ class Rosary:
     ##########################################################################
     # ROSARY CONTROL - RUNTIME HUMAN INTERFACES
     ##########################################################################
-    def update(self):
-        """Transmit the OSC message to update all beads on the rosary."""
-        bundle = osc_bundle_builder.OscBundleBuilder(osc_bundle_builder.IMMEDIATELY)
-
-        i = 0
-        while (i < self.BEAD_COUNT):
-            msg = osc_message_builder.OscMessageBuilder(address = "/beadf")
-            msg.add_arg(i)
-            msg.add_arg(float(self.beads[i].color.r))
-            msg.add_arg(float(self.beads[i].color.g))
-            msg.add_arg(float(self.beads[i].color.b))
-            msg = msg.build()
-            bundle.add_content(msg)
-            i = i + 1
-            
-        msg = osc_message_builder.OscMessageBuilder(address = "/update")
-        msg = msg.build()
-        bundle.add_content(msg)
-            
-        bundle = bundle.build()
-        self.osc_client.send(bundle)
-
-        # If we need to unregister effects' paths from the dispatcher,
-        # do it here
-#        while self.effect_paths_to_unregister:
-#            self.dispatcher._map.pop(self.effect_paths_to_unregister.pop())
-
 
     # TODO: HOW MUCH DO I NEED THIS?
     def trigger(self, id):
@@ -293,20 +317,22 @@ class Rosary:
         """
 
         effect_name = kwargs.get('name')
-        bead_set_name = kwargs.get('bead_set', 'all')
+        bead_set_name = kwargs.get('bead_set', 'rosary')
+        bead_set_sort = kwargs.get('bead_set_sort', 'cw')
 
         # Accept either a color name or rgb values
         color_name = kwargs.get('color', 'white')
         r = kwargs.get('r', 0.0)
         g = kwargs.get('g', 0.0)
         b = kwargs.get('b', 0.0)
+        a = kwargs.get('a', 0.0)
 
         # If you don't pass in a good name I'll pretend I didn't hear you
         bead_set = self.set_registry.get(bead_set_name.lower(),
                                          self.set_registry['all'])
 
         if any([r, g, b]):
-            effect_color = color.Color(r, g, b)
+            effect_color = color.Color(r, g, b, a)
         else:
             effect_color = self.color_registry.get(color_name.lower())
 
@@ -318,11 +344,15 @@ class Rosary:
         # it's all the same to us
         kwargs['bead_set'] = bead_set
         kwargs['color'] = effect_color
+        kwargs['bead_set_sort'] = bead_set_sort
 
         # I'd rather be fancy and strip out kwargs that won't be accepted
         # than force people writing effects to take **kwargs /flex
         requested_effect = self.effect_registry.get(effect_name)
         requested_effect_args = inspect.getargspec(requested_effect).args
+        # I don't want to add this to all the effects that are already written, but this
+        # solution feels like a gross hack
+        requested_effect_args.append('bead_set_sort')
 
         # Er, "clean up" the kwargs to pass to an effect init method
         for key in list(kwargs):
@@ -330,7 +360,9 @@ class Rosary:
                 kwargs.pop(key)
 
         if requested_effect is not None:
-            return self.bin.add_effect_object(requested_effect(*args, rosary=self, **kwargs))
+            effect_id = self.bin.add_effect_object(requested_effect(*args, rosary=self, **kwargs))
+            self.expose_effect_knobs(requested_effect)
+            return effect_id
         else:
             return None
 
@@ -367,16 +399,11 @@ class Rosary:
         r = self
         if (r.run_mainloop == False):
             r.run_mainloop = True
-            self.t_mainloop = threading.Thread(name='rosary_mainloop', target=self.mainloop)
+            self.t_mainloop = threading.Thread(name='mainloop', target=self.mainloop)
             self.t_mainloop.start()
 
-            # Don't join the thread if being called from server
             if interactive:
-
                 code.interact(local=locals())
-
-                self.t_mainloop.join()
-
 
     @dm.expose()
     def stop(self):
@@ -443,17 +470,17 @@ class Rosary:
             - This method is called in bin.py's next()
         """
 
-        if not effect.registered:
-            for fn_name, fn in effect.dm.exposed_methods.items():
-                if fn_name in self.knobs.keys():
-                    self.knobs[fn_name].append( (fn, effect) )
-                else:
-                    self.knobs[fn_name] = [ (fn, effect) ]
+        #if not effect.registered:
+        for fn_name, fn in effect.dm.exposed_methods.items():
+            if fn_name in self.knobs.keys():
+                self.knobs[fn_name].append( (fn, effect) )
+            else:
+                self.knobs[fn_name] = [ (fn, effect) ]
 
-            effect.registered = True
+        effect.registered = True
 
 
-    def mainloop(self):
+    def mainloop(self, *args, **kwargs):
         """This is the animiation loop. It cycles through all active effects
         and invokes next() on each effect.
 
@@ -461,6 +488,8 @@ class Rosary:
         * frame_time: how much wall-clock time to allocate to each update
 
         """
+
+        frame_time = kwargs.get('frame_time', self.frame_time)
 
         next_frame_time = time.monotonic()
         
@@ -472,7 +501,10 @@ class Rosary:
         while (self.run_mainloop):
             next_frame_time += self.frame_time
 
-            self.beads_set_bgcolor()
+            bead_list = kwargs.get('bead_list')
+
+            for updater in self.updater_list:
+                self.beads_set_bgcolor(updater.bead_list)
 
             # advance the state of all the effects
             self.bin.next()
@@ -506,8 +538,8 @@ class Rosary:
 
             # update the LEDs
             # do this last to try to make the updates as regular as possible
-            self.update()
-
+            for updater in self.updater_list:
+                updater.update()
 
 
 

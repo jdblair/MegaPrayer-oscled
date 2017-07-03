@@ -6,6 +6,7 @@ from tkinter import *
 from math import pi
 from math import cos
 from math import sin
+from struct import unpack
 
 
 class App:
@@ -25,6 +26,7 @@ class App:
         x_offset = radius + (stem_spacing * 4) + 50
         y_offset = 325
         self.beads = []
+        self.bases = []
         #make the stem
         for i in range(0, 4):
             x = (x_offset - radius - stem_spacing * 4) + (stem_spacing * i)
@@ -37,19 +39,45 @@ class App:
             x = x_offset + radius * cos(angle)
             y = y_offset + radius * sin(angle)
             self.beads.append(self.canvas.create_oval(x, y, x+(2*bead_radius), y+(2*bead_radius), fill="#128192200", width=2))
+
+        #make the bases
+        for i in range(0, 9):
+            angle = (pi * 2 / 9 * (i - 4)) - pi
+            x = x_offset + (radius - (bead_radius * 3)) * cos(angle)
+            y = y_offset + (radius - (bead_radius * 3)) * sin(angle)
+
+
+            self.bases.append(
+                self.canvas.create_polygon((x + bead_radius, y,
+                                            x, y + (2 * bead_radius),
+                                            x + (2 * bead_radius), y + (2 * bead_radius)),
+                                           fill="#128192200", width=2))
+
+#self.canvas.create_oval(x, y, x+(2*bead_radius), y+(2*bead_radius), fill="#128192200", width=2))
+
+
         ##########################################################
 
         self.canvas.pack()
 
+
     def updateBeads(self, beadData):
+        bead_len = 8
         for bd in beadData:
-            bead = bd[0]
-            r = int(bd[1] * 255)
-            g = int(bd[2] * 255)
-            b = int(bd[3] * 255)
-            print(r,g,b)
-            tk_rgb = "#%02x%02x%02x" % (r, g, b)
-            self.canvas.itemconfig(self.beads[bead], fill=tk_rgb)
+            iface_class = bd[0]
+            num = bd[1]
+            length = bd[2]
+            blob = bd[3]
+            for i in range(0, len(blob), bead_len):
+                #print(blob[i:i+6])
+                (r, g, b, brightness) = unpack('!HHHH', blob[i:i+bead_len])
+                tk_rgb = "#%02x%02x%02x" % (r >> 8, g >> 8, b >> 8)
+                if (iface_class == 'rosary'):
+                    self.canvas.itemconfig(self.beads[num], fill=tk_rgb)
+                if (iface_class == 'base'):
+                    self.canvas.itemconfig(self.bases[num], fill=tk_rgb)
+                num += 1
+
 
 
 def main(queue):
