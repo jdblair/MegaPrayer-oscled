@@ -21,5 +21,5 @@ __all__ = [
     'cop_lights',
     'looper',
     'random_fill',
-    'trigger_override_demo'
+    'trigger_hijack_demo'
 ]

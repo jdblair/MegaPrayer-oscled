@@ -505,12 +505,18 @@ class Rosary:
     ##########################################################################
     def fire_trigger(self, trigger_name, *args, **kwargs):
 
+        # See if any currently running effects have hijacked this trigger
         hijacked = self.trigger_hijacks.get(trigger_name)
 
         if hijacked is not None and len(hijacked) > 0:
-            print("RUNNING HIJACK!")
 
+            # I thought it'd be cool if the hijacks acted like a stack -
+            # if many effects hijack the same trigger, then only the newest
+            # effect's hijacked trigger fires
             hijacked_effect, hijacked_method = hijacked[-1]
+
+            print("Trigger {} hijacked by {}".format(trigger_name,
+                                                     hijacked_effect))
             hijacked_method(hijacked_effect)
 
         else:
