@@ -25,10 +25,6 @@ class Bead:
     def __repr__(self):
         return "Bead(index={}, color={})".format(self.index, self.color)
 
-    def copy_color(self, color):
-        """Helper function that sets the Bead color by copying a Color object."""
-        self.color = copy.copy(color)
-
 
 class Updater:
     def __init__(self, name='', bead_list=[], osc_client=None):
@@ -122,7 +118,6 @@ class Rosary:
         # some useful predefined sets of beads
         self.set_registry = {
             'none': frozenset(),
-            'all': frozenset(self.beads),
             'rosary': frozenset(self.beads),
             'stem': frozenset(self.beads[0:4]),
             'ring': frozenset(self.beads[4:60]),
@@ -153,8 +148,12 @@ class Rosary:
                                            union(self.set_registry['quadrent3'])
         self.set_registry['half30'] = self.set_registry['quadrent3'].\
                                            union(self.set_registry['quadrent0'])
-        self.set_registry['stem+half'] = self.set_registry['half01'].\
+        self.set_registry['stem+left'] = self.set_registry['half01'].\
                                          union(self.set_registry['stem'])
+        self.set_registry['stem+right'] = self.set_registry['half23'].\
+                                          union(self.set_registry['stem'])
+
+        self.set_registry['all'] = self.set_registry['rosary'].union(self.set_registry['bases'].union(self.set_registry['cross']))
 
         # some useful predefined colors
         self.color_registry = {
@@ -186,10 +185,9 @@ class Rosary:
         # it holds all the other effects.
         self.bin = effects.bin.Bin(self.set_registry['all'], rosary=self)
 
-        # just kidding
-        # now we also have a bin dedicated to the bases
-        # this is because these lights are special and always need to be on
-        self.base_bin = effects.bin.Bin(self.set_registry['bases'], rosary=self)
+        # just kidding! now we also have a bin of "safe" effects that can't be
+        # removed. this is used primarily to keep the base lanterns on.
+        self.safe_bin = effects.bin.Bin(self.set_registry['all'], rosary=self)
 
         print("self.osc_server_ip:", self.osc_server_ip)
         print("self.osc_server_port:", self.osc_server_port)
@@ -330,7 +328,7 @@ class Rosary:
         self.trigger_id += 1
         trigger.id = self.trigger_id
         trigger.rosary = self
-        self.triggers.append(trigger)
+        #self.triggers.append(trigger)
         trigger.fire()
         return self.trigger_id
 
@@ -362,7 +360,7 @@ class Rosary:
         if any([r, g, b, a]):
             effect_color = color.Color(r, g, b, a)
         else:
-            effect_color = self.color_registry.get(color_name.lower())
+            effect_color = self.color_registry.get(color_name.lower(), 'white')
 
         # If all else fails, just pick a random color from the registry
         while effect_color in (None, color.Color(0,0,0)):
@@ -535,12 +533,13 @@ class Rosary:
 
             bead_list = kwargs.get('bead_list')
 
+            # i'm starting to think this should be a permanent effect
             for updater in self.updater_list:
                 self.beads_set_bgcolor(updater.bead_list)
 
             # advance the state of all the effects
+            self.safe_bin.next()
             self.bin.next()
-            self.base_bin.next()
 
             # store the time - we will use this to decide how long to sleep
             now = time.monotonic()

@@ -56,7 +56,7 @@ class Bin(effect.Effect):
         """Delete an active effect by id."""
         effect = self.effect(id)
 
-        if effect is not None:
+        if (effect is not None):
             #effect_paths = [effect.generate_osc_path(fn) for fn in\
             #                effect.dm.registered_methods.keys()]
             #self.effect_paths_to_unregister.extend(effect_paths)
@@ -76,7 +76,6 @@ class Bin(effect.Effect):
         """
         Just calling clear_effects() is jarring, let's ease it in
         """
-
         for eff in self.effects:
             eff.fade_out(30)
 

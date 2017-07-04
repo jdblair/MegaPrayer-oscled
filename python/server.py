@@ -57,6 +57,9 @@ if __name__ == "__main__":
     # (Especially for checking that paths for cleared effects are removed)
     d.map("/paths", print_dispatcher_paths, r)
 
+    # turn the lamps in the bases on
+    r.add_effect(name='set_color', color='tungsten40', bead_set='bases', bin=r.safe_bin)
+
     # Since the Rosary itself won't be instantiated often, I don't feel
     # bad about requiring that the dispatcher be passed
     r.start(interactive=args.interactive)
