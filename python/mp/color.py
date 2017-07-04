@@ -33,7 +33,7 @@ class Color:
             alpha = color.a
 
         # this part is the porter-duff equation
-        self.a = alpha + (self.a * (1 - alpha))
+        self.a = max(1, alpha + (self.a * (1 - alpha)))
         if self.a == 0:
             self.r = 0
             self.g = 0
