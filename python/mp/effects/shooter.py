@@ -15,7 +15,7 @@ class Shoot(effect.Effect):
     dm = copy.deepcopy(effect.Effect.dm)
     
     def __init__(self, bead_set, color=color.Color(), speed=1, length=1, **kwargs):
-        super().__init__(name="shoot", bead_set=bead_set, color=color, **kwargs)
+        super().__init__(name="shooter", bead_set=bead_set, color=color, **kwargs)
         self.speed = speed
         self.length = length
         if self.length > len(self.bead_list):
