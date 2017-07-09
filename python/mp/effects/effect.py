@@ -65,6 +65,9 @@ class Effect(abc.ABC):
         # Since we're not guaranteed a rosary object on init, we will rely
         # on the rosary to look at our exposed methods (via `@dm.expose())
         self.registered = False
+        # If we want to hijack any triggers, define them here
+        # Example: {'left_nail': self.left_nail_hijack}
+        self.trigger_hijacks = {}
 
     def __eq__(self, other):
         return (self.id == other)
@@ -121,6 +124,38 @@ class Effect(abc.ABC):
             self.my_bin.del_effect(self.id)
 
         self.time += 1
+
+
+    def hijack_triggers(self):
+        """
+        If self.trigger_hijacks is empty then this gracefully becomes a no-op
+        """
+
+        for k, v in self.trigger_hijacks.items():
+            print("Hijacking rosary trigger {} with {}".format(k, v))
+            self.rosary.trigger_hijacks.setdefault(k, []).append((self,v))
+
+
+    def unhijack_triggers(self):
+        """
+        As an effect is being deleted, remove any trigger hijacks
+
+        Again, the degenerate case exits gracefully
+        """
+
+        for k, v in self.trigger_hijacks.items():
+
+            # There could be multiple hijacks of this trigger on rosary
+            hijackeds = self.rosary.trigger_hijacks.get(k)
+
+            # Loop backwards to avoid skipping elements
+            for hijacked in reversed(hijackeds):
+
+                hijacked_effect, hijacked_method = hijacked
+
+                if hijacked_effect == self:
+                    hijackeds.remove(hijacked)
+
 
     def set_rosary(self, rosary):
         self.rosary = rosary

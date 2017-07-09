@@ -57,10 +57,13 @@ class Bin(effect.Effect):
         effect = self.effect(id)
 
         if effect is not None:
-            #effect_paths = [effect.generate_osc_path(fn) for fn in\
-            #                effect.dm.registered_methods.keys()]
-            #self.effect_paths_to_unregister.extend(effect_paths)
             self.rosary.unexpose_effect_knobs(effect)
+
+            # If this effect hijacked any triggers, time to un-hijack them
+            # NOTE: Because this doesn't have that decorator fanciness,
+            #       we can just call the method on the effect
+            effect.unhijack_triggers()
+
             self.effects.remove(effect)
 
     def clear_effects(self):

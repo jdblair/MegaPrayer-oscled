@@ -25,5 +25,6 @@ __all__ = [
     'roulette',
     'shooter',
     'launcher',
+    'trigger_hijack_demo',
     'random_fill'
 ]
