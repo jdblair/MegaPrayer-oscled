@@ -23,6 +23,8 @@ __all__ = [
     'looper',
     'wheel',
     'roulette',
-    'random_fill',
-    'trigger_hijack_demo'
+    'shooter',
+    'launcher',
+    'trigger_hijack_demo',
+    'random_fill'
 ]
