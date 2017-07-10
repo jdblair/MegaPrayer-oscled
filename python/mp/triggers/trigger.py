@@ -45,9 +45,10 @@ class Trigger(abc.ABC):
 
     def post_fire(self):
         """
-        If I want some sort of generic cleanup
+        Clean up the thing in rosary that prevents the same trigger from
+        taking over itself, aka a ghetto debounce
         """
-        pass
+        self.rosary.triggers.remove(self)
 
     def fire(self):
         self.pre_fire()

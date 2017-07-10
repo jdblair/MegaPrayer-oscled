@@ -82,6 +82,8 @@ class Rosary:
         self.frame_time = 1 / 30   # reciprocal of fps
         self.effect_registry = {}
         self.trigger_registry = {}
+        # Allow effects to take over triggers
+        self.trigger_hijacks = {}
         # Reasonable defaults
         self.name = name
         self.dispatcher = dispatcher
@@ -190,7 +192,10 @@ class Rosary:
         object name itself.
         """
         # instantiate the object so we get get the name
-        e = effect(self.set_registry['none'])
+        e = effect(bead_set=self.set_registry['none'], rosary=self)
+        # Argh, because of the way we're doing the above line,
+        # trigger_hijacks actually WILL hijack right now, so undo that
+        e.unhijack_triggers()
         # note that we are returning effect, a class, not e, an instance!
         self.effect_registry[e.name] = effect
 
@@ -458,6 +463,14 @@ class Rosary:
         """
         Given an effect, create mappings in self.knobs to effect's
         `dm.expose()`-ed functions
+
+        FUN FACT: Why is this here and not on the effect itself?
+            - We wanted to play around with decorators
+            - Decorators run at "compile-time" and not "run-time"
+            - We don't know which knobs an effect has at initilization
+            - We need to expose the knobs after the effect is created
+            - Our first opportunity is the first mainloop() after
+            - This method is called in bin.py's next()
         """
 
         #if not effect.registered:
@@ -538,22 +551,38 @@ class Rosary:
     ##########################################################################
     def fire_trigger(self, trigger_name, *args, **kwargs):
 
-        requested_trigger = self.trigger_registry.get(trigger_name)
-        # I really only expect there to be one trigger running at a time,
-        # but just in case, get everyone's names
-        running_trigger_names = [t.name for t in self.triggers]
+        # See if any currently running effects have hijacked this trigger
+        hijacked = self.trigger_hijacks.get(trigger_name)
 
-        # Don't want to restart a running trigger
-        if requested_trigger is not None and \
-           trigger_name not in running_trigger_names:
+        if hijacked is not None and len(hijacked) > 0:
 
-            # Kill all existing triggers
-            self.clear_triggers()
+            # I thought it'd be cool if the hijacks acted like a stack -
+            # if many effects hijack the same trigger, then only the newest
+            # effect's hijacked trigger fires
+            hijacked_effect, hijacked_method = hijacked[-1]
 
-            # Start fading out all existing effects
-            self.clear_effects_fade()
+            print("Trigger {} hijacked by {}".format(trigger_name,
+                                                     hijacked_effect))
+            hijacked_method()
 
-            self.add_trigger_object(requested_trigger(*args, **kwargs))
+        else:
+
+            requested_trigger = self.trigger_registry.get(trigger_name)
+            # I really only expect there to be one trigger running at a time,
+            # but just in case, get everyone's names
+            running_trigger_names = [t.name for t in self.triggers]
+
+            # Don't want to restart a running trigger
+            if requested_trigger is not None and \
+               trigger_name not in running_trigger_names:
+
+                # Kill all existing triggers
+                self.clear_triggers()
+
+                # Start fading out all existing effects
+                self.clear_effects_fade()
+
+                self.add_trigger_object(requested_trigger(*args, **kwargs))
 
 
     def turn_knob(self, knob_name, *args, **kwargs):
@@ -571,6 +600,8 @@ class Rosary:
         Figure out what the OSC path means and, well, do what the
         runes instruct us to do.
         """
+
+        print("Route OSC call: {}".format(full_path))
 
         osc_args = full_path.split('/')
         osc_args.remove('')
@@ -597,13 +628,18 @@ class Rosary:
 
             inferred_kwargs[implied_arg] = implied_val
 
+        print("* Namespace: {}".format(namespace))
+        print("* Function: {}".format(fn_name))
+        print("* Inferred kwargs: {}".format(inferred_kwargs))
+
         # If we have inferred kwargs, use them
         # Otherwise, use whatever is in passed args
         # If nothing, assume a 1 from passed args
         if namespace == 'rosary':
-            if inferred_kwargs:
+            if fn_name in self.dm.exposed_methods.keys():
+                print("* Found rosary function, calling")
                 # We expect to mostly end up here
-                if fn_name in self.dm.exposed_methods.keys():
+                if inferred_kwargs:
                     self.dm.exposed_methods[fn_name](self, **inferred_kwargs)
                 # But in some rare cases, we set some reasonable defaults
                 # even if you're being COMPLETELY lazy
@@ -612,12 +648,14 @@ class Rosary:
 
         elif namespace == 'effect':
             if inferred_kwargs:
+                print("* Found effect knob, calling")
                 self.turn_knob(fn_name, **inferred_kwargs)
             else:
                 self.turn_knob(fn_name, *args)
                 
         elif namespace == 'trigger':
             if inferred_kwargs:
+                print("* Found trigger, calling")
                 self.fire_trigger(fn_name, **inferred_kwargs)
             else:
                 self.fire_trigger(fn_name, *args)
