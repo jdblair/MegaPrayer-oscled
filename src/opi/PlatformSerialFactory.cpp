@@ -16,19 +16,19 @@ std::shared_ptr<IPlatformSerial> const PlatformSerialFactory::create_platform_se
 
     switch (iface_num) {
     case 0:
-        ser.reset(new PlatformSerial(3, 5));
+        ser.reset(new PlatformSerial(12, 11));
         break;
     case 1:
-        ser.reset(new PlatformSerial(7, 12));
+        ser.reset(new PlatformSerial(6, 7));
         break;
     case 2:
-        ser.reset(new PlatformSerial(11, 13));
+        ser.reset(new PlatformSerial(1, 0));
         break;
     case 3:
-        ser.reset(new PlatformSerial(16, 18));
+        ser.reset(new PlatformSerial(19, 18));
         break;
     case 4:
-        ser.reset(new PlatformSerial(8, 10));
+        ser.reset(new PlatformSerial(198, 199));
         break;
     }
 
