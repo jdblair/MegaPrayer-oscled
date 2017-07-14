@@ -51,7 +51,7 @@ if __name__ == "__main__":
     d = dispatcher.Dispatcher()
     # Since the Rosary itself won't be instantiated often, I don't feel
     # bad about requiring that the dispatcher be passed
-    r = rosary.Rosary(args.ip, args.port, d)
+    r = rosary.Rosary(ip=args.ip, port=args.port, dispatcher=d, server_ip=args.listen_ip, server_port=args.listen_port)
 
     # Since basically all the paths will be dynamically generated,
     # this will be useful for developing
@@ -60,10 +60,4 @@ if __name__ == "__main__":
 
     # Since the Rosary itself won't be instantiated often, I don't feel
     # bad about requiring that the dispatcher be passed
-    r = rosary.Rosary(args.ip, args.port, d)
     r.start(interactive=args.interactive)
-
-    server = osc_server.ThreadingOSCUDPServer(
-        (args.listen_ip, args.listen_port), d)
-    print("Serving on {}".format(server.server_address))
-    server.serve_forever()

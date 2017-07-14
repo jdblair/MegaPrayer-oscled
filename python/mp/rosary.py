@@ -12,6 +12,7 @@ import struct
 from pythonosc import udp_client
 from pythonosc import osc_bundle_builder
 from pythonosc import osc_message_builder
+from pythonosc import osc_server
 
 from mp import color, effects, triggers
 from mp.dispatcher_mapper import DispatcherMapper
@@ -24,10 +25,6 @@ class Bead:
         
     def __repr__(self):
         return "Bead(index={}, color={})".format(self.index, self.color)
-
-    def copy_color(self, color):
-        """Helper function that sets the Bead color by copying a Color object."""
-        self.color = copy.copy(color)
 
 
 class Updater:
@@ -66,7 +63,13 @@ class Rosary:
     # Can't decorate with @self.r, so need this here
     dm = DispatcherMapper()
 
-    def __init__(self, ip="127.0.0.1", port=5005, dispatcher=None, name="rosary"):
+    def __init__(self,
+                 ip="127.0.0.1",
+                 port=5005,
+                 dispatcher=None,
+                 name="rosary",
+                 server_ip="127.0.0.1",
+                 server_port=5006):
         self.beads = []
         self.bases = []
         self.cross = []
@@ -90,6 +93,9 @@ class Rosary:
         # Available knobs to turn
         self.knobs = {}
         self.updater_list = []
+
+        self.osc_server_ip=server_ip
+        self.osc_server_port=server_port
 
         self.osc_client = udp_client.UDPClient(self.osc_ip, self.osc_port)
 
@@ -178,9 +184,17 @@ class Rosary:
         # it holds all the other effects.
         self.bin = effects.bin.Bin(self.set_registry['all'], rosary=self)
 
+        self.osc_server = osc_server.ThreadingOSCUDPServer(
+            (self.osc_server_ip, self.osc_server_port), self.dispatcher)
+
     def beads_set_bgcolor(self, beads):
         for bead in beads:
             bead.color.set(self.bgcolor)
+
+    def osc_server_main(self):
+        print("Serving on {}".format(self.osc_server.server_address))
+        self.osc_server.serve_forever()
+    
 
     ##########################################################################
     # INITIALIZATION STUFF - DISCOVER WRITTEN MODULES
@@ -405,6 +419,9 @@ class Rosary:
             self.t_mainloop = threading.Thread(name='mainloop', target=self.mainloop)
             self.t_mainloop.start()
 
+            self.t_osc_server = threading.Thread(name='osc_server', target=self.osc_server_main)
+            self.t_osc_server.start()
+
             if interactive:
                 code.interact(local=locals())
 
@@ -412,6 +429,7 @@ class Rosary:
     def stop(self):
         """Stop the mainloop and exit the application."""
         self.run_mainloop = False
+        self.osc_server.shutdown()
         exit(0)
 
 
@@ -420,6 +438,13 @@ class Rosary:
         """Stop the animation loop without exiting."""
         if (self.run_mainloop):
             self.run_mainloop = False
+
+
+    @dm.expose()
+    def resume(self):
+        """Restart the animation loop."""
+        self.run_mainloop = True
+
 
 
     ##########################################################################
@@ -563,7 +588,7 @@ class Rosary:
 
             print("Trigger {} hijacked by {}".format(trigger_name,
                                                      hijacked_effect))
-            hijacked_method()
+            hijacked_method(*args, **kwargs)
 
         else:
 
