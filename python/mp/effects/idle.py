@@ -19,19 +19,23 @@ class Idle(effect.Effect):
 
         # NOTE: THIS IS THE MAIN ATTRACTION HERE!!!
         self.trigger_hijacks = {
-            'left_nail': self.left_hijack,
-            'right_nail': self.right_hijack
+            'left_nail': self.left_nail,
+            'right_nail': self.right_nail,
+            'bead00': self.bead00
         }
         # The base Effect class will check self.trigger_hijacks and
         # modify the rosary's behavior
         self.hijack_triggers()
 
 
-    def left_hijack(self, *args):
-        print("idle: left_hijack", *args)
+    def left_nail(self, *args, **kwargs):
+        print("idle: left_hijack", *args, **kwargs)
 
-    def right_hijack(self, *args):
-        print("right_hijack", *args)
+    def right_nail(self, *args, **kwargs):
+        print("right_hijack", *args, **kwargs)
+
+    def bead00(self, *args, **kwargs):
+        print("bead00", *args, **kwargs)
 
 
     def next(self):
