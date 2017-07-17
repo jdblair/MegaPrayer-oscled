@@ -304,7 +304,7 @@ void OSCServer::show_value(int value, int total_bits, int bead_offset, led_t col
 void OSCServer::test_sequence()
 {
     // there's probably some c++ way to do this
-    const int test_color_len = 1;
+    const int test_color_len = 7;
     led_t test_color[] = {
         {1, 0, 0},
         {1, 1, 0},

@@ -27,6 +27,8 @@ public:
         bool id_set;
         bool daemonize;
         bool daemonize_set;
+        bool startup_test;
+        bool startup_test_set;
         std::string ip;
         bool ip_set;
         std::string port;
@@ -59,6 +61,7 @@ public:
         int bead_count;
         int bead_base;
         bool daemonize;
+        bool startup_test;
         std::string byte_order;
         std::string led_type;
         int brightness;
@@ -96,6 +99,7 @@ public:
     static const std::string KEY_BEAD_COUNT;
     static const std::string KEY_BEAD_BASE;
     static const std::string KEY_DAEMONIZE;
+    static const std::string KEY_STARTUP_TEST;
     static const std::string KEY_IFACE_ID;
     static const std::string KEY_IFACE_LED_BASE;
     static const std::string KEY_IFACE_LED_COUNT;
