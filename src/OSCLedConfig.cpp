@@ -30,6 +30,7 @@ const string OSCLedConfig::KEY_LEDS_PER_BEAD = "leds_per_bead";
 const string OSCLedConfig::KEY_BEAD_COUNT = "bead_count";
 const string OSCLedConfig::KEY_BEAD_BASE = "bead_base";
 const string OSCLedConfig::KEY_DAEMONIZE = "daemonize";
+const string OSCLedConfig::KEY_STARTUP_TEST = "startup_test";
 const string OSCLedConfig::KEY_IFACE_ID = "id";
 const string OSCLedConfig::KEY_IFACE_LED_BASE = "led_base";
 const string OSCLedConfig::KEY_IFACE_LED_COUNT = "led_count";
@@ -66,12 +67,21 @@ OSCLedConfig::OSCLedConfig()
     m_cmd_line_config.config_file = string("/etc/mp/config.json");
     m_cmd_line_config.id = 0;
     m_cmd_line_config.daemonize = false;
+    m_cmd_line_config.startup_test = false;
     m_cmd_line_config.port = string("5005");
     m_cmd_line_config.config_file_set = false;
     m_cmd_line_config.id_set = false;
     m_cmd_line_config.daemonize_set = false;
+    m_cmd_line_config.startup_test_set = false;
     m_cmd_line_config.ip_set = false;
     m_cmd_line_config.port_set = false;
+
+    // parse the PACKAGE_VERSION (x.y)
+    m_version.major = 0;
+    m_version.minor = 0;
+    if (sscanf(PACKAGE_VERSION, "%d.%d", &m_version.major, &m_version.minor) != 2) {
+        cout << "can't parse PACKAGE_VERSION = " << PACKAGE_VERSION << endl;
+    }
 }
 
 
@@ -133,6 +143,7 @@ bool OSCLedConfig::json_parse_station_values(Json::Value s, OSCLedConfig::statio
     config.bead_count = s.get(KEY_BEAD_COUNT, m_default.bead_count).asInt();
     config.bead_base = s.get(KEY_BEAD_BASE, m_default.bead_base).asInt();
     config.daemonize = s.get(KEY_DAEMONIZE, m_default.daemonize).asBool();
+    config.startup_test = s.get(KEY_STARTUP_TEST, m_default.startup_test).asBool();
     config.led_type = s.get(KEY_IFACE_LED_TYPE, m_default.led_type).asString();
     config.byte_order = s.get(KEY_IFACE_BYTE_ORDER, m_default.byte_order).asString();
     config.brightness = s.get(KEY_IFACE_BRIGHTNESS, m_default.brightness).asInt();
@@ -153,6 +164,9 @@ bool OSCLedConfig::json_parse_station_values(Json::Value s, OSCLedConfig::statio
 
     if (m_cmd_line_config.daemonize_set)
         config.daemonize = m_cmd_line_config.daemonize;
+    
+    if (m_cmd_line_config.startup_test_set)
+        config.startup_test = m_cmd_line_config.startup_test;
     
     if (s.isMember(KEY_IFACE)) {
         // protect against being called more than once by removing all
@@ -190,7 +204,7 @@ bool OSCLedConfig::json_parse_station_values(Json::Value s, OSCLedConfig::statio
         }
     }
 
-    cout << "parse_station_config: " << endl;
+    // cout << "parse_station_config: " << endl;
     // cout << "ip: " << config.ip << endl; 
     // cout << "json_parse_station_values():" << endl;
     // cout << "ip: " << config.ip << endl;
@@ -255,11 +269,12 @@ bool OSCLedConfig::getopt(int argc, char * const argv[])
             {"daemonize", no_argument, 0, 'd'},
             {"ip", required_argument, 0, 'I'},
             {"port", required_argument, 0, 'p'},
+            {"test", no_argument, 0, 't'},
             {"help", no_argument, 0, 'h'},
             {0, 0, 0}
         };
         
-        c = getopt_long(argc, argv, "vc:i:I:dhp:", long_options, &option_index);
+        c = getopt_long(argc, argv, "vc:i:I:dhp:t", long_options, &option_index);
         if (c == -1)
             break;
         
@@ -282,6 +297,12 @@ bool OSCLedConfig::getopt(int argc, char * const argv[])
             cout << "damonize = true\n";
             m_cmd_line_config.daemonize = true;
             m_cmd_line_config.daemonize_set = true;
+            break;
+
+        case 't':
+            cout << "test = true\n";
+            m_cmd_line_config.startup_test = true;
+            m_cmd_line_config.startup_test_set = true;
             break;
 
         case 'I':
@@ -309,6 +330,7 @@ bool OSCLedConfig::getopt(int argc, char * const argv[])
                  << "   --daemonize  detach process from terminal (" << (m_config.daemonize ? "true" : "false") << ")" << endl
                  << "   --ip         ip address to bind to (" << m_config.ip << ")" << endl
                  << "   --port       port to bind to (" << m_config.port << ")" << endl
+                 << "   --test       enable startup test sequence" << endl
                  << "   --help       this help message" << endl
                  << endl;
             exit(0);
