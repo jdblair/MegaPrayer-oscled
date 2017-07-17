@@ -4,6 +4,7 @@
         "port": 5005,
         "leds_per_bead": 8,
         "bead_count": 60,
+        "xform" : { "r": 1.0, "g": 1.0, "b": 1.0 },
         "daemonize": false
     },
     "station": [

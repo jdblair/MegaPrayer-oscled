@@ -2,11 +2,9 @@ import copy
 from mp import color
 from mp.effects import effect
 
-class Bounce(effect.Effect):
+class Shoot(effect.Effect):
     """
-    Bounce colors a single bead, one at a time, from the lowest bead to
-    the highest bead. Once the high bead is reached the direction
-    reverses until the low bead is reached.
+    "Shoots" a light one time across the specified set.
 
     knobs:
     * speed: the amount to move every time tick, can be a float.
@@ -17,7 +15,7 @@ class Bounce(effect.Effect):
     dm = copy.deepcopy(effect.Effect.dm)
     
     def __init__(self, bead_set, color=color.Color(), speed=1, length=1, **kwargs):
-        super().__init__(name="bounce", bead_set=bead_set, color=color, **kwargs)
+        super().__init__(name="shooter", bead_set=bead_set, color=color, **kwargs)
         self.speed = speed
         self.length = length
         if self.length > len(self.bead_list):
@@ -31,8 +29,8 @@ class Bounce(effect.Effect):
         for i in range(0,self.length):
             self.bead_list[int(round(self.current - i))].color.set(self.color)
         self.current += self.speed
-        if (self.current >= (len(self.bead_list) - 1) or self.current <= self.length):
-            self.speed *= -1
+        if (self.current > (len(self.bead_list) - 1) or self.current < self.length):
+            self.finished = True
 
     @dm.expose()
     def set_speed(self, speed):

@@ -15,9 +15,16 @@ __all__ = [
     'bounce',
     'casino',
     'sparkle',
+    'random_fill',
     'vibration_fixed',
     'bin_demo',
     'strobe',
     'cop_lights',
+    'looper',
+    'wheel',
+    'roulette',
+    'shooter',
+    'launcher',
+    'trigger_hijack_demo',
     'random_fill'
 ]

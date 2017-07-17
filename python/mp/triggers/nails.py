@@ -50,11 +50,11 @@ class LeftNail(trigger.Trigger):
         threeps.id = random.randrange(1000, 9999)
 
 
-        self.rosary.add_effect_object(bounce1)
-        self.rosary.add_effect_object(bounce2)
-        self.rosary.add_effect_object(bounce3)
-        self.rosary.add_effect_object(sinewav)
-        self.rosary.add_effect_object(threeps)
+        self.rosary.bin.add_effect_object(bounce1)
+        self.rosary.bin.add_effect_object(bounce2)
+        self.rosary.bin.add_effect_object(bounce3)
+        self.rosary.bin.add_effect_object(sinewav)
+        self.rosary.bin.add_effect_object(threeps)
 
 
 class RightNail(LeftNail):

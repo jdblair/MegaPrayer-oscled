@@ -50,13 +50,13 @@ OSCServer::OSCServer(atomic<bool> *running, string ip, string port) : m_running(
     // make a ServerThread object from the lo_server_thread we made above
     m_st.reset(new lo::ServerThread(osc_st));
 
-    m_st->add_method("/led", "iiii", 
+    m_st->add_method("/led", "siiii", 
                      [this](lo_arg **argv, int)  {this->osc_method_led(argv);});
 
-    m_st->add_method("/ledf", "ifff", 
+    m_st->add_method("/ledf", "sifff", 
                      [this](lo_arg **argv, int)  {this->osc_method_led_float(argv);});
 
-    m_st->add_method("/beadf", "ifff", 
+    m_st->add_method("/beadf", "sifff", 
                      [this](lo_arg **argv, int)  {this->osc_method_bead_float(argv);});
     m_st->add_method("/update", "",
                      [this](lo_arg **argv, int)  {this->osc_method_update(argv);});
@@ -74,6 +74,11 @@ OSCServer::OSCServer(atomic<bool> *running, string ip, string port) : m_running(
 
 void OSCServer::set_led(string const &iface_class, int n, led_t led)
 {
+    // cout << "set_led(" << iface_class << ", " << n <<
+    //     ", [" << int(led.r) <<
+    //     ", " << int(led.g) <<
+    //     ", " << int(led.b) <<
+    //     "])" << endl;
     // search for correct led_interface, set leds
     for (auto it = m_led_ifaces.begin(); it != m_led_ifaces.end(); ++it) {
         auto iface = *it;
@@ -91,6 +96,7 @@ void OSCServer::set_led(string const &iface_class, int n, led_t led)
 
 void OSCServer::set_xform(float r, float g, float b)
 {
+    //cout << "set_xform: [" << r << ", " << g << ", " << b << "]" << endl;
     for (auto it = m_led_ifaces.begin(); it != m_led_ifaces.end(); ++it) {
         (*it)->set_xform(r, g, b);
     }
@@ -104,10 +110,11 @@ int OSCServer::osc_method_led(lo_arg **argv)
     //      << argv[0]->i << ", " 
     //      << argv[1]->i << ", " 
     //      << argv[2]->i << ", "
-    //      << argv[3]->i << endl;
+    //      << argv[3]->i << ", "
+    //      << argv[4]->i << endl;
     
-    auto n = argv[0]->i;
-    set_led(string("bead"), n, led_t(argv[1]->i, argv[2]->i, argv[3]->i));
+    auto n = argv[1]->i;
+    set_led(string(reinterpret_cast<char*>(argv[0])), n, led_t(argv[2]->i, argv[3]->i, argv[4]->i));
 
     return 0;
 }
@@ -119,12 +126,13 @@ int OSCServer::osc_method_led_float(lo_arg **argv)
     //      << argv[0]->i << ", " 
     //      << argv[1]->f << ", " 
     //      << argv[2]->f << ", "
-    //      << argv[3]->f << endl;
+    //      << argv[3]->f << ", "
+    //      << argv[4]->f << endl;
     
-    auto n = argv[0]->i;
-    set_led(string("bead"), n, led_t(argv[1]->f * 255,
-                     argv[2]->f * 255,
-                     argv[3]->f * 255));
+    auto n = argv[1]->i;
+    set_led(string(reinterpret_cast<char*>(argv[0])), n, led_t(argv[2]->f * 255,
+                     argv[3]->f * 255,
+                     argv[4]->f * 255));
 
     return 0;
 }
@@ -133,14 +141,15 @@ int OSCServer::osc_method_led_float(lo_arg **argv)
 int OSCServer::osc_method_bead_float(lo_arg **argv)
 {
     // cout << "/beadf (" << ++received << "): "
-    //      << argv[0]->i << ", " 
+    //      << &(argv[0]->s) << ", " 
     //      << argv[1]->f << ", " 
     //      << argv[2]->f << ", "
-    //      << argv[3]->f << endl;
+    //      << argv[3]->f << ", "
+    //      << argv[4]->f << endl;
     
-    auto n = argv[0]->i * m_leds_per_bead;
+    auto n = argv[1]->i * m_leds_per_bead;
     for (int offset = 0; offset < m_leds_per_bead; offset++) {
-        set_led(string("bead"), n + offset, led_t(argv[1]->f * 255, argv[2]->f * 255, argv[3]->f * 255));
+        set_led(&(argv[0]->s), n + offset, led_t(argv[2]->f * 255, argv[3]->f * 255, argv[4]->f * 255));
     }        
 
     return 0;
@@ -149,6 +158,8 @@ int OSCServer::osc_method_bead_float(lo_arg **argv)
 
 int OSCServer::osc_method_update(lo_arg **argv)
 {
+    // cout << "/update" << endl;
+
     for (auto it = m_led_ifaces.begin(); it != m_led_ifaces.end(); ++it) {
         (*it)->notify_update_thread();
     }
@@ -502,6 +513,8 @@ void OSCServer::led_interface::set_led(int offset, led_t led)
     led.g *= m_xform.g;
     led.b *= m_xform.b;
 
+    // cout << "set_led() after xform: " << offset << "," << int(led.r)  << "," << int(led.g)  << "," << int(led.b)  << ")" << endl;
+
     lock_guard<mutex> lock(leds_mutex);
     leds.at(offset) = led;
 }
@@ -513,7 +526,7 @@ void OSCServer::led_interface::set_xform(float r, float g, float b)
     m_xform.g = g;
     m_xform.b = b;
 
-    cout << "set_xform(" << r << ", " << g << ", " << b << ")" << endl;
+    // cout << "set_xform(" << r << ", " << g << ", " << b << ")" << endl;
 }
 
 

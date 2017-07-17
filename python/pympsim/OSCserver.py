@@ -21,11 +21,11 @@ def print_update(addr, args):
     queue.put(beadblob)
     beadblob =[]
 
-def print_bead_rosary(addr, args, base, length, blob):
+def print_bead_rosary(addr, args, iface_class, base, length, blob):
     global beadblob
     queue = args[0]
 
-    beadblob.append([base, length, blob])
+    beadblob.append([iface_class, base, length, blob])
     queue.put(beadblob)
     beadblob = []
 
@@ -40,7 +40,7 @@ def main(queue):
     dispatcher = disp.Dispatcher()
     dispatcher.map("/beadf", print_bead, queue)
     dispatcher.map("/update", print_update, queue)
-    dispatcher.map("/bead/rosary", print_bead_rosary, queue)
+    dispatcher.map("/bead", print_bead_rosary, queue)
 
     server = osc_server.ThreadingOSCUDPServer(
             (args.ip, args.port), dispatcher)

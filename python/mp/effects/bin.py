@@ -34,12 +34,13 @@ class Bin(effect.Effect):
         """Adds an Effect object to the active Effect list.  Returns the id of
         the active effect.
 
-x        """
+        """
         effect.id = self.effect_id()
         # Since rosary holds the dispatcher and the effect doesn't
         # know about rosary on init, we can't map to dispatcher yet either
         self.effects.append(effect)
         effect.rosary = self.rosary
+        effect.my_bin = self
 
         return effect.id
 
@@ -51,21 +52,20 @@ x        """
             effect.set_rosary(rosary)
             super().set_rosary(rosary)
 
-    @dm.expose()
     def del_effect(self, id):
         """Delete an active effect by id."""
-        
         effect = self.effect(id)
 
         if effect is not None:
-            #effect_paths = [effect.generate_osc_path(fn) for fn in\
-            #                effect.dm.registered_methods.keys()]
-            #self.effect_paths_to_unregister.extend(effect_paths)
             self.rosary.unexpose_effect_knobs(effect)
+
+            # If this effect hijacked any triggers, time to un-hijack them
+            # NOTE: Because this doesn't have that decorator fanciness,
+            #       we can just call the method on the effect
+            effect.unhijack_triggers()
+
             self.effects.remove(effect)
 
-
-    @dm.expose()
     def clear_effects(self):
         """Remove all active effects. This stops all activity on the rosary."""
         # There's some weird race condition where del_effect's call to
@@ -75,8 +75,6 @@ x        """
             effect = self.effects[0]
             self.del_effect(effect.id)
 
-
-    @dm.expose()
     def clear_effects_fade(self):
         """
         Just calling clear_effects() is jarring, let's ease it in
@@ -87,12 +85,6 @@ x        """
 
     def next(self):
         for effect in self.effects:
-
-            # If any new effects have been added since the last iteration,
-            # add their knobs to the dispatched functikon
-            #if self.rosary != None:
-            self.rosary.expose_effect_knobs(effect)
-
             effect.supernext()
 
             if (effect.finished):

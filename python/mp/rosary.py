@@ -70,8 +70,8 @@ class Rosary:
         self.beads = []
         self.bases = []
         self.cross = []
-        self.bgcolor = color.Color(0,0,0)
         self.triggers = []
+        self.bgcolor = color.Color(0,0,0,1)  # note opaque alpha channel
         self.osc_ip = ip
         self.osc_port = port
         self.trigger_id = 0
@@ -82,6 +82,8 @@ class Rosary:
         self.frame_time = 1 / 30   # reciprocal of fps
         self.effect_registry = {}
         self.trigger_registry = {}
+        # Allow effects to take over triggers
+        self.trigger_hijacks = {}
         # Reasonable defaults
         self.name = name
         self.dispatcher = dispatcher
@@ -115,6 +117,7 @@ class Rosary:
         self.set_registry = {
             'none': frozenset(),
             'all': frozenset(self.beads),
+            'rosary': frozenset(self.beads),
             'stem': frozenset(self.beads[0:4]),
             'ring': frozenset(self.beads[4:60]),
             'eighth0': frozenset(self.beads[4:11]),
@@ -147,16 +150,19 @@ class Rosary:
 
         # some useful predefined colors
         self.color_registry = {
-            'white': color.Color(1,1,1),
-            'red': color.Color(1,0,0),
-            'yellow': color.Color(1,1,0),
-            'green': color.Color(0,1,0),
-            'blue': color.Color(0,0,1),
-            'violet': color.Color(1,0,1),
-            'cyan': color.Color(0,1,1),
+            'white': color.Color(1,1,1,1),
+            'tungsten100': color.Color(1, 214/255, 170/255),
+            'tungsten40': color.Color(1, 197/255, 143/255),
+            'candle': color.Color(1, 147/255, 41/255),
+            'red': color.Color(1,0,0,1),
+            'yellow': color.Color(1,1,0,1),
+            'green': color.Color(0,1,0,1),
+            'blue': color.Color(0,0,1,1),
+            'violet': color.Color(1,0,1,1),
+            'cyan': color.Color(0,1,1,1),
             # It's annoying when the sim picks black and I can't see anything
             # NOTE YUNFAN: Take this out (maybe) going into prod?
-            #'black': color.Color(0,0,0)
+            #'black': color.Color(0,0,0,1)
         }
                                     
         # Automagically register effects so that they're callable by name
@@ -186,7 +192,10 @@ class Rosary:
         object name itself.
         """
         # instantiate the object so we get get the name
-        e = effect(self.set_registry['none'])
+        e = effect(bead_set=self.set_registry['none'], rosary=self)
+        # Argh, because of the way we're doing the above line,
+        # trigger_hijacks actually WILL hijack right now, so undo that
+        e.unhijack_triggers()
         # note that we are returning effect, a class, not e, an instance!
         self.effect_registry[e.name] = effect
 
@@ -281,43 +290,6 @@ class Rosary:
     ##########################################################################
     # ROSARY CONTROL - RUNTIME HUMAN INTERFACES
     ##########################################################################
-    def update(self, bead_list):
-        """Transmit the OSC message to update all beads on the rosary."""
-        #bundle = osc_bundle_builder.OscBundleBuilder(osc_bundle_builder.IMMEDIATELY)
-
-        i = int(0)
-
-        msg = osc_message_builder.OscMessageBuilder(address = "/bead/")
-        msg.add_arg(int(0))    # base
-        msg.add_arg(int(len(bead_list)))  # length
-
-        payload = bytearray()
-        for bead in bead_list:
-
-
-            payload.append((int(bead.color.r * 255)))
-            payload.append((int(bead.color.g * 255)))
-            payload.append((int(bead.color.b * 255)))
-
-        #print(bytes(payload))
-
-        #print('len(bead_list)', len(bead_list), 'len(payload)', len(payload))
-        
-        msg.add_arg(bytes(payload))
-            
-        # msg = osc_message_builder.OscMessageBuilder(address = "/update")
-
-        #bundle.add_content(msg)
-            
-        #bundle = bundle.build()
-        #self.osc_client.send(bundle)
-        self.osc_client.send(msg.build())
-        
-        # If we need to unregister effects' paths from the dispatcher,
-        # do it here
-#        while self.effect_paths_to_unregister:
-#            self.dispatcher._map.pop(self.effect_paths_to_unregister.pop())
-
 
     # TODO: HOW MUCH DO I NEED THIS?
     def trigger(self, id):
@@ -348,20 +320,22 @@ class Rosary:
         """
 
         effect_name = kwargs.get('name')
-        bead_set_name = kwargs.get('bead_set', 'all')
+        bead_set_name = kwargs.get('bead_set', 'rosary')
+        bead_set_sort = kwargs.get('bead_set_sort', 'cw')
 
         # Accept either a color name or rgb values
         color_name = kwargs.get('color', 'white')
         r = kwargs.get('r', 0.0)
         g = kwargs.get('g', 0.0)
         b = kwargs.get('b', 0.0)
+        a = kwargs.get('a', 0.0)
 
         # If you don't pass in a good name I'll pretend I didn't hear you
         bead_set = self.set_registry.get(bead_set_name.lower(),
                                          self.set_registry['all'])
 
         if any([r, g, b]):
-            effect_color = color.Color(r, g, b)
+            effect_color = color.Color(r, g, b, a)
         else:
             effect_color = self.color_registry.get(color_name.lower())
 
@@ -373,11 +347,15 @@ class Rosary:
         # it's all the same to us
         kwargs['bead_set'] = bead_set
         kwargs['color'] = effect_color
+        kwargs['bead_set_sort'] = bead_set_sort
 
         # I'd rather be fancy and strip out kwargs that won't be accepted
         # than force people writing effects to take **kwargs /flex
         requested_effect = self.effect_registry.get(effect_name)
         requested_effect_args = inspect.getargspec(requested_effect).args
+        # I don't want to add this to all the effects that are already written, but this
+        # solution feels like a gross hack
+        requested_effect_args.append('bead_set_sort')
 
         # Er, "clean up" the kwargs to pass to an effect init method
         for key in list(kwargs):
@@ -385,10 +363,28 @@ class Rosary:
                 kwargs.pop(key)
 
         if requested_effect is not None:
-            return self.bin.add_effect_object(requested_effect(*args, rosary=self, **kwargs))
+            effect_id = self.bin.add_effect_object(requested_effect(*args, rosary=self, **kwargs))
+            self.expose_effect_knobs(requested_effect)
+            return effect_id
         else:
             return None
 
+    @dm.expose()
+    def del_effect(self, id):
+        self.bin.del_effect(id)
+
+    @dm.expose()
+    def clear_effects(self):
+        self.bin.clear_effects()
+        
+    @dm.expose()
+    def clear_effects_fade(self):
+        """
+        Just calling clear_effects() is jarring, let's ease it in
+        """
+
+        for eff in self.bin.effects:
+            eff.fade_out(30)
 
     @dm.expose()
     def clear_triggers(self):
@@ -467,16 +463,24 @@ class Rosary:
         """
         Given an effect, create mappings in self.knobs to effect's
         `dm.expose()`-ed functions
+
+        FUN FACT: Why is this here and not on the effect itself?
+            - We wanted to play around with decorators
+            - Decorators run at "compile-time" and not "run-time"
+            - We don't know which knobs an effect has at initilization
+            - We need to expose the knobs after the effect is created
+            - Our first opportunity is the first mainloop() after
+            - This method is called in bin.py's next()
         """
 
-        if not effect.registered:
-            for fn_name, fn in effect.dm.exposed_methods.items():
-                if fn_name in self.knobs.keys():
-                    self.knobs[fn_name].append( (fn, effect) )
-                else:
-                    self.knobs[fn_name] = [ (fn, effect) ]
+        #if not effect.registered:
+        for fn_name, fn in effect.dm.exposed_methods.items():
+            if fn_name in self.knobs.keys():
+                self.knobs[fn_name].append( (fn, effect) )
+            else:
+                self.knobs[fn_name] = [ (fn, effect) ]
 
-            effect.registered = True
+        effect.registered = True
 
 
     def mainloop(self, *args, **kwargs):
@@ -488,11 +492,7 @@ class Rosary:
 
         """
 
-        print('mainloop')
-
         frame_time = kwargs.get('frame_time', self.frame_time)
-
-        print(kwargs.get('name'), 'frame_time', frame_time)
 
         next_frame_time = time.monotonic()
         
@@ -551,22 +551,38 @@ class Rosary:
     ##########################################################################
     def fire_trigger(self, trigger_name, *args, **kwargs):
 
-        requested_trigger = self.trigger_registry.get(trigger_name)
-        # I really only expect there to be one trigger running at a time,
-        # but just in case, get everyone's names
-        running_trigger_names = [t.name for t in self.triggers]
+        # See if any currently running effects have hijacked this trigger
+        hijacked = self.trigger_hijacks.get(trigger_name)
 
-        # Don't want to restart a running trigger
-        if requested_trigger is not None and \
-           trigger_name not in running_trigger_names:
+        if hijacked is not None and len(hijacked) > 0:
 
-            # Kill all existing triggers
-            self.clear_triggers()
+            # I thought it'd be cool if the hijacks acted like a stack -
+            # if many effects hijack the same trigger, then only the newest
+            # effect's hijacked trigger fires
+            hijacked_effect, hijacked_method = hijacked[-1]
 
-            # Start fading out all existing effects
-            self.clear_effects_fade()
+            print("Trigger {} hijacked by {}".format(trigger_name,
+                                                     hijacked_effect))
+            hijacked_method()
 
-            self.add_trigger_object(requested_trigger(*args, **kwargs))
+        else:
+
+            requested_trigger = self.trigger_registry.get(trigger_name)
+            # I really only expect there to be one trigger running at a time,
+            # but just in case, get everyone's names
+            running_trigger_names = [t.name for t in self.triggers]
+
+            # Don't want to restart a running trigger
+            if requested_trigger is not None and \
+               trigger_name not in running_trigger_names:
+
+                # Kill all existing triggers
+                self.clear_triggers()
+
+                # Start fading out all existing effects
+                self.clear_effects_fade()
+
+                self.add_trigger_object(requested_trigger(*args, **kwargs))
 
 
     def turn_knob(self, knob_name, *args, **kwargs):
@@ -584,6 +600,8 @@ class Rosary:
         Figure out what the OSC path means and, well, do what the
         runes instruct us to do.
         """
+
+        print("Route OSC call: {}".format(full_path))
 
         osc_args = full_path.split('/')
         osc_args.remove('')
@@ -610,13 +628,18 @@ class Rosary:
 
             inferred_kwargs[implied_arg] = implied_val
 
+        print("* Namespace: {}".format(namespace))
+        print("* Function: {}".format(fn_name))
+        print("* Inferred kwargs: {}".format(inferred_kwargs))
+
         # If we have inferred kwargs, use them
         # Otherwise, use whatever is in passed args
         # If nothing, assume a 1 from passed args
         if namespace == 'rosary':
-            if inferred_kwargs:
+            if fn_name in self.dm.exposed_methods.keys():
+                print("* Found rosary function, calling")
                 # We expect to mostly end up here
-                if fn_name in self.dm.exposed_methods.keys():
+                if inferred_kwargs:
                     self.dm.exposed_methods[fn_name](self, **inferred_kwargs)
                 # But in some rare cases, we set some reasonable defaults
                 # even if you're being COMPLETELY lazy
@@ -625,12 +648,14 @@ class Rosary:
 
         elif namespace == 'effect':
             if inferred_kwargs:
+                print("* Found effect knob, calling")
                 self.turn_knob(fn_name, **inferred_kwargs)
             else:
                 self.turn_knob(fn_name, *args)
                 
         elif namespace == 'trigger':
             if inferred_kwargs:
+                print("* Found trigger, calling")
                 self.fire_trigger(fn_name, **inferred_kwargs)
             else:
                 self.fire_trigger(fn_name, *args)

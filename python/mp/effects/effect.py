@@ -22,14 +22,36 @@ class Effect(abc.ABC):
     dm = DispatcherMapper()
 
     def __init__(self, *args, **kwargs):
+        # id will be assigned when the effect is attached to the mainloop
+        self.id = None
 
         # Introducing...the option to pass a rosary on init instead of
         # assigning it afterwards
         self.rosary = kwargs.get('rosary')
+
         # the name is used when the Effect is registered
         self.name = kwargs.get('name')
-        # the bead_set is a list of beads the Effect is applied to. The order is important!
-        self.bead_set = self.set_bead_set(kwargs.get('bead_set', set()))
+
+        self.sort_registry = {
+            'cw': self.bead_set_sort_cw,
+            'ccw': self.bead_set_sort_ccw
+        }
+
+        # the sorting function for beads can be passed as an argument
+        self.bead_set_sort = kwargs.get('bead_set_sort', self.bead_set_sort_cw)
+        if (type(self.bead_set_sort) == str):
+            # default to cw
+            self.bead_set_sort = self.sort_registry.get(self.bead_set_sort.lower(),
+                                                        self.sort_registry['cw'])
+
+        if 'bead_set' in kwargs:
+            # the bead_set is a list of beads the Effect is applied to. The order is important!
+            self.set_bead_set(kwargs.get('bead_set', set()))
+
+        if 'bead_list' in kwargs:
+            # alternately, the sorted bead_list may be passed directly
+            self.bead_list = kwargs.get('bead_list')
+
         # The color of the Effect. This is not always meaningful.
         self.color = kwargs.get('color')
         self.duration = kwargs.get('duration')
@@ -38,13 +60,14 @@ class Effect(abc.ABC):
 
         # For the purposes of `fade_out` and `duration`
         self.time = 0
-        # id will be assigned when the effect is attached to the mainloop
-        self.id = None
         # the Effect will be removed from effect list if self.finished is true
         self.finished = False
         # Since we're not guaranteed a rosary object on init, we will rely
         # on the rosary to look at our exposed methods (via `@dm.expose())
         self.registered = False
+        # If we want to hijack any triggers, define them here
+        # Example: {'left_nail': self.left_nail_hijack}
+        self.trigger_hijacks = {}
 
     def __eq__(self, other):
         return (self.id == other)
@@ -54,15 +77,16 @@ class Effect(abc.ABC):
         
     def set_bead_set(self, set):
         """Convenience function for storing a set of beads as a sorted list."""
+        self.bead_list = self.bead_set_sort(set)
+
+    def bead_set_sort_cw(self, set):
         beads = []
         for bead in set:
             beads.append(bead)
         beads.sort(key=lambda bead: bead.index)
-        self.bead_list = beads
+        return beads
 
-    def set_bead_set_cc(self, set):
-        """Convenience function for storing a set of beads as a sorted list in
-        a counter-clockwise direction."""
+    def bead_set_sort_ccw(self, set):
         bead_map = [0, 1, 2, 3, 4,
                     59, 58, 57, 56, 55, 54, 53, 52, 51, 50,
                     49, 48, 47, 46, 45, 44, 43, 42, 41, 40,
@@ -75,7 +99,7 @@ class Effect(abc.ABC):
         for bead in set:
             beads.append(bead)
         beads.sort(key=lambda bead: bead_map[bead.index])
-        self.bead_list = beads
+        return beads
 
     def get_name(self):
         """Returns the name of the Effect."""
@@ -97,9 +121,41 @@ class Effect(abc.ABC):
             self.next()
 
         if self.duration is not None and self.time >= self.duration + (self.delay or 0):
-            self.rosary.del_effect(self.id)
+            self.my_bin.del_effect(self.id)
 
         self.time += 1
+
+
+    def hijack_triggers(self):
+        """
+        If self.trigger_hijacks is empty then this gracefully becomes a no-op
+        """
+
+        for k, v in self.trigger_hijacks.items():
+            print("Hijacking rosary trigger {} with {}".format(k, v))
+            self.rosary.trigger_hijacks.setdefault(k, []).append((self,v))
+
+
+    def unhijack_triggers(self):
+        """
+        As an effect is being deleted, remove any trigger hijacks
+
+        Again, the degenerate case exits gracefully
+        """
+
+        for k, v in self.trigger_hijacks.items():
+
+            # There could be multiple hijacks of this trigger on rosary
+            hijackeds = self.rosary.trigger_hijacks.get(k)
+
+            # Loop backwards to avoid skipping elements
+            for hijacked in reversed(hijackeds):
+
+                hijacked_effect, hijacked_method = hijacked
+
+                if hijacked_effect == self:
+                    hijackeds.remove(hijacked)
+
 
     def set_rosary(self, rosary):
         self.rosary = rosary
@@ -113,7 +169,7 @@ class Effect(abc.ABC):
 
     @dm.expose()
     def set_color(self, r, g, b):
-        self.color = color.Color(r, g, b)
+        self.color.set(color.Color(r, g, b))
 
     @dm.expose()
     def set_duration(self, sec):
