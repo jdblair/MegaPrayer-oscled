@@ -21,7 +21,7 @@ const int OSCServer::BEAD_BASES = 1;
 const int OSCServer::BEAD_CROSS = 2;
 
 
-OSCServer::OSCServer(string ip, string port) : m_ip(ip), m_port(port)
+OSCServer::OSCServer(atomic<bool> *running, string ip, string port) : m_running(running), m_ip(ip), m_port(port)
 {
     received = 0;
     m_iface_count = 0;
@@ -255,11 +255,110 @@ int OSCServer::drop_interfaces()
     m_iface_count=0;
 }
 
+
+void OSCServer::set_all_led(led_t led)
+{
+    for (auto it = m_led_ifaces.begin(); it != m_led_ifaces.end(); ++it) {
+        auto iface = *it;
+        for (int led_num = iface->m_base; led_num < iface->m_base + iface->m_len; led_num++) {
+            set_led(iface->m_iface_class, led_num, led);
+        }
+        iface->notify_update_thread();
+    }
+}
+
+// display an integer value in binary
+void OSCServer::show_value(int value, int total_bits, int bead_offset, led_t color_0, led_t color_1)
+{
+    led_t color(0, 0, 0);
+
+    // avoid a race and wait for update_thread() to spawn for all interfaces
+    for (auto it = m_led_ifaces.begin(); it != m_led_ifaces.end(); ++it) {
+        while (! (*it)->run_update_thread)
+            usleep(100000);
+    }
+
+    //cout << "value: " << value << " ";
+    for (int bit = total_bits - 1; bit >= 0; bit--) {
+        auto n = bit * m_leds_per_bead;
+        if (value & (0x01 << bit)) {
+            color = color_1;
+            //cout << "1";
+        } else {
+            color = color_0;
+            //cout << "0";
+        }
+        for (int led = 0; led < m_leds_per_bead; led++) {
+            // FIXME: version is only displayed on the rosary
+            set_led(string("rosary"), ((bead_offset + bit) * m_leds_per_bead) + led, color);
+        }
+    }
+    //cout << endl;
+
+    // call notify_update_thread() on all interfaces
+    for (auto it = m_led_ifaces.begin(); it != m_led_ifaces.end(); ++it) {
+        (*it)->notify_update_thread();
+    }
+}
+
+void OSCServer::test_sequence()
+{
+    // there's probably some c++ way to do this
+    const int test_color_len = 7;
+    led_t test_color[] = {
+        {1, 0, 0},
+        {1, 1, 0},
+        {0, 1, 0},
+        {0, 1, 1},
+        {0, 0, 1},
+        {1, 0, 1},
+        {1, 1, 1},
+    };
+
+    // avoid a race and wait for update_thread() to spawn for all interfaces
+    for (auto it = m_led_ifaces.begin(); it != m_led_ifaces.end(); ++it) {
+        while (! (*it)->run_update_thread)
+            usleep(100000);
+    }
+
+    // show off all our colors
+    for (int color = 0; color < test_color_len; color++) {
+
+        // fade in
+        for (int brightness = 0; brightness < 255; brightness++) {
+            set_all_led(led_t(test_color[color].r * brightness,
+                              test_color[color].g * brightness,
+                              test_color[color].b * brightness));
+            usleep(6000);
+        }
+
+        usleep(20000);
+
+        // fade out
+        for (int brightness = 255; brightness > 0; brightness--) {
+            set_all_led(led_t(test_color[color].r * brightness,
+                              test_color[color].g * brightness,
+                              test_color[color].b * brightness));
+            usleep(6000);
+        }
+
+        usleep(20000);
+
+        // break out if m_running is false
+        // this is to support SIGTERM handler during test sequence
+        if (! *m_running) {
+            return;
+        }
+
+    }
+}
+
+
 shared_ptr<OSCServer::ILEDDataFormat> OSCServer::LEDDataFormatFactory::create_led_format(OSCLedConfig::interface_config const &cfg)
 {
     shared_ptr<OSCServer::ILEDDataFormat> fmt;
 
-    //cout << "led_type = " << cfg.led_type << endl;
+    cout << "led_type = " << cfg.led_type << endl;
     
     // ws2801 is used in the 36mm "pixel" LED modules
     if (cfg.led_type == string("ws2801")) {
@@ -376,6 +475,8 @@ OSCServer::led_interface::led_interface(std::shared_ptr<IPlatformSerial> const s
                                         OSCLedConfig::interface_config const &cfg) :
     m_ser(ser) {
 
+    run_update_thread = false;
+
     m_base = cfg.led_base;
     m_len = cfg.led_count;
     m_reverse = cfg.reversed;
@@ -460,5 +561,3 @@ void OSCServer::led_interface::notify_update_thread()
     unique_lock<mutex> lock(update_mutex);
     update_cv.notify_all();
 }
-
-
