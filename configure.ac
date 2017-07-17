@@ -51,6 +51,9 @@ AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([
  Makefile
  src/Makefile
- src/$enable_serial/Makefile
+ src/gtksim/Makefile
+ src/opi/Makefile
+ src/rpi/Makefile
+ src/skeleton/Makefile
 ])
 AC_OUTPUT
