@@ -56,9 +56,9 @@ OSCLedConfig::OSCLedConfig()
     m_default.byte_order = string("rgb");
     m_default.led_type = string("ws2801");
     m_default.brightness = 31;
-    m_default.xform.r = 1;
-    m_default.xform.g = 1;
-    m_default.xform.b = 1;
+    m_default.xform.r = 1.0;
+    m_default.xform.g = 1.0;
+    m_default.xform.b = 1.0;
 
     m_config.ip = string("127.0.0.1");
     m_config.port = string("5005");
@@ -97,6 +97,7 @@ bool OSCLedConfig::json_parse()
     }
 
     if (json_root.isMember(KEY_GLOBAL)) {
+        //cout << "m_default.xform.r: " << m_default.xform.r << endl; 
         rc = json_parse_station_values(json_root[KEY_GLOBAL], m_default);
     }
 
@@ -116,7 +117,6 @@ bool OSCLedConfig::json_parse_linear_xform(Json::Value s, OSCLedConfig::linear_x
     xform.r = s.get(KEY_IFACE_XFORM_R, m_default.xform.r).asFloat();
     xform.g = s.get(KEY_IFACE_XFORM_G, m_default.xform.g).asFloat();
     xform.b = s.get(KEY_IFACE_XFORM_B, m_default.xform.b).asFloat();
-    cout << __FUNCTION__ << ": " << xform.r << endl;
 
     return true;
 }
@@ -138,6 +138,7 @@ bool OSCLedConfig::json_parse_station_values(Json::Value s, OSCLedConfig::statio
     config.brightness = s.get(KEY_IFACE_BRIGHTNESS, m_default.brightness).asInt();
         
     // parse linear_xform
+    config.xform = m_default.xform;
     if (s.isMember(KEY_IFACE_XFORM)) {
         json_parse_linear_xform(s.get(KEY_IFACE_XFORM, ""), config.xform);
     }
@@ -172,6 +173,7 @@ bool OSCLedConfig::json_parse_station_values(Json::Value s, OSCLedConfig::statio
             iface_ptr->brightness = i->get(KEY_IFACE_BRIGHTNESS, m_default.brightness).asInt();
 
             // parse linear_xform
+            iface_ptr->xform = config.xform;
             if (i->isMember(KEY_IFACE_XFORM)) {
                 json_parse_linear_xform(i->get(KEY_IFACE_XFORM, ""), iface_ptr->xform);
             }
@@ -199,7 +201,7 @@ bool OSCLedConfig::json_parse_station_values(Json::Value s, OSCLedConfig::statio
     // cout << "daemonize: " << config.daemonize << endl;
     // cout << "byte_order: " << config.byte_order << endl;
     // cout << "led_type: " << config.led_type << endl;
-    cout << "xform: " << config.xform.r << ", " << config.xform.g << ", " << config.xform.b << endl;
+    // cout << "xform: " << config.xform.r << ", " << config.xform.g << ", " << config.xform.b << endl;
 
     return true;
 }
