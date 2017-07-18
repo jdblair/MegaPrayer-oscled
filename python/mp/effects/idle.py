@@ -58,10 +58,13 @@ class Idle(effect.Effect):
             return
 
         if (v == 1.0):
-            self.bead_effect[bead.index] = set_color.SetColor(frozenset([bead]), color=self.color)
-            self.bin.add_effect_object(self.bead_effect[bead.index])
+            if self.bead_effect[bead.index] == None:
+                self.bead_effect[bead.index] = set_color.SetColor(frozenset([bead]), color=self.color)
+                self.bin.add_effect_object(self.bead_effect[bead.index])
         else:
-            self.bead_effect[bead.index].fade_out(30)
+            if self.bead_effect[bead.index] != None:
+                self.bead_effect[bead.index].fade_out(30)
+                self.bead_effect[bead.index] = None
             
 
     def next(self):
