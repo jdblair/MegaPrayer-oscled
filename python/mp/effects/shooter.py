@@ -2,7 +2,7 @@ import copy
 from mp import color
 from mp.effects import effect
 
-class Shoot(effect.Effect):
+class Shooter(effect.Effect):
     """
     "Shoots" a light one time across the specified set.
 

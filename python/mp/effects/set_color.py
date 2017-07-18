@@ -13,4 +13,4 @@ class SetColor(effect.Effect):
 
     def next(self):
         for bead in (self.bead_list):
-            bead.copy_color(self.color)
+            bead.color.set(self.color)

@@ -574,7 +574,7 @@ class Rosary:
     ##########################################################################
     # DEFINE OSC DISPATCHER ROUTES
     ##########################################################################
-    def fire_trigger(self, trigger_name, *args, **kwargs):
+    def fire_trigger(self, trigger_name, v, **kwargs):
 
         # See if any currently running effects have hijacked this trigger
         hijacked = self.trigger_hijacks.get(trigger_name)
@@ -588,7 +588,7 @@ class Rosary:
 
             print("Trigger {} hijacked by {}".format(trigger_name,
                                                      hijacked_effect))
-            hijacked_method(*args, **kwargs)
+            hijacked_method(v, **kwargs)
 
         else:
 
@@ -681,11 +681,10 @@ class Rosary:
         elif namespace == 'trigger':
             if inferred_kwargs:
                 print("* Found trigger, calling")
-                self.fire_trigger(fn_name, **inferred_kwargs)
+                self.fire_trigger(fn_name, args[0], **inferred_kwargs)
             else:
-                self.fire_trigger(fn_name, *args)
+                self.fire_trigger(fn_name, args[0])
                 
-
     def map_to_dispatcher(self):
         """
         Register 3 wildcard handlers. But only three. Not THAT wild.
