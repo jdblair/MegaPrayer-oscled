@@ -143,7 +143,8 @@ class Rosary:
             'odd_all': frozenset(self.beads[1:60:2]),
             'odd_ring': frozenset(self.beads[5:60:2]),
             'base': frozenset(self.bases[0:self.BASE_COUNT]),
-            'cross': frozenset(self.cross[0:self.CROSS_LED_COUNT])
+            'cross': frozenset(self.cross[0:self.CROSS_LED_COUNT]),
+            'lords_prayer': frozenset([self.beads[0], self.beads[4], self.beads[5], self.beads[16], self.beads[27], self.beads[38], self.beads[49]])
         }
         self.set_registry['half01'] = self.set_registry['quadrent0'].\
                                            union(self.set_registry['quadrent1'])
