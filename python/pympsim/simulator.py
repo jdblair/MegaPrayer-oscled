@@ -25,7 +25,8 @@ class App:
         radius = 300
         bead_radius = 10
         stem_spacing = radius * pi * 2 / ring_beads
-        stem_length = stem_spacing * stem_beads + (3 * stem_spacing * 0.2)
+        #stem_length = stem_spacing * stem_beads + (3 * stem_spacing * 0.2)
+        stem_length = stem_spacing * stem_beads
         x_offset = radius + stem_length + 50
         y_offset = 325
         lords_gap_ratio = 0.2
@@ -36,22 +37,23 @@ class App:
         for i in range(0, 5):
             y = y_offset
             self.beads.append(self.canvas.create_oval(x, y, x+(2*bead_radius),y+(2*bead_radius), fill="#128192200", width=2))
-            if i in [0, 3, 4]:
-                x += stem_spacing * lords_gap_ratio
+            # if i in [0, 3, 4]:
+            #     x += stem_spacing * lords_gap_ratio
             x += stem_spacing
 
         #make the rest of the beads
-        bead_spacing = (pi * 2) / ring_beads
+        bead_spacing = (pi * 2) / (ring_beads + 1)   # there's an "extra" empty bead at the junction
         # remove a little from bead_spacing to make room for the extra space around lords prayer beads
-        bead_spacing -= (bead_spacing * bead_radius * lords_gap_ratio) / 55
-        angle = 0 - pi
+        bead_spacing -= (bead_spacing * bead_radius * lords_gap_ratio) / (ring_beads + 1)
+        angle = 0 - pi + bead_spacing
         for i in range(5, 60):
             #angle = (bead_spacing * (i - 6)) - pi
             print(i, angle)
             x = x_offset + radius * cos(angle)
             y = y_offset + radius * sin(angle)
             self.beads.append(self.canvas.create_oval(x, y, x+(2*bead_radius), y+(2*bead_radius), fill="#128192200", width=2))
-            if i in [5, 15, 16, 26, 27, 37, 38, 48, 49]:
+            #if i in [10, 11, 21, 22, 32, 33, 43, 44, 54, 55]:
+            if i in [9, 10, 20, 21, 31, 32, 42, 43, 53, 54]:
                 angle += bead_spacing * lords_gap_ratio
             angle += bead_spacing
 
