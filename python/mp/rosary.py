@@ -124,9 +124,9 @@ class Rosary:
             'none': frozenset(),
             'all': frozenset(self.beads),
             'rosary': frozenset(self.beads),
-            'stem': frozenset(self.beads[0:4]),
-            'ring': frozenset(self.beads[4:60]),
-            'eighth0': frozenset(self.beads[4:11]),
+            'stem': frozenset(self.beads[0:5]),
+            'ring': frozenset(self.beads[5:60]),
+            'eighth0': frozenset(self.beads[5:11]),
             'eighth1': frozenset(self.beads[11:18]),
             'eighth2': frozenset(self.beads[18:25]),
             'eighth3': frozenset(self.beads[25:32]),
@@ -134,18 +134,24 @@ class Rosary:
             'eighth5': frozenset(self.beads[39:46]),
             'eighth6': frozenset(self.beads[46:53]),
             'eighth7': frozenset(self.beads[53:60]),
-            'quadrent0': frozenset(self.beads[4:18]),
+            'quadrent0': frozenset(self.beads[5:18]),
             'quadrent1': frozenset(self.beads[18:32]),
             'quadrent2': frozenset(self.beads[32:46]),
             'quadrent3': frozenset(self.beads[46:60]),
             'even_all': frozenset(self.beads[0:60:2]),
-            'even_ring': frozenset(self.beads[4:60:2]),
+            'even_ring': frozenset(self.beads[6:60:2]),
             'odd_all': frozenset(self.beads[1:60:2]),
             'odd_ring': frozenset(self.beads[5:60:2]),
             'base': frozenset(self.bases[0:self.BASE_COUNT]),
             'cross': frozenset(self.cross[0:self.CROSS_LED_COUNT]),
-            'lords_prayer': frozenset([self.beads[0], self.beads[4], self.beads[5], self.beads[16], self.beads[27], self.beads[38], self.beads[49]])
+            'lords_prayer': frozenset([self.beads[10], self.beads[21], self.beads[32], self.beads[43], self.beads[54]]),
+            'decade0': frozenset(self.beads[5:9] + self.beads[55:59]),
+            'decade1': frozenset(self.beads[11:20]),
+            'decade2': frozenset(self.beads[22:31]),
+            'decade3': frozenset(self.beads[33:42]),
+            'decade4': frozenset(self.beads[44:53]),
         }
+
         self.set_registry['half01'] = self.set_registry['quadrent0'].\
                                            union(self.set_registry['quadrent1'])
         self.set_registry['half12'] = self.set_registry['quadrent1'].\
