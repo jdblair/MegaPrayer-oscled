@@ -53,7 +53,7 @@ class App:
 
         #make the bases
         for i in range(0, 9):
-            angle = (pi * 2 / 9 * (i - 6)) - pi
+            angle = (pi * 2 / 9 * (i - 5)) - pi
             x = x_offset + (radius - (bead_radius * 3)) * cos(angle)
             y = y_offset + (radius - (bead_radius * 3)) * sin(angle)
 
