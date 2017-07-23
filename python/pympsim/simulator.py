@@ -20,29 +20,40 @@ class App:
 
         ###############John's fancy witchcraft ###################
         i = 0
+        stem_beads = 5
+        ring_beads = 60 - stem_beads
         radius = 300
         bead_radius = 10
-        stem_spacing = radius * pi * 2 / 56
-        x_offset = radius + (stem_spacing * 4) + 50
+        stem_spacing = radius * pi * 2 / ring_beads
+        stem_length = stem_spacing * stem_beads
+        x_offset = radius + stem_length + 50
         y_offset = 325
+        lords_gap_ratio = 0.2
         self.beads = []
         self.bases = []
         #make the stem
-        for i in range(0, 4):
-            x = (x_offset - radius - stem_spacing * 4) + (stem_spacing * i)
+        x = (x_offset - radius - stem_length) + (stem_spacing * i)
+        for i in range(0, 5):
             y = y_offset
             self.beads.append(self.canvas.create_oval(x, y, x+(2*bead_radius),y+(2*bead_radius), fill="#128192200", width=2))
+            x += stem_spacing
 
         #make the rest of the beads
-        for i in range(4, 60):
-            angle = (pi * 2 / 56 * (i - 4)) - pi
+        bead_spacing = (pi * 2) / (ring_beads + 1)   # there's an "extra" empty bead at the junction
+        # remove a little from bead_spacing to make room for the extra space around lords prayer beads
+        bead_spacing -= (bead_spacing * bead_radius * lords_gap_ratio) / (ring_beads + 1)
+        angle = 0 - pi + bead_spacing
+        for i in range(5, 60):
             x = x_offset + radius * cos(angle)
             y = y_offset + radius * sin(angle)
             self.beads.append(self.canvas.create_oval(x, y, x+(2*bead_radius), y+(2*bead_radius), fill="#128192200", width=2))
+            if i in [9, 10, 20, 21, 31, 32, 42, 43, 53, 54]:
+                angle += bead_spacing * lords_gap_ratio
+            angle += bead_spacing
 
         #make the bases
         for i in range(0, 9):
-            angle = (pi * 2 / 9 * (i - 4)) - pi
+            angle = (pi * 2 / 9 * (i - 5)) - pi
             x = x_offset + (radius - (bead_radius * 3)) * cos(angle)
             y = y_offset + (radius - (bead_radius * 3)) * sin(angle)
 
