@@ -154,43 +154,20 @@ class Rosary:
             'tungsten100': color.Color(1, 214/255, 170/255),
             'tungsten40': color.Color(1, 197/255, 143/255),
             'candle': color.Color(1, 147/255, 41/255),
-            'tungstenfade': color.ColorFade(
-                                color.Color(1, 214/255, 170/255),
-                                color.Color(1, 197/255, 143/255)
-                            ),
-            'candlefire': color.ColorFade(
-                        color.Color(1, 147/255, 41/255),
-                        color.Color(1, 137/255, 41/255),
-                        time=1
-                    ),
-            'fire': color.ColorFade(
-                        color.Color(1, 100/255, 10/255, 1),
-                        color.Color(1, 9/255, 10/255, 0),
-                        time=2
-                    ),
-            'candle': color.ColorMapRandomWalk(
+            'fire': color.ColorMapRandomWalk(
                 colormap=color.ColorMap(colormap=[
-                    color.ColorMapStep(step=0, color=color.Color(1, 97/255, 41/255)),
-                    color.ColorMapStep(step=1/6, color=color.Color(1, 127/255, 41/255)),
-                    color.ColorMapStep(step=2/6, color=color.Color(1, 137/255, 41/255)),
+                    color.ColorMapStep(step=0, color=color.Color(1, 132/255, 41/255)),
+                    color.ColorMapStep(step=1/6, color=color.Color(1, 137/255, 41/255)),
+                    color.ColorMapStep(step=2/6, color=color.Color(1, 142/255, 41/255)),
+                    # The middle value here is taken directly from the
+                    # "Reproducing Real World Light" article:
+                    # http://planetpixelemporium.com/tutorialpages/light.html
                     color.ColorMapStep(step=3/6, color=color.Color(1, 147/255, 41/255)),
-                    color.ColorMapStep(step=4/6, color=color.Color(1, 157/255, 41/255)),
-                    color.ColorMapStep(step=5/6, color=color.Color(1, 167/255, 41/255)),
-                    color.ColorMapStep(step=1, color=color.Color(1, 187/255, 41/255))
+                    color.ColorMapStep(step=4/6, color=color.Color(1, 152/255, 41/255)),
+                    color.ColorMapStep(step=5/6, color=color.Color(1, 157/255, 41/255)),
+                    color.ColorMapStep(step=1, color=color.Color(1, 162/255, 41/255))
                 ]),
-                time=5,
-                name='color_map_test'
-            ),
-            #'colormaptest': color.ColorMapFade(
-            'colormaptest': color.ColorMapRandomWalk(
-                colormap=color.ColorMap(colormap=[
-                    color.ColorMapStep(step=0, color=color.Color(1, 0, 0)),
-                    color.ColorMapStep(step=1/3, color=color.Color(0, 1, 0)),
-                    color.ColorMapStep(step=2/3, color=color.Color(0, 0, 1)),
-                    color.ColorMapStep(step=1, color=color.Color(1, 0, 0)),
-                ]),
-                time=30,
-                name='color_map_test'
+                time=3
             ),
             'red': color.Color(1,0,0,1),
             'yellow': color.Color(1,1,0,1),
@@ -375,14 +352,10 @@ class Rosary:
         if any([r, g, b]):
             effect_color = color.Color(r, g, b, a)
         else:
-            print("SHOULD GET A COLOR")
             effect_color = self.color_registry.get(color_name.lower())
-            print(effect_color)
 
         # If all else fails, just pick a random color from the registry
         while effect_color in (None, color.Color(0,0,0)):
-            print("WTF EFFECT COLOR")
-            print(effect_color)
             effect_color = random.choice(list(self.color_registry.values()))
 
         # Whether we're overwriting the string or setting for the first time,
@@ -663,10 +636,18 @@ class Rosary:
 
             # Convert strings representing ints to ints and
             # strings representing floats to floats
+            #
+            # NOTE: Happily, python will raise a ValueError if we try
+            # to cast a float-as-string into an int, instead of just
+            # truncating it, phew!
+            #
             try:
-                implied_val = ast.literal_eval(implied_val)
+                implied_val = int(implied_val)
             except ValueError:
-                pass
+                try:
+                    implied_val = float(implied_val)
+                except ValueError:
+                    pass
 
             inferred_kwargs[implied_arg] = implied_val
 
