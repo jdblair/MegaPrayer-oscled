@@ -2,7 +2,7 @@ import copy
 import math
 
 from mp import color
-from mp.effects import effect
+from mp.effects import effect, bin
 
 class SineWave(effect.Effect):
     """Sets the alpha value of a set of beads by mapping a unit circle to
@@ -105,3 +105,34 @@ class ThreePhaseSineWave(effect.Effect):
     @dm.expose()
     def set_phase_b(self, phase_b):
         self.phase_b = phase_b
+
+
+
+
+class SineWaveEvolve(effect.Effect):
+    """
+    Vary period and phase on the 3phase_sine_wave
+    """
+
+    # Wish there were a better way than requiring this every time
+    dm = copy.deepcopy(effect.Effect.dm)
+
+    def __init__(self, bead_set, color=color.Color(), **kwargs):
+        super().__init__(name="sine_wave_evolve", bead_set=bead_set, color=color, **kwargs)
+        self.period_delta = .01
+        self.period_max = 6
+       
+        self.bin = bin.Bin(bead_set, rosary=self.rosary)
+        self.sine_wave = ThreePhaseSineWave(bead_set, color=color)
+        self.bin.add_effect_object(self.sine_wave)
+
+    def next(self):
+        self.bin.next()
+
+        self.sine_wave.period += self.period_delta
+        if abs(self.sine_wave.period) > self.period_max:
+            self.period_delta *= -1
+
+        # if abs(self.sine_wave.period) > 1:
+        #     self.period_delta *= -1
+        #     self.sine_wave.phase_r += .01

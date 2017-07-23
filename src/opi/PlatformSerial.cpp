@@ -37,17 +37,17 @@ void PlatformSerial::send(unsigned char const *buf, size_t const len)
     int b;
     unsigned char bit;
 
-    gpio_set_value(gpio_clk, 0);
-    gpio_set_value(gpio_dat, 0);
+    sunxi_gpio_output(gpio_clk, 0);
+    sunxi_gpio_output(gpio_dat, 0);
 
     for (i = 0; i < len; i++) {
         bit = 0x80;
         for (b = 0; b < 8; b++) {
             //printf("%d & %d = %d\n", buf[i], bit, buf[i] & bit);
-            gpio_set_value(gpio_clk, 0);
-            gpio_set_value(gpio_dat, (buf[i] & bit));
+            sunxi_gpio_output(gpio_clk, 0);
+            sunxi_gpio_output(gpio_dat, (buf[i] & bit));
             for (int delay = CLK_WIDTH; delay; delay--);
-            gpio_set_value(gpio_clk, 1);
+            sunxi_gpio_output(gpio_clk, 1);
             for (int delay = CLK_WIDTH; delay; delay--);
             bit >>= 1;
         }

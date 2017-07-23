@@ -12,6 +12,7 @@ import struct
 from pythonosc import udp_client
 from pythonosc import osc_bundle_builder
 from pythonosc import osc_message_builder
+from pythonosc import osc_server
 
 from mp import color, effects, triggers
 from mp.dispatcher_mapper import DispatcherMapper
@@ -24,10 +25,6 @@ class Bead:
         
     def __repr__(self):
         return "Bead(index={}, color={})".format(self.index, self.color)
-
-    def copy_color(self, color):
-        """Helper function that sets the Bead color by copying a Color object."""
-        self.color = copy.copy(color)
 
 
 class Updater:
@@ -66,7 +63,13 @@ class Rosary:
     # Can't decorate with @self.r, so need this here
     dm = DispatcherMapper()
 
-    def __init__(self, ip="127.0.0.1", port=5005, dispatcher=None, name="rosary"):
+    def __init__(self,
+                 ip="127.0.0.1",
+                 port=5005,
+                 dispatcher=None,
+                 name="rosary",
+                 server_ip="127.0.0.1",
+                 server_port=5006):
         self.beads = []
         self.bases = []
         self.cross = []
@@ -90,6 +93,9 @@ class Rosary:
         # Available knobs to turn
         self.knobs = {}
         self.updater_list = []
+
+        self.osc_server_ip=server_ip
+        self.osc_server_port=server_port
 
         self.osc_client = udp_client.UDPClient(self.osc_ip, self.osc_port)
 
@@ -137,7 +143,8 @@ class Rosary:
             'odd_all': frozenset(self.beads[1:60:2]),
             'odd_ring': frozenset(self.beads[5:60:2]),
             'base': frozenset(self.bases[0:self.BASE_COUNT]),
-            'cross': frozenset(self.cross[0:self.CROSS_LED_COUNT])
+            'cross': frozenset(self.cross[0:self.CROSS_LED_COUNT]),
+            'lords_prayer': frozenset([self.beads[0], self.beads[4], self.beads[5], self.beads[16], self.beads[27], self.beads[38], self.beads[49]])
         }
         self.set_registry['half01'] = self.set_registry['quadrent0'].\
                                            union(self.set_registry['quadrent1'])
@@ -193,9 +200,17 @@ class Rosary:
         # it holds all the other effects.
         self.bin = effects.bin.Bin(self.set_registry['all'], rosary=self)
 
+        self.osc_server = osc_server.ThreadingOSCUDPServer(
+            (self.osc_server_ip, self.osc_server_port), self.dispatcher)
+
     def beads_set_bgcolor(self, beads):
         for bead in beads:
             bead.color.set(self.bgcolor)
+
+    def osc_server_main(self):
+        print("Serving on {}".format(self.osc_server.server_address))
+        self.osc_server.serve_forever()
+    
 
     ##########################################################################
     # INITIALIZATION STUFF - DISCOVER WRITTEN MODULES
@@ -420,6 +435,9 @@ class Rosary:
             self.t_mainloop = threading.Thread(name='mainloop', target=self.mainloop)
             self.t_mainloop.start()
 
+            self.t_osc_server = threading.Thread(name='osc_server', target=self.osc_server_main)
+            self.t_osc_server.start()
+
             if interactive:
                 code.interact(local=locals())
 
@@ -427,6 +445,7 @@ class Rosary:
     def stop(self):
         """Stop the mainloop and exit the application."""
         self.run_mainloop = False
+        self.osc_server.shutdown()
         exit(0)
 
 
@@ -435,6 +454,13 @@ class Rosary:
         """Stop the animation loop without exiting."""
         if (self.run_mainloop):
             self.run_mainloop = False
+
+
+    @dm.expose()
+    def resume(self):
+        """Restart the animation loop."""
+        self.run_mainloop = True
+
 
 
     ##########################################################################
@@ -564,7 +590,7 @@ class Rosary:
     ##########################################################################
     # DEFINE OSC DISPATCHER ROUTES
     ##########################################################################
-    def fire_trigger(self, trigger_name, *args, **kwargs):
+    def fire_trigger(self, trigger_name, v, **kwargs):
 
         # See if any currently running effects have hijacked this trigger
         hijacked = self.trigger_hijacks.get(trigger_name)
@@ -578,7 +604,7 @@ class Rosary:
 
             print("Trigger {} hijacked by {}".format(trigger_name,
                                                      hijacked_effect))
-            hijacked_method()
+            hijacked_method(v, **kwargs)
 
         else:
 
@@ -679,11 +705,10 @@ class Rosary:
         elif namespace == 'trigger':
             if inferred_kwargs:
                 print("* Found trigger, calling")
-                self.fire_trigger(fn_name, **inferred_kwargs)
+                self.fire_trigger(fn_name, args[0], **inferred_kwargs)
             else:
-                self.fire_trigger(fn_name, *args)
+                self.fire_trigger(fn_name, args[0])
                 
-
     def map_to_dispatcher(self):
         """
         Register 3 wildcard handlers. But only three. Not THAT wild.

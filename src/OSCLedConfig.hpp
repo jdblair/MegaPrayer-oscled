@@ -10,6 +10,11 @@
 class OSCLedConfig
 {
 public:
+    struct version_number {
+        int major;
+        int minor;
+    };
+
     static OSCLedConfig& getInstance() {
         static OSCLedConfig instance;
         return instance;
@@ -22,6 +27,8 @@ public:
         bool id_set;
         bool daemonize;
         bool daemonize_set;
+        bool startup_test;
+        bool startup_test_set;
         std::string ip;
         bool ip_set;
         std::string port;
@@ -54,6 +61,7 @@ public:
         int bead_count;
         int bead_base;
         bool daemonize;
+        bool startup_test;
         std::string byte_order;
         std::string led_type;
         int brightness;
@@ -76,6 +84,7 @@ public:
     struct station_config m_default;
     struct station_config m_config;
     struct cmd_line_config m_cmd_line_config;
+    struct version_number m_version;
 
     const struct station_config& get_station() { return m_config; };
 
@@ -90,6 +99,7 @@ public:
     static const std::string KEY_BEAD_COUNT;
     static const std::string KEY_BEAD_BASE;
     static const std::string KEY_DAEMONIZE;
+    static const std::string KEY_STARTUP_TEST;
     static const std::string KEY_IFACE_ID;
     static const std::string KEY_IFACE_LED_BASE;
     static const std::string KEY_IFACE_LED_COUNT;
