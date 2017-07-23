@@ -6,7 +6,7 @@
         "bead_count": 10,
         "byte_order": "brg",
         "brightness": 30,
-        "led_type": "WS201"
+        "led_type": "WS2801"
     },
     "station": [
         {
