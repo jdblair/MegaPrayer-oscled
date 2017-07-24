@@ -336,7 +336,6 @@ void OSCServer::test_sequence()
             set_all_led(led_t(test_color[color].r * brightness,
                               test_color[color].g * brightness,
                               test_color[color].b * brightness));
-            usleep(6000);
         }
 
         usleep(20000);
@@ -346,7 +345,6 @@ void OSCServer::test_sequence()
             set_all_led(led_t(test_color[color].r * brightness,
                               test_color[color].g * brightness,
                               test_color[color].b * brightness));
-            usleep(6000);
         }
 
         usleep(20000);
