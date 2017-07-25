@@ -16,7 +16,7 @@ class App:
         frame = Frame(master)
         frame.pack()
 
-        self.canvas = Canvas(master, width=900, height=700, borderwidth=0, highlightthickness=0, bg="black")
+        self.canvas = Canvas(master, width=1500, height=700, borderwidth=0, highlightthickness=0, bg="black")
 
         ###############John's fancy witchcraft ###################
         i = 0
@@ -26,7 +26,7 @@ class App:
         bead_radius = 10
         stem_spacing = radius * pi * 2 / ring_beads
         stem_length = stem_spacing * stem_beads
-        x_offset = radius + stem_length + 50
+        x_offset = radius + stem_length + 600
         y_offset = 325
         lords_gap_ratio = 0.2
         self.beads = []
@@ -64,7 +64,72 @@ class App:
                                             x + (2 * bead_radius), y + (2 * bead_radius)),
                                            fill="#128192200", width=2))
 
-#self.canvas.create_oval(x, y, x+(2*bead_radius), y+(2*bead_radius), fill="#128192200", width=2))
+
+        #make the cross -- would like to have this in a separate window somedaaaaay
+        
+        #cross base, left side, drawing from bottom to top
+        x_offset = 275
+        y_offset = 695
+        for p in range(92):
+            self.canvas.create_oval(x_offset, y_offset, x_offset - 4, y_offset - 4, fill="red", width=0)
+            y_offset = y_offset - 5
+        
+        #cross arm, left side, drawing from right to left
+        for p in range(55):
+            self.canvas.create_oval(x_offset, y_offset, x_offset - 4, y_offset - 4, fill="red", width=0)
+            x_offset = x_offset - 5
+
+        #cross arm, left side, drawing from bottom to top
+        for p in range(18):
+            self.canvas.create_oval(x_offset, y_offset, x_offset - 4, y_offset - 4, fill="red", width=0)
+            y_offset = y_offset - 5
+
+        #cross arm, left side, drawing from left to right
+        for p in range(55):
+            self.canvas.create_oval(x_offset, y_offset, x_offset + 4, y_offset + 4, fill="red", width=0)
+            x_offset = x_offset + 5
+
+        #cross head, left side, drawing from bottom to top
+        for p in range(28):
+            self.canvas.create_oval(x_offset, y_offset, x_offset + 4, y_offset + 4, fill="red", width=0)
+            y_offset = y_offset - 5
+
+        #cross head, across the top, drawing from left to right
+        for p in range(18):
+            self.canvas.create_oval(x_offset, y_offset, x_offset + 4, y_offset + 4, fill="red", width=0)
+            x_offset = x_offset + 5
+
+        #cross head, right side, drawing from top to bottom
+        for p in range(28):
+            self.canvas.create_oval(x_offset, y_offset, x_offset + 4, y_offset + 4, fill="red", width=0)
+            y_offset = y_offset + 5
+
+        #cross arm, right side, drawing from left to right
+        for p in range(55):
+            self.canvas.create_oval(x_offset, y_offset, x_offset + 4, y_offset + 4, fill="red", width=0)
+            x_offset = x_offset + 5
+
+        #cross arm, right side, drawing from top to bottom
+        for p in range(18):
+            self.canvas.create_oval(x_offset, y_offset, x_offset + 4, y_offset + 4, fill="red", width=0)
+            y_offset = y_offset + 5
+
+        #cross arm, right side, drawing from right to left
+        for p in range(55):
+            self.canvas.create_oval(x_offset, y_offset, x_offset + 4, y_offset + 4, fill="red", width=0)
+            x_offset = x_offset - 5
+        
+        #cross base, right side, drawing from top to bottom
+        for p in range(92):
+            self.canvas.create_oval(x_offset, y_offset, x_offset + 4, y_offset + 4, fill="red", width=0)
+            y_offset = y_offset + 5
+
+        #cross base, across the bottom, drawing from right to left
+        for p in range(18):
+            self.canvas.create_oval(x_offset, y_offset, x_offset + 4, y_offset + 4, fill="red", width=0)
+            x_offset = x_offset - 5
+        #coord = 10, 50, 240, 210
+        #arc = self.canvas.create_arc(coord, start=0, extent=150, fill="red")
 
 
         ##########################################################

@@ -21,10 +21,13 @@ if __name__ == "__main__":
     #r.effect(1).color.set(r.color_registry['red'])
 
     # add another throb on the odd beads
-    r.add_effect('throb', 'odd_ring', color_name_or_r='blue')
+    r.add_effect(name='throb', color='red', bead_set='all')
+
+    # add an effect for the cross
+    r.add_effect(name='throb', color='blue', bead_set='cross')
 
     # add bounce
-    r.add_effect('casino', 'all', color_name_or_r='green')
+    #r.add_effect('casino', 'all', color_name_or_r='green')
 
 
     r.start()
