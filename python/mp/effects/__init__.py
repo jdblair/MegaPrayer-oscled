@@ -26,5 +26,7 @@ __all__ = [
     'shooter',
     'launcher',
     'trigger_hijack_demo',
+    'idle',
+    'level',
     'random_fill'
 ]

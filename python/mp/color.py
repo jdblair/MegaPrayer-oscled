@@ -1,4 +1,5 @@
 from collections import namedtuple
+import random
 
 
 class Color:
@@ -155,8 +156,60 @@ class ColorMapFade(Color):
         self.delta += self.delta_t
         self.colormap.map(self.delta)
         self.set(self.colormap)
-        if (self.delta >= 1) or (self.delta <= 0):
+        # NOTE: I'm replacing '>=' with '>' because on some values of "time"
+        # e.g. 15, the equality makes it thrash on the boundaries
+        if (self.delta > 1) or (self.delta < 0):
             self.delta_t *= -1
+
+
+class ColorMapRandomWalk(Color):
+    """
+    Instead of always going from one end of the ColorMap to the other, randomly pick a direction every time we get to a step.
+
+    NOTE: This is basically made specifically for the "fire" color
+    """
+    def __init__(self, colormap=ColorMap(colormap=[ColorMapStep(0, Color(0, 0, 0)), ColorMapStep(1, Color(1, 1, 1))]), time=30, name='color_map_fade'):
+        super().__init__(r=colormap.colormap[0].color.r,
+                         g=colormap.colormap[0].color.g,
+                         b=colormap.colormap[0].color.b,
+                         a=colormap.colormap[0].color.a, name=name)
+        self.colormap = colormap
+        self.delta = 0
+        self.time = time
+        self.delta_t = 1 / time
+
+        # Whenever we cross a "step" we need to decide whether or not
+        # to change direction
+        self.breakpoints = [c[0] for c in self.colormap.colormap]
+        self.breakpoints.remove(0)
+        self.breakpoints.remove(1)
+
+    def __repr__(self):
+        return "ColorMap(r={}, g={}, b={}, a={}, colormap={}, time={})".format(self.r, self.g, self.b, self.a, self.colormap, self.time)
+
+    def next(self):
+        self.delta += self.delta_t
+        self.colormap.map(self.delta)
+        self.set(self.colormap)
+
+        # NOTE: I'm replacing '>=' with '>' because on some values of "time"
+        # e.g. 15, the equality makes it thrash on the boundaries
+        if (self.delta > 1) or (self.delta < 0):
+            self.delta_t *= -1
+
+        # Since the first thing we do in this next() is increment self.delta,
+        # check if we just crossed a breakpoint (a step value)
+        #
+        # When the author of "Reverse Engineering a Real Candle"
+        # says "the pattern could possibly be simulated with a constrained
+        # random walk, I take him literally" (except I throw out the word
+        # constrained because I don't know what the fuck that means).
+        #
+        # https://cpldcpu.com/2016/01/05/reverse-engineering-a-real-candle/
+        #
+        elif any(self.delta - self.delta_t < b and self.delta > b for b in self.breakpoints):
+            if random.random() > .5:
+                self.delta_t *= -1
 
 
 class ColorFade(ColorMapFade):

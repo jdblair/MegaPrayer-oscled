@@ -17,6 +17,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <thread>
+#include <atomic>
 
 #include "IPlatformSerial.h"
 #include "OSCLedConfig.hpp"
@@ -33,7 +34,7 @@ class OSCServer {
         uint8_t brightness;  // used by apa102 LEDs, value is 0 to 31
     } led_t;
 
-    OSCServer(std::string ip, std::string port);
+    OSCServer(std::atomic<bool> *running, std::string ip, std::string port);
 
     static const int BEAD_ROSARY;
     static const int BEAD_BASES;
@@ -48,9 +49,11 @@ class OSCServer {
     int osc_method_bead_float(lo_arg **argv);
     int osc_method_update(lo_arg **argv);
     int osc_method_xform(lo_arg **argv);
-    void set_led(int n, led_t led);
+    void show_value(int value, int total_bits, int bead_offset, led_t color_0, led_t color_1);
+    void test_sequence();
     void set_xform(float r, float g, float b);
     void set_led(std::string const &iface_class, int n, led_t led);
+    void set_all_led(led_t led);
 
     int osc_method_bead_rosary(lo_arg **argv);
     int osc_method_bead_base(lo_arg **argv);
@@ -129,7 +132,7 @@ class OSCServer {
         std::vector<led_t> leds;
         uint8_t *led_buf;
         std::thread t_update;
-        bool run_update_thread;
+        std::atomic<bool> run_update_thread;
 
         std::mutex leds_mutex;
 
@@ -151,6 +154,7 @@ class OSCServer {
  private:
     std::string m_port;
     std::string m_ip;
+    std::atomic<bool> *m_running;
     std::shared_ptr<lo::ServerThread> m_st;
     
     std::atomic<int> received;

@@ -54,7 +54,9 @@ void PlatformSerial::send(unsigned char const *buf, size_t const len)
     }
     
     sunxi_gpio_output(gpio_clk, 0);
-    sunxi_gpio_output(gpio_dat, 0);    
+    sunxi_gpio_output(gpio_dat, 0);
+
+    usleep(1000);
 }
 
 PlatformSerial::~PlatformSerial()

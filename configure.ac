@@ -1,4 +1,4 @@
-AC_INIT([oscled], [0.7], [jdb@moship.net], [oscled], [https://github.com/jdblair/MegaPrayer-oscled])
+AC_INIT([oscled], [0.8], [jdb@moship.net], [oscled], [https://github.com/jdblair/MegaPrayer-oscled])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_PROG_CC
 AC_PROG_CXX
@@ -51,6 +51,9 @@ AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([
  Makefile
  src/Makefile
- src/$enable_serial/Makefile
+ src/gtksim/Makefile
+ src/opi/Makefile
+ src/rpi/Makefile
+ src/skeleton/Makefile
 ])
 AC_OUTPUT

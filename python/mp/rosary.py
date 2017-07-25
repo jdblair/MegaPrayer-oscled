@@ -12,6 +12,7 @@ import struct
 from pythonosc import udp_client
 from pythonosc import osc_bundle_builder
 from pythonosc import osc_message_builder
+from pythonosc import osc_server
 
 from mp import color, effects, triggers
 from mp.dispatcher_mapper import DispatcherMapper
@@ -24,10 +25,6 @@ class Bead:
         
     def __repr__(self):
         return "Bead(index={}, color={})".format(self.index, self.color)
-
-    def copy_color(self, color):
-        """Helper function that sets the Bead color by copying a Color object."""
-        self.color = copy.copy(color)
 
 
 class Updater:
@@ -66,7 +63,13 @@ class Rosary:
     # Can't decorate with @self.r, so need this here
     dm = DispatcherMapper()
 
-    def __init__(self, ip="127.0.0.1", port=5005, dispatcher=None, name="rosary"):
+    def __init__(self,
+                 ip="127.0.0.1",
+                 port=5005,
+                 dispatcher=None,
+                 name="rosary",
+                 server_ip="127.0.0.1",
+                 server_port=5006):
         self.beads = []
         self.bases = []
         self.cross = []
@@ -90,6 +93,9 @@ class Rosary:
         # Available knobs to turn
         self.knobs = {}
         self.updater_list = []
+
+        self.osc_server_ip=server_ip
+        self.osc_server_port=server_port
 
         self.osc_client = udp_client.UDPClient(self.osc_ip, self.osc_port)
 
@@ -118,9 +124,9 @@ class Rosary:
             'none': frozenset(),
             'all': frozenset(self.beads),
             'rosary': frozenset(self.beads),
-            'stem': frozenset(self.beads[0:4]),
-            'ring': frozenset(self.beads[4:60]),
-            'eighth0': frozenset(self.beads[4:11]),
+            'stem': frozenset(self.beads[0:5]),
+            'ring': frozenset(self.beads[5:60]),
+            'eighth0': frozenset(self.beads[5:11]),
             'eighth1': frozenset(self.beads[11:18]),
             'eighth2': frozenset(self.beads[18:25]),
             'eighth3': frozenset(self.beads[25:32]),
@@ -128,17 +134,24 @@ class Rosary:
             'eighth5': frozenset(self.beads[39:46]),
             'eighth6': frozenset(self.beads[46:53]),
             'eighth7': frozenset(self.beads[53:60]),
-            'quadrent0': frozenset(self.beads[4:18]),
+            'quadrent0': frozenset(self.beads[5:18]),
             'quadrent1': frozenset(self.beads[18:32]),
             'quadrent2': frozenset(self.beads[32:46]),
             'quadrent3': frozenset(self.beads[46:60]),
             'even_all': frozenset(self.beads[0:60:2]),
-            'even_ring': frozenset(self.beads[4:60:2]),
+            'even_ring': frozenset(self.beads[6:60:2]),
             'odd_all': frozenset(self.beads[1:60:2]),
             'odd_ring': frozenset(self.beads[5:60:2]),
             'base': frozenset(self.bases[0:self.BASE_COUNT]),
-            'cross': frozenset(self.cross[0:self.CROSS_LED_COUNT])
+            'cross': frozenset(self.cross[0:self.CROSS_LED_COUNT]),
+            'lords_prayer': frozenset([self.beads[10], self.beads[21], self.beads[32], self.beads[43], self.beads[54]]),
+            'decade0': frozenset(self.beads[5:9] + self.beads[55:59]),
+            'decade1': frozenset(self.beads[11:20]),
+            'decade2': frozenset(self.beads[22:31]),
+            'decade3': frozenset(self.beads[33:42]),
+            'decade4': frozenset(self.beads[44:53]),
         }
+
         self.set_registry['half01'] = self.set_registry['quadrent0'].\
                                            union(self.set_registry['quadrent1'])
         self.set_registry['half12'] = self.set_registry['quadrent1'].\
@@ -154,6 +167,21 @@ class Rosary:
             'tungsten100': color.Color(1, 214/255, 170/255),
             'tungsten40': color.Color(1, 197/255, 143/255),
             'candle': color.Color(1, 147/255, 41/255),
+            'fire': color.ColorMapRandomWalk(
+                colormap=color.ColorMap(colormap=[
+                    color.ColorMapStep(step=0, color=color.Color(1, 132/255, 41/255)),
+                    color.ColorMapStep(step=1/6, color=color.Color(1, 137/255, 41/255)),
+                    color.ColorMapStep(step=2/6, color=color.Color(1, 142/255, 41/255)),
+                    # The middle value here is taken directly from the
+                    # "Reproducing Real World Light" article:
+                    # http://planetpixelemporium.com/tutorialpages/light.html
+                    color.ColorMapStep(step=3/6, color=color.Color(1, 147/255, 41/255)),
+                    color.ColorMapStep(step=4/6, color=color.Color(1, 152/255, 41/255)),
+                    color.ColorMapStep(step=5/6, color=color.Color(1, 157/255, 41/255)),
+                    color.ColorMapStep(step=1, color=color.Color(1, 162/255, 41/255))
+                ]),
+                time=3
+            ),
             'red': color.Color(1,0,0,1),
             'yellow': color.Color(1,1,0,1),
             'green': color.Color(0,1,0,1),
@@ -178,9 +206,17 @@ class Rosary:
         # it holds all the other effects.
         self.bin = effects.bin.Bin(self.set_registry['all'], rosary=self)
 
+        self.osc_server = osc_server.ThreadingOSCUDPServer(
+            (self.osc_server_ip, self.osc_server_port), self.dispatcher)
+
     def beads_set_bgcolor(self, beads):
         for bead in beads:
             bead.color.set(self.bgcolor)
+
+    def osc_server_main(self):
+        print("Serving on {}".format(self.osc_server.server_address))
+        self.osc_server.serve_forever()
+    
 
     ##########################################################################
     # INITIALIZATION STUFF - DISCOVER WRITTEN MODULES
@@ -405,6 +441,9 @@ class Rosary:
             self.t_mainloop = threading.Thread(name='mainloop', target=self.mainloop)
             self.t_mainloop.start()
 
+            self.t_osc_server = threading.Thread(name='osc_server', target=self.osc_server_main)
+            self.t_osc_server.start()
+
             if interactive:
                 code.interact(local=locals())
 
@@ -412,6 +451,7 @@ class Rosary:
     def stop(self):
         """Stop the mainloop and exit the application."""
         self.run_mainloop = False
+        self.osc_server.shutdown()
         exit(0)
 
 
@@ -420,6 +460,13 @@ class Rosary:
         """Stop the animation loop without exiting."""
         if (self.run_mainloop):
             self.run_mainloop = False
+
+
+    @dm.expose()
+    def resume(self):
+        """Restart the animation loop."""
+        self.run_mainloop = True
+
 
 
     ##########################################################################
@@ -549,7 +596,7 @@ class Rosary:
     ##########################################################################
     # DEFINE OSC DISPATCHER ROUTES
     ##########################################################################
-    def fire_trigger(self, trigger_name, *args, **kwargs):
+    def fire_trigger(self, trigger_name, v, **kwargs):
 
         # See if any currently running effects have hijacked this trigger
         hijacked = self.trigger_hijacks.get(trigger_name)
@@ -563,7 +610,7 @@ class Rosary:
 
             print("Trigger {} hijacked by {}".format(trigger_name,
                                                      hijacked_effect))
-            hijacked_method()
+            hijacked_method(v, **kwargs)
 
         else:
 
@@ -621,10 +668,18 @@ class Rosary:
 
             # Convert strings representing ints to ints and
             # strings representing floats to floats
+            #
+            # NOTE: Happily, python will raise a ValueError if we try
+            # to cast a float-as-string into an int, instead of just
+            # truncating it, phew!
+            #
             try:
-                implied_val = ast.literal_eval(implied_val)
+                implied_val = int(implied_val)
             except ValueError:
-                pass
+                try:
+                    implied_val = float(implied_val)
+                except ValueError:
+                    pass
 
             inferred_kwargs[implied_arg] = implied_val
 
@@ -656,11 +711,10 @@ class Rosary:
         elif namespace == 'trigger':
             if inferred_kwargs:
                 print("* Found trigger, calling")
-                self.fire_trigger(fn_name, **inferred_kwargs)
+                self.fire_trigger(fn_name, args[0], **inferred_kwargs)
             else:
-                self.fire_trigger(fn_name, *args)
+                self.fire_trigger(fn_name, args[0])
                 
-
     def map_to_dispatcher(self):
         """
         Register 3 wildcard handlers. But only three. Not THAT wild.

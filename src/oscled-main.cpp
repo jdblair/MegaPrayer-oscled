@@ -21,7 +21,7 @@ using namespace std;
 
 
 // used to exit the main process on SIGINT and SIGKILL
-static atomic<int> running;
+static atomic<bool> running;
 
 
 void sig_handler(int signo)
@@ -53,6 +53,25 @@ static void daemonize()
 }
 
 
+void startup_test(OSCServer &server, OSCLedConfig &config)
+{
+    auto station = config.get_station();
+
+    if (! station.startup_test)
+        return;
+
+    server.test_sequence();
+
+    // display version number
+    server.set_all_led(OSCServer::led_t(0, 0, 0));
+    server.show_value(config.m_version.minor, 4, station.bead_base, OSCServer::led_t(0, 0, 255), OSCServer::led_t(255, 0, 0));
+    server.show_value(config.m_version.major, 4, station.bead_base + 5, OSCServer::led_t(0, 0, 255), OSCServer::led_t(255, 0, 0));
+
+    // give us a chance to see the version number
+    sleep(4);
+}
+
+
 int main(int argc, char **argv)
 {
     OSCLedConfig &config = OSCLedConfig::getInstance();
@@ -66,7 +85,7 @@ int main(int argc, char **argv)
     config.json_parse();
 
     PlatformSerialFactory ser_factory;
-    OSCServer server(config.get_station().ip, config.get_station().port);
+    OSCServer server(&running, config.get_station().ip, config.get_station().port);
     server.set_base_bead(config.get_station().bead_base);
     server.set_leds_per_bead(config.get_station().leds_per_bead);
 
@@ -79,7 +98,8 @@ int main(int argc, char **argv)
             ", led_count: " << (*i)->led_count <<
             ", reversed: " << (*i)->reversed <<
             ", led_type: " << (*i)->led_type <<
-            ", byte_order: " << (*i)->byte_order << endl;
+            ", byte_order: " << (*i)->byte_order <<
+            ", xform: " << (*i)->xform.r << ", " << (*i)->xform.g << ", "  << (*i)->xform.b << endl;
         } else {
             cout << "interface id " << (*i)->id << " does not exist" << endl;
         }
@@ -87,11 +107,15 @@ int main(int argc, char **argv)
 
     if (config.get_station().daemonize) {
         daemonize();
-    } else {
-        server.start();
     }
 
     running = 1;
+
+    startup_test(server, config);
+
+    server.start();
+    //cout << "after server start\n";
+
     while (running) {
         sleep(1);
     }
