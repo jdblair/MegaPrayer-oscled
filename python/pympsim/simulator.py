@@ -18,7 +18,7 @@ class App:
 
         self.canvas = Canvas(master, width=1500, height=700, borderwidth=0, highlightthickness=0, bg="black")
 
-        ###############John's fancy witchcraft ###################
+        ############### John's fancy witchcraft ###################
         i = 0
         stem_beads = 5
         ring_beads = 60 - stem_beads
@@ -31,14 +31,15 @@ class App:
         lords_gap_ratio = 0.2
         self.beads = []
         self.bases = []
-        #make the stem
+        self.cross_blips = [] # for lack of a better word
+        # make the stem
         x = (x_offset - radius - stem_length) + (stem_spacing * i)
         for i in range(0, 5):
             y = y_offset
             self.beads.append(self.canvas.create_oval(x, y, x+(2*bead_radius),y+(2*bead_radius), fill="#128192200", width=2))
             x += stem_spacing
 
-        #make the rest of the beads
+        # make the rest of the beads
         bead_spacing = (pi * 2) / (ring_beads + 1)   # there's an "extra" empty bead at the junction
         # remove a little from bead_spacing to make room for the extra space around lords prayer beads
         bead_spacing -= (bead_spacing * bead_radius * lords_gap_ratio) / (ring_beads + 1)
@@ -51,7 +52,7 @@ class App:
                 angle += bead_spacing * lords_gap_ratio
             angle += bead_spacing
 
-        #make the bases
+        # make the bases
         for i in range(0, 9):
             angle = (pi * 2 / 9 * (i - 5)) - pi
             x = x_offset + (radius - (bead_radius * 3)) * cos(angle)
@@ -64,74 +65,110 @@ class App:
                                             x + (2 * bead_radius), y + (2 * bead_radius)),
                                            fill="#128192200", width=2))
 
-
-        #make the cross -- would like to have this in a separate window somedaaaaay
+        print("base!", self.bases)
+        # make the cross -- would like to have this in a separate window somedaaaaay
+        # also there's prolly a prettier algorithm I could have used to draw this thing
+        # forgive me for my sims
         
-        #cross base, left side, drawing from bottom to top
-        x_offset = 275
+        # cross base, left side, drawing from bottom to top
+        x_offset = 300
         y_offset = 695
         for p in range(92):
-            self.canvas.create_oval(x_offset, y_offset, x_offset - 4, y_offset - 4, fill="red", width=0)
+            self.cross_blips.append(
+                self.canvas.create_oval(x_offset, y_offset, 
+                                        x_offset - 4, y_offset - 4, 
+                                        fill="red", width=0))
             y_offset = y_offset - 5
         
-        #cross arm, left side, drawing from right to left
+        # cross arm, left side, drawing from right to left
         for p in range(55):
-            self.canvas.create_oval(x_offset, y_offset, x_offset - 4, y_offset - 4, fill="red", width=0)
+            self.cross_blips.append(
+                self.canvas.create_oval(x_offset, y_offset, 
+                                        x_offset - 4, y_offset - 4, 
+                                        fill="red", width=0))
             x_offset = x_offset - 5
 
-        #cross arm, left side, drawing from bottom to top
+        # cross arm, left side, drawing from bottom to top
         for p in range(18):
-            self.canvas.create_oval(x_offset, y_offset, x_offset - 4, y_offset - 4, fill="red", width=0)
+            self.cross_blips.append(
+                self.canvas.create_oval(x_offset, y_offset, 
+                                        x_offset - 4, y_offset - 4, 
+                                        fill="red", width=0))
             y_offset = y_offset - 5
 
-        #cross arm, left side, drawing from left to right
+        # cross arm, left side, drawing from left to right
         for p in range(55):
-            self.canvas.create_oval(x_offset, y_offset, x_offset + 4, y_offset + 4, fill="red", width=0)
+            self.cross_blips.append(
+                self.canvas.create_oval(x_offset, y_offset, 
+                                        x_offset + 4, y_offset + 4, 
+                                        fill="red", width=0))
             x_offset = x_offset + 5
 
-        #cross head, left side, drawing from bottom to top
+        # cross head, left side, drawing from bottom to top
         for p in range(28):
-            self.canvas.create_oval(x_offset, y_offset, x_offset + 4, y_offset + 4, fill="red", width=0)
+            self.cross_blips.append(
+                self.canvas.create_oval(x_offset, y_offset, 
+                                        x_offset + 4, y_offset + 4, 
+                                        fill="red", width=0))
             y_offset = y_offset - 5
 
-        #cross head, across the top, drawing from left to right
+        # cross head, across the top, drawing from left to right
         for p in range(18):
-            self.canvas.create_oval(x_offset, y_offset, x_offset + 4, y_offset + 4, fill="red", width=0)
+            self.cross_blips.append(
+                self.canvas.create_oval(x_offset, y_offset, 
+                                        x_offset + 4, y_offset + 4, 
+                                        fill="red", width=0))
             x_offset = x_offset + 5
 
-        #cross head, right side, drawing from top to bottom
+        # cross head, right side, drawing from top to bottom
         for p in range(28):
-            self.canvas.create_oval(x_offset, y_offset, x_offset + 4, y_offset + 4, fill="red", width=0)
+            self.cross_blips.append(
+                self.canvas.create_oval(x_offset, y_offset, 
+                                        x_offset + 4, y_offset + 4, 
+                                        fill="red", width=0))
             y_offset = y_offset + 5
 
-        #cross arm, right side, drawing from left to right
+        # cross arm, right side, drawing from left to right
         for p in range(55):
-            self.canvas.create_oval(x_offset, y_offset, x_offset + 4, y_offset + 4, fill="red", width=0)
+            self.cross_blips.append(
+                self.canvas.create_oval(x_offset, y_offset, 
+                                        x_offset + 4, y_offset + 4, 
+                                        fill="red", width=0))
             x_offset = x_offset + 5
 
-        #cross arm, right side, drawing from top to bottom
+        # cross arm, right side, drawing from top to bottom
         for p in range(18):
-            self.canvas.create_oval(x_offset, y_offset, x_offset + 4, y_offset + 4, fill="red", width=0)
+            self.cross_blips.append(
+                self.canvas.create_oval(x_offset, y_offset, 
+                                        x_offset + 4, y_offset + 4, 
+                                        fill="red", width=0))
             y_offset = y_offset + 5
 
-        #cross arm, right side, drawing from right to left
+        # cross arm, right side, drawing from right to left
         for p in range(55):
-            self.canvas.create_oval(x_offset, y_offset, x_offset + 4, y_offset + 4, fill="red", width=0)
+            self.cross_blips.append(
+                self.canvas.create_oval(x_offset, y_offset, 
+                                        x_offset + 4, y_offset + 4, 
+                                        fill="red", width=0))
             x_offset = x_offset - 5
         
-        #cross base, right side, drawing from top to bottom
+        # cross base, right side, drawing from top to bottom
         for p in range(92):
-            self.canvas.create_oval(x_offset, y_offset, x_offset + 4, y_offset + 4, fill="red", width=0)
+            self.cross_blips.append(
+                self.canvas.create_oval(x_offset, y_offset, 
+                                        x_offset + 4, y_offset + 4, 
+                                        fill="red", width=0))
             y_offset = y_offset + 5
 
-        #cross base, across the bottom, drawing from right to left
+        # cross base, across the bottom, drawing from right to left
         for p in range(18):
-            self.canvas.create_oval(x_offset, y_offset, x_offset + 4, y_offset + 4, fill="red", width=0)
+            self.cross_blips.append(
+                self.canvas.create_oval(x_offset, y_offset, 
+                                        x_offset + 4, y_offset + 4, 
+                                        fill="red", width=0))
             x_offset = x_offset - 5
-        #coord = 10, 50, 240, 210
-        #arc = self.canvas.create_arc(coord, start=0, extent=150, fill="red")
 
-
+        print("blip!", self.cross_blips)
         ##########################################################
 
         self.canvas.pack()
@@ -152,6 +189,8 @@ class App:
                     self.canvas.itemconfig(self.beads[num], fill=tk_rgb)
                 if (iface_class == 'base'):
                     self.canvas.itemconfig(self.bases[num], fill=tk_rgb)
+                if (iface_class == 'cross'):
+                    self.canvas.itemconfig(self.cross_blips[num], fill=tk_rgb)
                 num += 1
 
 
