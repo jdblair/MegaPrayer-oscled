@@ -31,7 +31,7 @@ class App:
         lords_gap_ratio = 0.2
         self.beads = []
         self.bases = []
-        self.cross_blips = [] # for lack of a better word
+        self.cross = [] 
         # make the stem
         x = (x_offset - radius - stem_length) + (stem_spacing * i)
         for i in range(0, 5):
@@ -72,9 +72,9 @@ class App:
         
         # cross base, left side, drawing from bottom to top
         x_offset = 300
-        y_offset = 695
-        for p in range(92):
-            self.cross_blips.append(
+        y_offset = 615
+        for p in range(75):
+            self.cross.append(
                 self.canvas.create_oval(x_offset, y_offset, 
                                         x_offset - 4, y_offset - 4, 
                                         fill="red", width=0))
@@ -82,7 +82,7 @@ class App:
         
         # cross arm, left side, drawing from right to left
         for p in range(55):
-            self.cross_blips.append(
+            self.cross.append(
                 self.canvas.create_oval(x_offset, y_offset, 
                                         x_offset - 4, y_offset - 4, 
                                         fill="red", width=0))
@@ -90,7 +90,7 @@ class App:
 
         # cross arm, left side, drawing from bottom to top
         for p in range(18):
-            self.cross_blips.append(
+            self.cross.append(
                 self.canvas.create_oval(x_offset, y_offset, 
                                         x_offset - 4, y_offset - 4, 
                                         fill="red", width=0))
@@ -98,7 +98,7 @@ class App:
 
         # cross arm, left side, drawing from left to right
         for p in range(55):
-            self.cross_blips.append(
+            self.cross.append(
                 self.canvas.create_oval(x_offset, y_offset, 
                                         x_offset + 4, y_offset + 4, 
                                         fill="red", width=0))
@@ -106,7 +106,7 @@ class App:
 
         # cross head, left side, drawing from bottom to top
         for p in range(28):
-            self.cross_blips.append(
+            self.cross.append(
                 self.canvas.create_oval(x_offset, y_offset, 
                                         x_offset + 4, y_offset + 4, 
                                         fill="red", width=0))
@@ -114,7 +114,7 @@ class App:
 
         # cross head, across the top, drawing from left to right
         for p in range(18):
-            self.cross_blips.append(
+            self.cross.append(
                 self.canvas.create_oval(x_offset, y_offset, 
                                         x_offset + 4, y_offset + 4, 
                                         fill="red", width=0))
@@ -122,7 +122,7 @@ class App:
 
         # cross head, right side, drawing from top to bottom
         for p in range(28):
-            self.cross_blips.append(
+            self.cross.append(
                 self.canvas.create_oval(x_offset, y_offset, 
                                         x_offset + 4, y_offset + 4, 
                                         fill="red", width=0))
@@ -130,7 +130,7 @@ class App:
 
         # cross arm, right side, drawing from left to right
         for p in range(55):
-            self.cross_blips.append(
+            self.cross.append(
                 self.canvas.create_oval(x_offset, y_offset, 
                                         x_offset + 4, y_offset + 4, 
                                         fill="red", width=0))
@@ -138,7 +138,7 @@ class App:
 
         # cross arm, right side, drawing from top to bottom
         for p in range(18):
-            self.cross_blips.append(
+            self.cross.append(
                 self.canvas.create_oval(x_offset, y_offset, 
                                         x_offset + 4, y_offset + 4, 
                                         fill="red", width=0))
@@ -146,29 +146,31 @@ class App:
 
         # cross arm, right side, drawing from right to left
         for p in range(55):
-            self.cross_blips.append(
+            self.cross.append(
                 self.canvas.create_oval(x_offset, y_offset, 
                                         x_offset + 4, y_offset + 4, 
                                         fill="red", width=0))
             x_offset = x_offset - 5
         
         # cross base, right side, drawing from top to bottom
-        for p in range(92):
-            self.cross_blips.append(
+        for p in range(75):
+            self.cross.append(
                 self.canvas.create_oval(x_offset, y_offset, 
                                         x_offset + 4, y_offset + 4, 
                                         fill="red", width=0))
             y_offset = y_offset + 5
 
         # cross base, across the bottom, drawing from right to left
+        y_offset = y_offset + 80 #this is to adjust for removing the 17 blips to save power
         for p in range(18):
-            self.cross_blips.append(
-                self.canvas.create_oval(x_offset, y_offset, 
+            #these aren't appended to the cross array, just a placeholder
+            #to demonstrate where the base of the cross is
+            self.canvas.create_oval(x_offset, y_offset, 
                                         x_offset + 4, y_offset + 4, 
-                                        fill="red", width=0))
+                                        fill="red", width=0)
             x_offset = x_offset - 5
 
-        print("blip!", self.cross_blips)
+        print("blip!", self.cross)
         ##########################################################
 
         self.canvas.pack()
@@ -190,7 +192,7 @@ class App:
                 if (iface_class == 'base'):
                     self.canvas.itemconfig(self.bases[num], fill=tk_rgb)
                 if (iface_class == 'cross'):
-                    self.canvas.itemconfig(self.cross_blips[num], fill=tk_rgb)
+                    self.canvas.itemconfig(self.cross[num], fill=tk_rgb)
                 num += 1
 
 
