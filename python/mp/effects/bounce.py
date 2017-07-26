@@ -20,10 +20,12 @@ class Bounce(effect.Effect):
         super().__init__(name="bounce", bead_set=bead_set, color=color, **kwargs)
         self.speed = speed
         self.length = length
+        
         if self.length > len(self.bead_list):
             self.length = len(self.bead_list)
+
         if self.speed < 0:
-            self.current = len(self.bead_list) - 1
+            self.current = len(self.bead_list) - self.length
         else:
             self.current = self.length
 
@@ -31,7 +33,11 @@ class Bounce(effect.Effect):
         for i in range(0,self.length):
             self.bead_list[int(round(self.current - i))].color.set(self.color)
         self.current += self.speed
-        if (self.current >= (len(self.bead_list) - 1) or self.current <= self.length):
+        if (self.current >= len(self.bead_list) - 1):
+            self.current = len(self.bead_list) - 1;
+            self.speed *= -1
+        if (self.current <= self.length):
+            self.current = self.length
             self.speed *= -1
 
     @dm.expose()
