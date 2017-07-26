@@ -14,11 +14,11 @@ class Strobe(effect.Effect):
         self.count = 0
 
     def next(self):
-        if self.count == 27:
+        if self.count == 27 or self.count == 28 or self.count == 23 or self.count == 24:
             for bead in self.bead_list:
                 bead.color.set(self.color)
-        if self.count > 29:
-            for bead in self.bead_list:
-                bead.color.set(self.color)
+        # if self.count > 29:
+        #     for bead in self.bead_list:
+        #         bead.color.set(self.color)
             self.count = 0
         self.count += 1
