@@ -172,7 +172,6 @@ int OSCServer::osc_method_xform(lo_arg **argv)
 }
 
 
-// create an led_interface and added to m_led_ifaces
 int OSCServer::osc_method_bead(lo_arg **argv)
 {
     string iface_class(&(argv[0]->s));
