@@ -80,7 +80,7 @@ class Rosary:
         self.trigger_id = 0
         self.BEAD_COUNT=60
         self.BASE_COUNT=9
-        self.CROSS_LED_COUNT=480
+        self.CROSS_LED_COUNT=532
         self.run_mainloop = False
         self.frame_time = 1 / 30   # reciprocal of fps
         self.effect_registry = {}

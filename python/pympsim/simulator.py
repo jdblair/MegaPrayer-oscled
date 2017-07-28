@@ -68,7 +68,7 @@ class App:
         # make the cross -- would like to have this in a separate window somedaaaaay
         # this algorithm prolly just obfuscates the code but i like it anyway
         x_position = 300
-        y_position = 615
+        y_position = 695
         blip_diameter = 4
 
         up = [0, -1]
@@ -76,7 +76,7 @@ class App:
         right = [1, 0]
         left = [-1, 0]
 
-        leg = 75
+        leg = 92
         neck = 28
         head = 18
         hand = 18
@@ -98,106 +98,6 @@ class App:
                 x_position = x_position + delta_x
                 y_position = y_position + delta_y 
  
-        '''
-        # cross base, left side, drawing from bottom to top
-
-        for p in range(75):
-            self.cross.append(
-                self.canvas.create_oval(x_offset, y_offset, 
-                                        x_offset - 4, y_offset - 4, 
-                                        fill="red", width=0))
-            y_offset = y_offset - 5
-        
-        # cross arm, left side, drawing from right to left
-        for p in range(55):
-            self.cross.append(
-                self.canvas.create_oval(x_offset, y_offset, 
-                                        x_offset - 4, y_offset - 4, 
-                                        fill="red", width=0))
-            x_offset = x_offset - 5
-
-        # cross arm, left side, drawing from bottom to top
-        for p in range(18):
-            self.cross.append(
-                self.canvas.create_oval(x_offset, y_offset, 
-                                        x_offset - 4, y_offset - 4, 
-                                        fill="red", width=0))
-            y_offset = y_offset - 5
-
-        # cross arm, left side, drawing from left to right
-        for p in range(55):
-            self.cross.append(
-                self.canvas.create_oval(x_offset, y_offset, 
-                                        x_offset + 4, y_offset + 4, 
-                                        fill="red", width=0))
-            x_offset = x_offset + 5
-
-        # cross head, left side, drawing from bottom to top
-        for p in range(28):
-            self.cross.append(
-                self.canvas.create_oval(x_offset, y_offset, 
-                                        x_offset + 4, y_offset + 4, 
-                                        fill="red", width=0))
-            y_offset = y_offset - 5
-
-        # cross head, across the top, drawing from left to right
-        for p in range(18):
-            self.cross.append(
-                self.canvas.create_oval(x_offset, y_offset, 
-                                        x_offset + 4, y_offset + 4, 
-                                        fill="red", width=0))
-            x_offset = x_offset + 5
-
-        # cross head, right side, drawing from top to bottom
-        for p in range(28):
-            self.cross.append(
-                self.canvas.create_oval(x_offset, y_offset, 
-                                        x_offset + 4, y_offset + 4, 
-                                        fill="red", width=0))
-            y_offset = y_offset + 5
-
-        # cross arm, right side, drawing from left to right
-        for p in range(55):
-            self.cross.append(
-                self.canvas.create_oval(x_offset, y_offset, 
-                                        x_offset + 4, y_offset + 4, 
-                                        fill="red", width=0))
-            x_offset = x_offset + 5
-
-        # cross arm, right side, drawing from top to bottom
-        for p in range(18):
-            self.cross.append(
-                self.canvas.create_oval(x_offset, y_offset, 
-                                        x_offset + 4, y_offset + 4, 
-                                        fill="red", width=0))
-            y_offset = y_offset + 5
-
-        # cross arm, right side, drawing from right to left
-        for p in range(55):
-            self.cross.append(
-                self.canvas.create_oval(x_offset, y_offset, 
-                                        x_offset + 4, y_offset + 4, 
-                                        fill="red", width=0))
-            x_offset = x_offset - 5
-        
-        # cross base, right side, drawing from top to bottom
-        for p in range(75):
-            self.cross.append(
-                self.canvas.create_oval(x_offset, y_offset, 
-                                        x_offset + 4, y_offset + 4, 
-                                        fill="red", width=0))
-            y_offset = y_offset + 5
-
-        # cross base, across the bottom, drawing from right to left
-        y_offset = y_offset + 80 #this is to adjust for removing the 17 blips to save power
-        for p in range(18):
-            #these aren't appended to the cross array, just a placeholder
-            #to demonstrate where the base of the cross is
-            self.canvas.create_oval(x_offset, y_offset, 
-                                        x_offset + 4, y_offset + 4, 
-                                        fill="red", width=0)
-            x_offset = x_offset - 5
-'''
         ##########################################################
 
         self.canvas.pack()
