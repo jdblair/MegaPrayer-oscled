@@ -65,14 +65,42 @@ class App:
                                             x + (2 * bead_radius), y + (2 * bead_radius)),
                                            fill="#128192200", width=2))
 
-        print("base!", self.bases)
         # make the cross -- would like to have this in a separate window somedaaaaay
-        # also there's prolly a prettier algorithm I could have used to draw this thing
-        # forgive me for my sims
+        # this algorithm prolly just obfuscates the code but i like it anyway
+        x_position = 300
+        y_position = 615
+        blip_diameter = 4
+
+        up = [0, -1]
+        down = [0, 1]
+        right = [1, 0]
+        left = [-1, 0]
+
+        leg = 75
+        neck = 28
+        head = 18
+        hand = 18
+        arm = 55
+
+        konami_code = [up, left, up, right, up, right, down, right, down, left, down]
+        blip_count = [leg, arm, hand, arm, neck, head, neck, arm, hand, arm, leg]
         
+        for i, move in enumerate(konami_code):
+            delta_x = (blip_diameter + 1) * move[0]
+            delta_y = (blip_diameter + 1) * move[1]
+            n_blips = blip_count[i]
+            for b in range(n_blips):
+                self.cross.append(
+                    self.canvas.create_oval(x_position, y_position, 
+                                            x_position - blip_diameter, y_position - blip_diameter, 
+                                            fill="white", width=0))
+
+                x_position = x_position + delta_x
+                y_position = y_position + delta_y 
+ 
+        '''
         # cross base, left side, drawing from bottom to top
-        x_offset = 300
-        y_offset = 615
+
         for p in range(75):
             self.cross.append(
                 self.canvas.create_oval(x_offset, y_offset, 
@@ -169,8 +197,7 @@ class App:
                                         x_offset + 4, y_offset + 4, 
                                         fill="red", width=0)
             x_offset = x_offset - 5
-
-        print("blip!", self.cross)
+'''
         ##########################################################
 
         self.canvas.pack()
