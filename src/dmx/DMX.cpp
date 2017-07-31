@@ -48,25 +48,33 @@ void DMX::init() {
 DMX::DMX() : m_led(0,0,0),
 	     ola_client((ola::client::StreamingClient::Options())) {}
 
-void DMXSerial::send(unsigned char const *buf, size_t const len) {
-    std::cout << "DMX: send()" << std::endl;
-    size_t buf_len(len);
-    const size_t MAX_VALUES_USED = 4; // r g b w
-
-    if (len > MAX_VALUES_USED) {
-	cerr << "Hey! More than one light specified for the cross spotlights, but I'm only using the first one !" << endl;
-	for(int i =0; i<len; i++) {
+void dump_buf(unsigned char const *buf, size_t const buf_len) {
+	for(int i=0; i<buf_len; i++) {
 	    std::cout << (int) buf[i] << " ";
 	}
 	std::cout << endl;
+}
+
+void DMXSerial::send(unsigned char const *buf, size_t const buf_len) {
+    std::cout << "DMX: send()" << std::endl;
+    // Maximum number of lights in a DMX universe is 512
+    unsigned long MAX_DMX_CHANNELS = 512;
+
+    const size_t OSC_VALUES_USED = 5; // red green blue white strobe
+    
+    if (buf_len % OSC_VALUES_USED != 0) {
+	cerr << "DMX: Hey! Incomplete number of bytes per light! (You need " << OSC_VALUES_USED
+	     << " bytes per light)." << endl;
+
+	dump_buf(buf, buf_len);
     }
 
-
-    if (len < MAX_VALUES_USED) {
-	cerr << "Hey! I need at least " << MAX_VALUES_USED << " data bytes, but I only got " << len << " bytes!! Exiting DMX::send." << endl;
-	return;
+    if (buf_len > OSC_VALUES_USED*MAX_DMX_CHANNELS) {
+	cerr << "DMX: Hey! Too many lights for a MX universe. Using first 512" << endl;
+	dump_buf(buf, buf_len);
     }
 
+/*
     // ----- begin buffer changed check
     // most of the time there is no change to buf
     // this check avoids calling the update machinery if there has been no change
@@ -77,7 +85,7 @@ void DMXSerial::send(unsigned char const *buf, size_t const len) {
     }
 
     bool buf_changed = false;
-    for (int i = 0; i < MAX_VALUES_USED; i++) {
+    for (int i = 0; i < OSC_VALUES_USED; i++) {
         if (m_last_buf[i] != buf[i]) {
             buf_changed = true;
             break;
@@ -91,34 +99,43 @@ void DMXSerial::send(unsigned char const *buf, size_t const len) {
     }
 
     // ----- end buffer changed check
+    */
 
-    uint8_t red = buf[0];
-    uint8_t green = buf[1];
-    uint8_t blue = buf[2];
-    uint8_t white = buf[3];
+    std::string data(8 * ((buf_len/8) + 1), 0);
 
-    std::string data(16, 0);
-   
-    cout << "DMX: light=" << m_light_id 
-	 << " r=" << (uint32_t)red 
-	 << " g=" << (uint32_t)green 
-	 << " b=" << (uint32_t)blue 
-	 << " w=" << (uint32_t)white
-	 << endl; 
-
+    int num_lights = std::min(MAX_DMX_CHANNELS, buf_len / OSC_VALUES_USED);
     ola::DmxBuffer buffer(data);
 
-    buffer.SetChannel(0, 255);
-    buffer.SetChannel(8, 255);
+    for(int light_id = 0; light_id<num_lights; light_id++) {
 
-    int channel_offset = m_light_id*DMX::CHANNELS_PER_LIGHT;
-    cout << "Channel: " << DMX::RED + channel_offset
-	 << " Value: " << (uint32_t)red << endl;
+	int osc_offset = OSC_VALUES_USED * light_id;
 
-    buffer.SetChannel(DMX::RED + channel_offset, red);
-    buffer.SetChannel(DMX::GREEN + channel_offset, green);
-    buffer.SetChannel(DMX::BLUE + channel_offset, blue);
-    buffer.SetChannel(DMX::WHITE + channel_offset, white);
+	uint8_t red = buf[0 + osc_offset];
+	uint8_t green = buf[1 + osc_offset];
+	uint8_t blue = buf[2 + osc_offset];
+	uint8_t white = buf[3 + osc_offset];
+	uint8_t strobe = buf[4 + osc_offset];
+   
+	cout << "DMX: light=" << (uint32_t)light_id
+	     << " r=" << (uint32_t)red 
+	     << " g=" << (uint32_t)green 
+	     << " b=" << (uint32_t)blue 
+	     << " w=" << (uint32_t)white
+	     << " strobe=" << (uint32_t)strobe
+	     << endl; 
+
+	int channel_offset = light_id * DMX::CHANNELS_PER_LIGHT;
+	cout << "Red Channel: " << (uint32_t)(DMX::RED + channel_offset)
+	     << " Value: " << (uint32_t)red << endl;
+
+	buffer.SetChannel(0 + channel_offset, 255);
+
+	buffer.SetChannel(DMX::RED + channel_offset, red);
+	buffer.SetChannel(DMX::GREEN + channel_offset, green);
+	buffer.SetChannel(DMX::BLUE + channel_offset, blue);
+	buffer.SetChannel(DMX::WHITE + channel_offset, white);
+	buffer.SetChannel(DMX::STROBE + channel_offset, strobe);
+    }
 
     m_dmx.send_dmx(buffer);
 

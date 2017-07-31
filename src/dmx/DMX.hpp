@@ -78,20 +78,18 @@ class DMXSerial : public IPlatformSerial
 {
 private:
     DMX &m_dmx;
-    int m_light_id;
+    unsigned int m_universe_id;
 
 public:
-    DMXSerial(DMX &dmx, int light_id, int base, int len) :
-        m_dmx(dmx), m_led_low(base), m_len(len), m_light_id(light_id)
+    DMXSerial(DMX &dmx, unsigned int universe_id) :
+        m_dmx(dmx), m_universe_id(universe_id)
     {
-        m_led_high = m_led_low + m_len;
         m_last_buf = NULL;
         m_last_buf_len = 0;
     };
 
     void send(unsigned char const *buf, const size_t len);
     ~DMXSerial() {
-	std::cerr << "Freeing PTR: " << (void*)m_last_buf << std::endl;
         free(m_last_buf);
     };
 
