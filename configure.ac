@@ -25,6 +25,12 @@ if test "x$enable_serial" = "xgtksim"; then
    PKG_CHECK_MODULES([GLIB], [glib-2.0])
 fi
 
+if test "x$enable_serial" = "xdmx"; then
+   PKG_CHECK_MODULES([OLA], [ola])
+   #PKG_CHECK_MODULES([OLACOMMON], [olacommon])
+   PKG_CHECK_MODULES([PROTOBUF], [protobuf])
+fi
+
 AC_ARG_ENABLE(debug, [  --enable-debug          Enable debug compiler flags])
 if test x"$enable_debug" = "xyes"; then
 
@@ -55,5 +61,6 @@ AC_CONFIG_FILES([
  src/opi/Makefile
  src/rpi/Makefile
  src/skeleton/Makefile
+ src/dmx/Makefile
 ])
 AC_OUTPUT
