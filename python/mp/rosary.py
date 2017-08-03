@@ -73,6 +73,7 @@ class Rosary:
         self.beads = []
         self.bases = []
         self.cross = []
+        self.dmx = []
         self.triggers = []
         self.bgcolor = color.Color(0,0,0,1)  # note opaque alpha channel
         self.osc_ip = ip
@@ -81,6 +82,7 @@ class Rosary:
         self.BEAD_COUNT=60
         self.BASE_COUNT=9
         self.CROSS_LED_COUNT=480
+        self.DMX_COUNT=2
         self.run_mainloop = False
         self.frame_time = 1 / 30   # reciprocal of fps
         self.effect_registry = {}
@@ -118,6 +120,12 @@ class Rosary:
                                          bead_list=self.cross,
                                          osc_client=self.osc_client))
 
+        for i in range(self.DMX_COUNT):
+            self.dmx.append(Bead(i))
+            self.updater_list.append(Updater(name='dmx',
+                                         bead_list=self.cross,
+                                         osc_client=self.osc_client))
+
 
         # some useful predefined sets of beads
         self.set_registry = {
@@ -150,6 +158,10 @@ class Rosary:
             'decade2': frozenset(self.beads[22:31]),
             'decade3': frozenset(self.beads[33:42]),
             'decade4': frozenset(self.beads[44:53]),
+            'spots': frozenset(self.dmx[0:-1]),
+            'dmx': frozenset(self.dmx[0:-1]),
+            'spot0': frozenset([self.dmx[0]]),
+            'spot1': frozenset([self.dmx[1]])
         }
 
         self.set_registry['half01'] = self.set_registry['quadrent0'].\
@@ -234,7 +246,8 @@ class Rosary:
         e.unhijack_triggers()
         # note that we are returning effect, a class, not e, an instance!
         self.effect_registry[e.name] = effect
-
+        print("effect", effect, "is registered")
+        
 
     def find_written_effects(self, module_or_class):
         """
