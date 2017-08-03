@@ -494,7 +494,7 @@ void OSCServer::LEDFormat_IanDMX::update(std::vector<led_t> const &leds) {
     size_t i = 0;
     
     for (auto it = leds.begin(); it != leds.end(); ++it) {
-        cout << "IanDMX update:" << ": " << int(it->r) << ", " << int(it->g) << ", " << int(it->b) << endl;
+        // cout << "IanDMX update:" << ": " << int(it->r) << ", " << int(it->g) << ", " << int(it->b) << endl;
         
         buf[i + 0] = it->r;
         buf[i + 1] = it->g;

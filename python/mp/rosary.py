@@ -158,8 +158,8 @@ class Rosary:
             'decade2': frozenset(self.beads[22:31]),
             'decade3': frozenset(self.beads[33:42]),
             'decade4': frozenset(self.beads[44:53]),
-            'spots': frozenset(self.dmx[0:-1]),
-            'dmx': frozenset(self.dmx[0:-1]),
+            'spots': frozenset(self.dmx[0:2]),
+            'dmx': frozenset(self.dmx[0:2]),
             'spot0': frozenset([self.dmx[0]]),
             'spot1': frozenset([self.dmx[1]])
         }
