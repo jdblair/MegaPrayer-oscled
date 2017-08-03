@@ -123,7 +123,7 @@ class Rosary:
         for i in range(self.DMX_COUNT):
             self.dmx.append(Bead(i))
             self.updater_list.append(Updater(name='dmx',
-                                         bead_list=self.cross,
+                                         bead_list=self.dmx,
                                          osc_client=self.osc_client))
 
 
