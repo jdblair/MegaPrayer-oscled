@@ -56,7 +56,7 @@ void dump_buf(unsigned char const *buf, size_t const buf_len) {
 }
 
 void DMXSerial::send(unsigned char const *buf, size_t const buf_len) {
-    std::cout << "DMX: send()" << std::endl;
+    //std::cout << "DMX: send()" << std::endl;
     // Maximum number of lights in a DMX universe is 512
     unsigned long MAX_DMX_CHANNELS = 512;
 
@@ -116,6 +116,7 @@ void DMXSerial::send(unsigned char const *buf, size_t const buf_len) {
 	uint8_t white = buf[3 + osc_offset];
 	uint8_t strobe = buf[4 + osc_offset];
    
+/*
 	cout << "DMX: light=" << (uint32_t)light_id
 	     << " r=" << (uint32_t)red 
 	     << " g=" << (uint32_t)green 
@@ -123,10 +124,11 @@ void DMXSerial::send(unsigned char const *buf, size_t const buf_len) {
 	     << " w=" << (uint32_t)white
 	     << " strobe=" << (uint32_t)strobe
 	     << endl; 
+*/
 
 	int channel_offset = light_id * DMX::CHANNELS_PER_LIGHT;
-	cout << "Red Channel: " << (uint32_t)(DMX::RED + channel_offset)
-	     << " Value: " << (uint32_t)red << endl;
+	//cout << "Red Channel: " << (uint32_t)(DMX::RED + channel_offset)
+	//     << " Value: " << (uint32_t)red << endl;
 
 	buffer.SetChannel(0 + channel_offset, 255);
 
