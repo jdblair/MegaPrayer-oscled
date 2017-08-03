@@ -28,5 +28,7 @@ __all__ = [
     'trigger_hijack_demo',
     'idle',
     'level',
+    'test',
+    'ramp',
     'random_fill'
 ]
