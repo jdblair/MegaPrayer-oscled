@@ -82,12 +82,15 @@ class App:
         hand = 18
         arm = 55
 
+        blip_space = 1
+
         konami_code = [up, left, up, right, up, right, down, right, down, left, down]
         blip_count = [leg, arm, hand, arm, neck, head, neck, arm, hand, arm, leg]
         
         for i, move in enumerate(konami_code):
-            delta_x = (blip_diameter + 1) * move[0]
-            delta_y = (blip_diameter + 1) * move[1]
+            delta_x = (blip_diameter + blip_space) * move[0]
+            delta_y = (blip_diameter + blip_space) * move[1]
+
             n_blips = blip_count[i]
             for b in range(n_blips):
                 self.cross.append(
@@ -96,8 +99,10 @@ class App:
                                             fill="white", width=0))
 
                 x_position = x_position + delta_x
-                y_position = y_position + delta_y 
- 
+                y_position = y_position + delta_y
+
+
+
         ##########################################################
 
         self.canvas.pack()
