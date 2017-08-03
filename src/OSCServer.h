@@ -27,11 +27,12 @@ class OSCServer {
  public:
     typedef struct led {
     led(uint8_t r_arg, uint8_t g_arg, uint8_t b_arg, uint8_t brightness_arg=0xff) :
-        r(r_arg), g(g_arg), b(b_arg), brightness(brightness_arg) {};
+        r(r_arg), g(g_arg), b(b_arg),
+	    brightness(brightness_arg) {};
         uint8_t r;
         uint8_t g;
         uint8_t b;
-        uint8_t brightness;  // used by apa102 LEDs, value is 0 to 31
+        uint8_t brightness;
     } led_t;
 
     OSCServer(std::atomic<bool> *running, std::string ip, std::string port);
@@ -94,6 +95,13 @@ class OSCServer {
         int m_r_offset;
         int m_g_offset;
         int m_b_offset;
+    };
+
+    class LEDFormat_IanDMX : public ILEDDataFormat {
+    public:
+	const int IAN_DMX_BUF_LEN_PER_LIGHT = 5; // r g b w strobe
+        LEDFormat_IanDMX(OSCLedConfig::interface_config const &cfg);
+        void update(std::vector<led_t> const &leds);	
     };
         
     class LEDFormat_APA102 : public ILEDDataFormat {
