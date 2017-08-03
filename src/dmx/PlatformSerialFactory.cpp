@@ -19,12 +19,10 @@ const std::shared_ptr<IPlatformSerial> PlatformSerialFactory::create_platform_se
     DMX &dmx = DMX::getInstance();
     dmx.init();
 
+    // Each MegaPrayer interface is mapped to a DMX universe
     switch (iface_num) {
     case 0:
-        ser.reset(new DMXSerial(dmx, 0, 0, 239));
-        break;
-    case 1:
-        ser.reset(new DMXSerial(dmx, 1, 0, 239));
+        ser.reset(new DMXSerial(dmx, 0));
         break;
 
     default:
