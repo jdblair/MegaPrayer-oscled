@@ -21,10 +21,16 @@ if __name__ == "__main__":
     #r.effect(1).color.set(r.color_registry['red'])
 
     # add another throb on the odd beads
-    r.add_effect(name='throb', color='red', bead_set='rosary')
+    #r.add_effect(name='throb', color='red', bead_set='rosary')
 
     # add an effect for the cross
-    r.add_effect(name='soft_edges_glow', color='yellow', bead_set='cross')
+    #r.add_effect(name='soft_edges_glow', color='yellow', bead_set='cross')
+
+    # stigmata FTW
+    r.add_effect(name='soft_edges_glow', color='red', bead_set='stigmata_left')
+    r.add_effect(name='soft_edges_glow', color='red', bead_set='stigmata_right')
+    r.add_effect(name='soft_edges_glow', color='yellow', bead_set='stigmata_crown')
+    r.add_effect(name='soft_edges_glow', color='red', bead_set='stigmata_feet')
 
     # add an effect for the bases
     r.add_effect(name='throb', color='yellow', bead_set='bases')

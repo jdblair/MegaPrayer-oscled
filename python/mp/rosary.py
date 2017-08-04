@@ -150,6 +150,11 @@ class Rosary:
             'decade2': frozenset(self.beads[22:31]),
             'decade3': frozenset(self.beads[33:42]),
             'decade4': frozenset(self.beads[44:53]),
+            'stigmata_left': frozenset(self.cross[103:210]),
+            'stigmata_right': frozenset(self.cross[305:412]),
+            #'stigmata_head': frozenset(self.cross[265:290]),
+            'stigmata_feet': frozenset(self.cross[0:50]),
+
         }
 
         self.set_registry['half01'] = self.set_registry['quadrent0'].\
