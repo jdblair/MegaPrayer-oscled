@@ -30,16 +30,12 @@ class Soft_Edges_Glow(effect.Effect):
         b = self.color.b
         a = self.color.a
 
-        r_bg = int(self.rosary.bgcolor.r)
-        g_bg = int(self.rosary.bgcolor.g)
-        b_bg = int(self.rosary.bgcolor.b)
-        a_bg = int(self.rosary.bgcolor.a)
-
         
         r_delta = r / fade_beads
         g_delta = g / fade_beads
         b_delta = b / fade_beads
         #a_delta = a / fade_beads
+
         
         # fade out the colour towards the end of the bead_set
         for bead in (self.bead_list[fade_out:]):
@@ -50,12 +46,19 @@ class Soft_Edges_Glow(effect.Effect):
 
             bead.color.set(color.Color(r, g, b, a))
 
+
+        r = int(self.rosary.bgcolor.r)
+        g = int(self.rosary.bgcolor.g)
+        b = int(self.rosary.bgcolor.b)
+        a = int(self.rosary.bgcolor.a)
+
         # fade in the colour from the beginning of the bead_set
-        for bead in (self.bead_list[:177]):
-            r = r_bg + r_delta
-            g = g_bg + g_delta
-            b = b_bg + b_delta
+        for bead in (self.bead_list[:fade_in]):
+            r = r + r_delta
+            g = g + g_delta
+            b = b + b_delta
             #a = a_bg = a_delta
+
             
             #fade in the colour
             bead.color.set(color.Color(r, g, b, a))

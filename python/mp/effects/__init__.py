@@ -28,5 +28,6 @@ __all__ = [
     'trigger_hijack_demo',
     'idle',
     'level',
-    'random_fill'
+    'random_fill',
+    'soft_edges_glow'
 ]
