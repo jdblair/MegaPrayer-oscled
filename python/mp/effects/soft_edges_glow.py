@@ -46,7 +46,8 @@ class Soft_Edges_Glow(effect.Effect):
 
             bead.color.set(color.Color(r, g, b, a))
 
-        # set 
+        # set fade in beads to background color so we 
+        # can add to it from there
         r = int(self.rosary.bgcolor.r)
         g = int(self.rosary.bgcolor.g)
         b = int(self.rosary.bgcolor.b)
