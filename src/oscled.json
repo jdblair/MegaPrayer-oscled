@@ -204,7 +204,22 @@
                     "reversed" : false
                 }
             ]
+        },
+        {
+            "id": 7,
+            "bead_base": 0,
+            "leds_per_bead": 1,
+            "interface": [
+                {
+                    "id": 0,
+                    "led_type": "dmx",
+                    "xform": { "r": 1.0, "g": 1.0, "b": 1.0 },
+                    "class": "dmx",
+                    "led_base" : 0,
+                    "led_count" : 2,
+                    "reversed" : false
+                }
+            ]
         }
-
     ]
 }

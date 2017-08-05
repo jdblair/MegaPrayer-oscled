@@ -19,17 +19,20 @@ AC_DEFINE_UNQUOTED([USE_PLATFORM_SERIAL], "$enable_serial", [platform serial int
 PLATFORM_SERIAL=$enable_serial
 AC_SUBST(PLATFORM_SERIAL)
 
+PLATFORM_SERIAL_LIBS=''
 if test "x$enable_serial" = "xgtksim"; then
    PKG_CHECK_MODULES([GTK], [gtk+-2.0])
    PKG_CHECK_MODULES([GOOCANVAS], [goocanvas])
    PKG_CHECK_MODULES([GLIB], [glib-2.0])
+   PLATFORM_SERIAL_LIBS="$GOOCANVAS_LIBS"
 fi
 
 if test "x$enable_serial" = "xdmx"; then
-   PKG_CHECK_MODULES([OLA], [ola])
-   #PKG_CHECK_MODULES([OLACOMMON], [olacommon])
+   PKG_CHECK_MODULES([OLA], [libola])
    PKG_CHECK_MODULES([PROTOBUF], [protobuf])
+   PLATFORM_SERIAL_LIBS="$OLA_LIBS"
 fi
+AC_SUBST(PLATFORM_SERIAL_LIBS)
 
 AC_ARG_ENABLE(debug, [  --enable-debug          Enable debug compiler flags])
 if test x"$enable_debug" = "xyes"; then
