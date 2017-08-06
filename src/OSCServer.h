@@ -161,6 +161,11 @@ class OSCServer {
 
     int m_iface_count;
 
+    void update_led_interfaces();
+    std::thread t_update;
+    std::mutex update_mutex;
+    std::condition_variable update_cv;
+    
     std::vector<std::shared_ptr<led_interface>> m_led_ifaces;
 };
 
