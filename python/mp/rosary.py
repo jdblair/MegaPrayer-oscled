@@ -80,7 +80,7 @@ class Rosary:
         self.trigger_id = 0
         self.BEAD_COUNT=60
         self.BASE_COUNT=9
-        self.CROSS_LED_COUNT=480
+        self.CROSS_LED_COUNT=514
         self.run_mainloop = False
         self.frame_time = 1 / 30   # reciprocal of fps
         self.effect_registry = {}
@@ -118,6 +118,7 @@ class Rosary:
                                          bead_list=self.cross,
                                          osc_client=self.osc_client))
 
+        
 
         # some useful predefined sets of beads
         self.set_registry = {
@@ -150,7 +151,14 @@ class Rosary:
             'decade2': frozenset(self.beads[22:31]),
             'decade3': frozenset(self.beads[33:42]),
             'decade4': frozenset(self.beads[44:53]),
+            'stigmata_left': frozenset(self.cross[103:210]),
+            'stigmata_right': frozenset(self.cross[305:412]),
+            'stigmata_crown': frozenset(self.cross[231:285]),
+            'stigmata_left_foot': frozenset(self.cross[25:0:-1]),
+            'stigmata_right_foot': frozenset(self.cross[490:514])
+
         }
+
 
         self.set_registry['half01'] = self.set_registry['quadrent0'].\
                                            union(self.set_registry['quadrent1'])
