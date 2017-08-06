@@ -16,9 +16,9 @@ class App:
         frame = Frame(master)
         frame.pack()
 
-        self.canvas = Canvas(master, width=900, height=700, borderwidth=0, highlightthickness=0, bg="black")
+        self.canvas = Canvas(master, width=1500, height=700, borderwidth=0, highlightthickness=0, bg="black")
 
-        ###############John's fancy witchcraft ###################
+        ############### John's fancy witchcraft ###################
         i = 0
         stem_beads = 5
         ring_beads = 60 - stem_beads
@@ -26,19 +26,20 @@ class App:
         bead_radius = 10
         stem_spacing = radius * pi * 2 / ring_beads
         stem_length = stem_spacing * stem_beads
-        x_offset = radius + stem_length + 50
+        x_offset = radius + stem_length + 600
         y_offset = 325
         lords_gap_ratio = 0.2
         self.beads = []
         self.bases = []
-        #make the stem
+        self.cross = [] 
+        # make the stem
         x = (x_offset - radius - stem_length) + (stem_spacing * i)
         for i in range(0, 5):
             y = y_offset
             self.beads.append(self.canvas.create_oval(x, y, x+(2*bead_radius),y+(2*bead_radius), fill="#128192200", width=2))
             x += stem_spacing
 
-        #make the rest of the beads
+        # make the rest of the beads
         bead_spacing = (pi * 2) / (ring_beads + 1)   # there's an "extra" empty bead at the junction
         # remove a little from bead_spacing to make room for the extra space around lords prayer beads
         bead_spacing -= (bead_spacing * bead_radius * lords_gap_ratio) / (ring_beads + 1)
@@ -51,7 +52,7 @@ class App:
                 angle += bead_spacing * lords_gap_ratio
             angle += bead_spacing
 
-        #make the bases
+        # make the bases
         for i in range(0, 9):
             angle = (pi * 2 / 9 * (i - 5)) - pi
             x = x_offset + (radius - (bead_radius * 3)) * cos(angle)
@@ -64,7 +65,42 @@ class App:
                                             x + (2 * bead_radius), y + (2 * bead_radius)),
                                            fill="#128192200", width=2))
 
-#self.canvas.create_oval(x, y, x+(2*bead_radius), y+(2*bead_radius), fill="#128192200", width=2))
+        # make the cross -- would like to have this in a separate window somedaaaaay
+        # this algorithm prolly just obfuscates the code but i like it anyway
+        x_position = 300
+        y_position = 695
+        blip_diameter = 4
+
+        up = [0, -1]
+        down = [0, 1]
+        right = [1, 0]
+        left = [-1, 0]
+
+        leg = 92
+        neck = 28
+        head = 18
+        hand = 18
+        arm = 55
+
+        blip_space = 1
+
+        konami_code = [up, left, up, right, up, right, down, right, down, left, down]
+        blip_count = [leg, arm, hand, arm, neck, head, neck, arm, hand, arm, leg]
+        
+        for i, move in enumerate(konami_code):
+            delta_x = (blip_diameter + blip_space) * move[0]
+            delta_y = (blip_diameter + blip_space) * move[1]
+
+            n_blips = blip_count[i]
+            for b in range(n_blips):
+                self.cross.append(
+                    self.canvas.create_oval(x_position, y_position, 
+                                            x_position - blip_diameter, y_position - blip_diameter, 
+                                            fill="white", width=0))
+
+                x_position = x_position + delta_x
+                y_position = y_position + delta_y
+
 
 
         ##########################################################
@@ -87,6 +123,8 @@ class App:
                     self.canvas.itemconfig(self.beads[num], fill=tk_rgb)
                 if (iface_class == 'base'):
                     self.canvas.itemconfig(self.bases[num], fill=tk_rgb)
+                if (iface_class == 'cross'):
+                    self.canvas.itemconfig(self.cross[num], fill=tk_rgb)
                 num += 1
 
 

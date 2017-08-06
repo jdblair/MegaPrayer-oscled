@@ -109,6 +109,9 @@ void GtkSimSerial::send(unsigned char const *buf, size_t const len) {
 
     if (m_sim->m_gtk_ready)
         gtk_idle_add_priority(G_PRIORITY_DEFAULT_IDLE, gtksim_update_beads, m_sim.get());
+
+    // simulate the delay in 
+    usleep(1000);
 }
 
 // this is a c-style wrapper around GtkSim::update_beads()

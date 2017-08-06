@@ -160,9 +160,7 @@ int OSCServer::osc_method_update(lo_arg **argv)
 {
     // cout << "/update" << endl;
 
-    for (auto it = m_led_ifaces.begin(); it != m_led_ifaces.end(); ++it) {
-        (*it)->notify_update_thread();
-    }
+    update_led_interfaces();
 }
 
 
@@ -174,7 +172,6 @@ int OSCServer::osc_method_xform(lo_arg **argv)
 }
 
 
-// create an led_interface and added to m_led_ifaces
 int OSCServer::osc_method_bead(lo_arg **argv)
 {
     string iface_class(&(argv[0]->s));
@@ -228,9 +225,7 @@ int OSCServer::osc_method_bead(lo_arg **argv)
     }
 
     // actually transmit the data to the LEDs
-    for (auto it = m_led_ifaces.begin(); it != m_led_ifaces.end(); ++it) {
-        (*it)->notify_update_thread();
-    }
+    update_led_interfaces();
 }
 
 
@@ -263,20 +258,14 @@ void OSCServer::set_all_led(led_t led)
         for (int led_num = iface->m_base; led_num < iface->m_base + iface->m_len; led_num++) {
             set_led(iface->m_iface_class, led_num, led);
         }
-        iface->notify_update_thread();
     }
+    update_led_interfaces();
 }
 
 // display an integer value in binary
 void OSCServer::show_value(int value, int total_bits, int bead_offset, led_t color_0, led_t color_1)
 {
     led_t color(0, 0, 0);
-
-    // avoid a race and wait for update_thread() to spawn for all interfaces
-    for (auto it = m_led_ifaces.begin(); it != m_led_ifaces.end(); ++it) {
-        while (! (*it)->run_update_thread)
-            usleep(100000);
-    }
 
     //cout << "value: " << value << " ";
     for (int bit = total_bits - 1; bit >= 0; bit--) {
@@ -295,10 +284,7 @@ void OSCServer::show_value(int value, int total_bits, int bead_offset, led_t col
     }
     //cout << endl;
 
-    // call notify_update_thread() on all interfaces
-    for (auto it = m_led_ifaces.begin(); it != m_led_ifaces.end(); ++it) {
-        (*it)->notify_update_thread();
-    }
+    update_led_interfaces();
 }
 
 void OSCServer::test_sequence()
@@ -322,11 +308,6 @@ void OSCServer::test_sequence()
     //     {1, 1, 1},
     // };
 
-    // avoid a race and wait for update_thread() to spawn for all interfaces
-    for (auto it = m_led_ifaces.begin(); it != m_led_ifaces.end(); ++it) {
-        while (! (*it)->run_update_thread)
-            usleep(100000);
-    }
 
     // show off all our colors
     for (int color = 0; color < test_color_len; color++) {
@@ -511,8 +492,6 @@ OSCServer::led_interface::led_interface(std::shared_ptr<IPlatformSerial> const s
                                         OSCLedConfig::interface_config const &cfg) :
     m_ser(ser) {
 
-    run_update_thread = false;
-
     m_base = cfg.led_base;
     m_len = cfg.led_count;
     m_reverse = cfg.reversed;
@@ -529,14 +508,10 @@ OSCServer::led_interface::led_interface(std::shared_ptr<IPlatformSerial> const s
     OSCServer::LEDDataFormatFactory led_fmt_factory;
     //shared_ptr<OSCServer::ILEDDataFormat> led_format(led_format = led_fmt_factory.create_led_format(cfg));
     m_fmt = led_fmt_factory.create_led_format(cfg);
-
-    t_update = std::thread(&OSCServer::led_interface::update_thread, this);
 };
 
 
 OSCServer::led_interface::~led_interface() {
-    run_update_thread = false;
-    t_update.join();
     delete led_buf;
 }
 
@@ -597,3 +572,12 @@ void OSCServer::led_interface::notify_update_thread()
     unique_lock<mutex> lock(update_mutex);
     update_cv.notify_all();
 }
+
+
+void OSCServer::update_led_interfaces()
+{
+    for (auto it = m_led_ifaces.begin(); it != m_led_ifaces.end(); ++it) {
+        (*it)->update_led_buf();
+    }    
+}
+
