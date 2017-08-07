@@ -27,8 +27,7 @@ __all__ = [
     'launcher',
     'trigger_hijack_demo',
     'idle',
-    'level',    
-    'test',
+    'level',
     'ramp',
     'random_fill',
     'soft_edges_glow'

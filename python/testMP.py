@@ -31,10 +31,10 @@ if __name__ == "__main__":
     r.add_effect(name='soft_edges_glow', color='red', bead_set='stigmata_right')
     r.add_effect(name='soft_edges_glow', color='yellow', bead_set='stigmata_crown')
     r.add_effect(name='soft_edges_glow', color='red', bead_set='stigmata_left_foot')
-    r.add_effect(name='soft_edges_glow', color='red', bead_set='stigmata_right_foot')
+    r.add_effect(name='soft_edges_glow', color='blue', bead_set='stigmata_right_foot')
 
     # add an effect for the bases
-    #r.add_effect(name='throb', color='yellow', bead_set='bases')
+    #r.add_effect(name='set_color', color='yellow', bead_set='cross')
 
     r.start()
     
