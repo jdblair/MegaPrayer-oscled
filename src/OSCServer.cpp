@@ -357,6 +357,11 @@ shared_ptr<OSCServer::ILEDDataFormat> OSCServer::LEDDataFormatFactory::create_le
         return fmt;
     }
 
+    if (cfg.led_type == string("iandmx")) {
+        fmt.reset(new LEDFormat_IanDMX(cfg));
+        return fmt;
+    }
+
     cout << "unknown led_type = " << cfg.led_type << endl;
 
     return NULL;
@@ -456,6 +461,32 @@ void OSCServer::LEDFormat_APA102::update(vector<led_t> const &leds)
     }
 }
 
+OSCServer::LEDFormat_IanDMX::LEDFormat_IanDMX(
+    OSCLedConfig::interface_config const &cfg) :
+    ILEDDataFormat(cfg) {
+
+    buf_len = cfg.led_count * IAN_DMX_BUF_LEN_PER_LIGHT;
+    buf = new uint8_t[buf_len + 1]; // + 1 for the "universe byte at the front
+}
+
+void OSCServer::LEDFormat_IanDMX::update(std::vector<led_t> const &leds) {
+    // 
+
+    size_t i = 0;
+    
+    for (auto it = leds.begin(); it != leds.end(); ++it) {
+        // cout << "IanDMX update:" << ": " << int(it->r) << ", " << int(it->g) << ", " << int(it->b) << endl;
+        
+        buf[i + 0] = it->r;
+        buf[i + 1] = it->g;
+        buf[i + 2] = it->b;
+        buf[i + 3] = 0;
+        buf[i + 4] = 0;
+
+        i += IAN_DMX_BUF_LEN_PER_LIGHT;
+    }
+
+}
 
 OSCServer::led_interface::led_interface(std::shared_ptr<IPlatformSerial> const ser,
                                         OSCLedConfig::interface_config const &cfg) :

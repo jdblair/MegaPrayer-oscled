@@ -1,0 +1,8 @@
+
+To cross-compile DMX:
+
+# in top level of repo
+. env.sh
+mkdir build-dmx
+cd build-dmx
+PKG_CONFIG=/usr/bin/pkg-config ../configure --enable-serial=dmx --host=$HOST
