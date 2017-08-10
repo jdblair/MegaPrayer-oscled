@@ -151,11 +151,11 @@ class Rosary:
             'decade2': frozenset(self.beads[22:31]),
             'decade3': frozenset(self.beads[33:42]),
             'decade4': frozenset(self.beads[44:53]),
-            'stigmata_left': frozenset(self.cross[105:160]),
-            'stigmata_right': frozenset(self.cross[305:412]),
-            'stigmata_crown': frozenset(self.cross[231:285]),
-            'stigmata_left_foot': frozenset(self.cross[25:0:-1]),
-            'stigmata_right_foot': frozenset(self.cross[400:448])
+            'stigmata_left': frozenset(self.cross[102:160]),
+            'stigmata_right': frozenset(self.cross[289:348]),
+            'stigmata_crown': frozenset(self.cross[200:251]),
+            'stigmata_left_foot': frozenset(self.cross[0:23]),
+            'stigmata_right_foot': frozenset(self.cross[425:448])
 
         }
 
