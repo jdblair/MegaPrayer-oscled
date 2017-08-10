@@ -91,6 +91,64 @@ cd build-opi-arm
 make
 ```
 
+### Open Lighting (OLA) DMX control
+
+You will need install OLA's prerequisites, and then build OLA for your system.
+
+#### Installing the OLA package
+
+If you don't want to build OLA:
+
+```
+$ cat /etc/apt/sources.list
+deb http://apt.openlighting.org/ubuntu trusty main
+
+sudo apt-get install ola
+```
+
+#### Prerequisites & Build
+
+```
+sudo apt-get install libcppunit-doc libcppunit-dev libossp-uuid-dev libossp-uuid16 libprotoc-dev libftdi-dev
+
+git clone https://github.com/OpenLightingProject/ola.git
+
+cd ola
+git log # Tested at: 7eb53beeaa577aab2e2196303a8beae492b637ad
+
+./configure --enable-python-libs && make -j2 check
+sudo (make install && ldconfig)
+
+```
+
+#### Configure OLA
+
+TODO
+
+
+#### Mapping Your devices
+
+
+### Testing OLA
+
+```
+cd MegaPrayer-oscled/python 
+oscsend localhost 5005 /beadf ifff 0 1 1 1
+aqk@monolith ~/code/MegaPrayer-oscled/python $ oscsend localhost 5005 /update
+
+cd code/MegaPrayer-oscled/python 
+$ python3 server.py --ip 127.0.0.1 --port=5005
+
+Make first light cyan, and second light green:
+src/swrite 0  0 255 255 10 0 0 255 0 10 0
+
+swrite [interface] r g b w s    r g b w s
+red green blue white strobe
+
+Make the first light strobe white
+src/swrite 0 255 255 255 255 255
+```
+
 
 # python/mp.py
 
