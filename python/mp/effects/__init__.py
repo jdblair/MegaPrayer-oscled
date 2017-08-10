@@ -30,5 +30,6 @@ __all__ = [
     'level',
     'ramp',
     'random_fill',
+    'stigmata',
     'soft_edges_glow'
 ]

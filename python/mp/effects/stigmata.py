@@ -13,18 +13,36 @@ class Stigmata(effect.Effect):
     # Wish there were a better way than requiring this every time
     dm = copy.deepcopy(effect.Effect.dm)
 
-    def __init__(self, bead_set, **kwargs):
+    def __init__(self, bead_set, color=_color.Color(), **kwargs):
         super().__init__(name="stigmata", bead_set=bead_set, color=color, **kwargs)
 
         self.count = 0
         self.bin = bin.Bin(bead_set, rosary=self.rosary)
 
-        #self.bin.add_effect_object(soft_edges_glow.Soft_Edges_Glow(bead_set='stigmata_left', color=_color.Color(0, 1, 0)))
-        self.bin.add_effect_object(name='soft_edges_glow', bead_set='stigmata_right', color=_color.Color(0, 1, 0))
-        #self.bin.add_effect_object(name='soft_edges_glow', color='yellow', bead_set='stigmata_crown')
-        #self.bin.add_effect_object(name='soft_edges_glow', color='red', bead_set='stigmata_left_foot')
-        #self.bin.add_effect_object(name='soft_edges_glow', color='red', bead_set='stigmata_right_foot')
+        self.bin.add_effect_object(
+            soft_edges_glow.Soft_Edges_Glow(
+                self.rosary.set_registry['stigmata_left'],
+                self.rosary.color_registry['red']))
 
+        self.bin.add_effect_object(
+            soft_edges_glow.Soft_Edges_Glow(
+                self.rosary.set_registry['stigmata_right'],
+                self.rosary.color_registry['red']))
+
+        self.bin.add_effect_object(
+            soft_edges_glow.Soft_Edges_Glow(
+                self.rosary.set_registry['stigmata_crown'],
+                self.rosary.color_registry['yellow']))
+
+        self.bin.add_effect_object(
+            soft_edges_glow.Soft_Edges_Glow(
+                self.rosary.set_registry['stigmata_left_foot'],
+                self.rosary.color_registry['red']))
+
+        self.bin.add_effect_object(
+            soft_edges_glow.Soft_Edges_Glow(
+                self.rosary.set_registry['stigmata_right_foot'],
+                self.rosary.color_registry['red']))
 
     def next(self):
         self.bin.next()
