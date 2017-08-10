@@ -166,7 +166,9 @@ class Rosary:
             'stigmata_right': frozenset(self.cross[305:412]),
             'stigmata_crown': frozenset(self.cross[231:285]),
             'stigmata_left_foot': frozenset(self.cross[25:0:-1]),
-            'stigmata_right_foot': frozenset(self.cross[490:514])
+            'stigmata_right_foot': frozenset(self.cross[490:514]),
+            'cross_left': frozenset(self.cross[0:258]),
+            'cross_right': frozenset(self.cross[258:514])
         }
 
 
@@ -692,15 +694,22 @@ class Rosary:
             # to cast a float-as-string into an int, instead of just
             # truncating it, phew!
             #
-            try:
-                implied_val = int(implied_val)
-            except ValueError:
-                try:
-                    implied_val = float(implied_val)
-                except ValueError:
-                    pass
 
-            inferred_kwargs[implied_arg] = implied_val
+            # holy hacks, batman!
+            # this is gonna be super fragile and xy gotta be the last argument
+            if (implied_arg == 'xy'):
+                inferred_kwargs['x'] = int(osc_args[i*2 + 1])
+                inferred_kwargs['y'] = int(osc_args[i*2 + 2])
+            else:
+                try:
+                    implied_val = int(implied_val)
+                except ValueError:
+                    try:
+                        implied_val = float(implied_val)
+                    except ValueError:
+                        pass
+
+                inferred_kwargs[implied_arg] = implied_val
 
         print("* Namespace: {}".format(namespace))
         print("* Function: {}".format(fn_name))
