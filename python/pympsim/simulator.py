@@ -67,40 +67,70 @@ class App:
 
         # make the cross -- would like to have this in a separate window somedaaaaay
         # this algorithm prolly just obfuscates the code but i like it anyway
+
         x_position = 300
-        y_position = 695
+        y_position = 650
         blip_diameter = 4
 
+        # directions to move
         up = [0, -1]
         down = [0, 1]
         right = [1, 0]
         left = [-1, 0]
+        #lower_left_vertex = [-1, -1]
+        lower_left_vertex = [0, -1]
+        upper_left_vertex = [1, -1]
+        upper_right_vertex = [1, 1]
+        lower_right_vertex = [-1, 1]
 
-        leg = 92
-        neck = 28
-        head = 18
-        hand = 18
-        arm = 55
+        # cross piece lengths
+        leg = 70
+        neck = 26
+        head = 14
+        hand = 14
+        arm_left = 54
+        arm_right = 53
+        vertex = 0
 
         blip_space = 1
 
-        konami_code = [up, left, up, right, up, right, down, right, down, left, down]
-        blip_count = [leg, arm, hand, arm, neck, head, neck, arm, hand, arm, leg]
+        konami_code = [
+                        [up, leg], [up, vertex], 
+                        [left, arm_left], [left, vertex],
+                        [up, hand], [up, vertex], 
+                        [right, arm_left], [right, vertex],
+                        [up, neck], [up, vertex], 
+                        [right, head], [right, vertex],
+                        [down, neck], [down, vertex],
+                        [right, arm_right], [right, vertex],
+                        [down, hand], [down, vertex],
+                        [left, arm_right], [left, vertex],
+                        [down, leg]
+                       ]
         
-        for i, move in enumerate(konami_code):
-            delta_x = (blip_diameter + blip_space) * move[0]
-            delta_y = (blip_diameter + blip_space) * move[1]
+        for move in konami_code:
+            direction = move[0]
+            length = move[1]
+            
+            delta_x = (blip_diameter + blip_space) * direction[0]
+            delta_y = (blip_diameter + blip_space) * direction[1]
 
-            n_blips = blip_count[i]
-            for b in range(n_blips):
-                self.cross.append(
-                    self.canvas.create_oval(x_position, y_position, 
-                                            x_position - blip_diameter, y_position - blip_diameter, 
-                                            fill="white", width=0))
 
+            # when we reach a vertex, don't add it to the blip set, just move the x and y position
+            if (length == 0):
                 x_position = x_position + delta_x
                 y_position = y_position + delta_y
 
+            else:
+                n_blips = length
+                for b in range(n_blips):
+                    x_position = x_position + delta_x
+                    y_position = y_position + delta_y
+
+                    self.cross.append(
+                        self.canvas.create_oval(x_position, y_position, 
+                                                x_position + blip_diameter, y_position + blip_diameter, 
+                                                fill="white", width=0))
 
 
         ##########################################################
