@@ -73,6 +73,7 @@ class Rosary:
         self.beads = []
         self.bases = []
         self.cross = []
+        self.dmx = []
         self.triggers = []
         self.bgcolor = color.Color(0,0,0,1)  # note opaque alpha channel
         self.osc_ip = ip
@@ -81,6 +82,7 @@ class Rosary:
         self.BEAD_COUNT=60
         self.BASE_COUNT=9
         self.CROSS_LED_COUNT=448
+        self.DMX_COUNT=2
         self.run_mainloop = False
         self.frame_time = 1 / 30   # reciprocal of fps
         self.effect_registry = {}
@@ -118,7 +120,12 @@ class Rosary:
                                          bead_list=self.cross,
                                          osc_client=self.osc_client))
 
-        
+        for i in range(self.DMX_COUNT):
+            self.dmx.append(Bead(i))
+            self.updater_list.append(Updater(name='dmx',
+                                         bead_list=self.dmx,
+                                         osc_client=self.osc_client))
+
 
         # some useful predefined sets of beads
         self.set_registry = {
@@ -155,8 +162,13 @@ class Rosary:
             'stigmata_right': frozenset(self.cross[289:348]),
             'stigmata_crown': frozenset(self.cross[200:251]),
             'stigmata_left_foot': frozenset(self.cross[0:23]),
-            'stigmata_right_foot': frozenset(self.cross[425:448])
-
+            'stigmata_right_foot': frozenset(self.cross[425:448]),
+            'spots': frozenset(self.dmx[0:2]),
+            'dmx': frozenset(self.dmx[0:2]),
+            'spot0': frozenset([self.dmx[0]]),
+            'spot1': frozenset([self.dmx[1]])
+            'cross_left': frozenset(self.cross[0:258]),
+            'cross_right': frozenset(self.cross[258:448])
         }
 
 
@@ -242,7 +254,8 @@ class Rosary:
         e.unhijack_triggers()
         # note that we are returning effect, a class, not e, an instance!
         self.effect_registry[e.name] = effect
-
+        print("effect", effect, "is registered")
+        
 
     def find_written_effects(self, module_or_class):
         """
@@ -681,15 +694,22 @@ class Rosary:
             # to cast a float-as-string into an int, instead of just
             # truncating it, phew!
             #
-            try:
-                implied_val = int(implied_val)
-            except ValueError:
-                try:
-                    implied_val = float(implied_val)
-                except ValueError:
-                    pass
 
-            inferred_kwargs[implied_arg] = implied_val
+            # holy hacks, batman!
+            # this is gonna be super fragile and xy gotta be the last argument
+            if (implied_arg == 'xy'):
+                inferred_kwargs['x'] = int(osc_args[i*2 + 1])
+                inferred_kwargs['y'] = int(osc_args[i*2 + 2])
+            else:
+                try:
+                    implied_val = int(implied_val)
+                except ValueError:
+                    try:
+                        implied_val = float(implied_val)
+                    except ValueError:
+                        pass
+
+                inferred_kwargs[implied_arg] = implied_val
 
         print("* Namespace: {}".format(namespace))
         print("* Function: {}".format(fn_name))
