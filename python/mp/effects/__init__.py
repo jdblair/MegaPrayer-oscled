@@ -32,5 +32,6 @@ __all__ = [
     'random_fill',
     'stigmata',
     'soft_edges_glow',
-    'test'
+    'test',
+    'america'
 ]
