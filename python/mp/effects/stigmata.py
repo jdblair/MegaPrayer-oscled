@@ -37,7 +37,7 @@ class Stigmata(effect.Effect):
         self.bin.add_effect_object(
             soft_edges_glow.Soft_Edges_Glow(
                 self.rosary.set_registry['stigmata_left_foot'],
-                self.rosary.color_registry['red']))
+                self.rosary.color_registry['red'], bead_set_sort = 'reverse'))
 
         self.bin.add_effect_object(
             soft_edges_glow.Soft_Edges_Glow(

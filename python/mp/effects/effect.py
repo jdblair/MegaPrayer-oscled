@@ -34,7 +34,8 @@ class Effect(abc.ABC):
 
         self.sort_registry = {
             'cw': self.bead_set_sort_cw,
-            'ccw': self.bead_set_sort_ccw
+            'ccw': self.bead_set_sort_ccw,
+            'reverse': self.bead_set_sort_reverse
         }
 
         # the sorting function for beads can be passed as an argument
@@ -99,6 +100,13 @@ class Effect(abc.ABC):
         for bead in set:
             beads.append(bead)
         beads.sort(key=lambda bead: bead_map[bead.index])
+        return beads
+
+    def bead_set_sort_reverse(self, set):
+        beads = []
+        for bead in set:
+            beads.append(bead)
+        beads.sort(key=lambda bead: bead.index, reverse=True)
         return beads
 
     def get_name(self):
