@@ -409,7 +409,6 @@ class Rosary:
         # I'd rather be fancy and strip out kwargs that won't be accepted
         # than force people writing effects to take **kwargs /flex
         requested_effect = self.effect_registry.get(effect_name)
-        print("EFFECT NAME: {}".format(effect_name))
         requested_effect_args = inspect.getargspec(requested_effect).args
         # I don't want to add this to all the effects that are already written, but this
         # solution feels like a gross hack
