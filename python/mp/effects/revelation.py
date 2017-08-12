@@ -86,19 +86,19 @@ class Revelation(effect.Effect):
                                       color=_color.Color(1, 1, 1),
                                       step=.25,
                                       offset=(1/math.pi) * -1, # start at 0
-                                      duration=240,
+                                      duration=210,
                                       delay=1470)
         self.rosary_beat1 = throb.Throb(bead_set=self.rosary.set_registry['rosary'],
                                       color=_color.Color(1, 1, 1),
                                       step=.25,
                                       offset=(1/math.pi) * -1, # start at 0
-                                      duration=240,
+                                      duration=210,
                                       delay=1470)
         self.base_beat1 = throb.Throb(bead_set=self.rosary.set_registry['base'],
                                       color=_color.Color(1, 1, 1),
                                       step=.25,
                                       offset=(1/math.pi) * -1, # start at 0
-                                      duration=240,
+                                      duration=210,
                                       delay=1470)
 
         # Add violet to the cross and cyan to the rosary
@@ -106,17 +106,17 @@ class Revelation(effect.Effect):
                                       color=_color.Color(1, 0, 1),
                                       step=.25,
                                       offset=(1/math.pi) * -1  + math.pi/2,
-                                      delay=1590)
+                                      delay=1560)
         self.rosary_beat2 = throb.Throb(bead_set=self.rosary.set_registry['rosary'],
                                       color=_color.Color(0, 1, 1),
                                       step=.25,
                                       offset=(1/math.pi) * -1  + math.pi/2,
-                                      delay=1590)
+                                      delay=1560)
         self.base_beat2 = throb.Throb(bead_set=self.rosary.set_registry['base'],
                                       color=_color.Color(1, 0, 1),
                                       step=.25,
                                       offset=(1/math.pi) * -1  + math.pi/2,
-                                      delay=1590)
+                                      delay=1560)
 
         # Now add cyan to the cross and violet to the rosary with
         # retro 80s colors because...
@@ -125,17 +125,17 @@ class Revelation(effect.Effect):
                                       color=_color.Color(0, 1, 1),
                                       step=.5,
                                       offset=(1/math.pi) * -1, # start at 0
-                                      delay=1710)
+                                      delay=1650)
         self.rosary_beat3 = throb.Throb(bead_set=self.rosary.set_registry['rosary'],
                                       color=_color.Color(1, 0, 1),
                                       step=.5,
                                       offset=(1/math.pi) * -1, # start at 0
-                                      delay=1710)
+                                      delay=1650)
         self.base_beat3 = throb.Throb(bead_set=self.rosary.set_registry['base'],
                                       color=_color.Color(0, 1, 1),
                                       step=.5,
                                       offset=(1/math.pi) * -1, # start at 0
-                                      delay=1710)
+                                      delay=1650)
 
         # It seems important that they're grouped like this
         # Otherwise the timing looks off, at least on the sim
