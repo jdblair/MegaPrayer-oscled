@@ -24,13 +24,19 @@ class Revelation(effect.Effect):
                                                    color=_color.Color(1, 1, 1),
                                                    speed=100,
                                                    acceleration=.99,
-                                                   duration=850)
+                                                   duration=660)
         self.rosary_reveal = random_fill.RandomFill(bead_set=self.rosary.set_registry['rosary'],
                                                     color=_color.Color(1, 1, 1),
-                                                    speed=600,
+                                                    speed=300,
                                                     acceleration=.99,
-                                                    delay=50,
-                                                    duration=800)
+                                                    delay=100,
+                                                    duration=560)
+        self.base_reveal = random_fill.RandomFill(bead_set=self.rosary.set_registry['base'],
+                                                    color=_color.Color(1, 1, 1),
+                                                    speed=200,
+                                                    acceleration=.99,
+                                                    delay=150,
+                                                    duration=510)
 
 
         # After the solid white goes away, let it stay dark for a ltitle,
@@ -39,67 +45,120 @@ class Revelation(effect.Effect):
                                       color=_color.Color(1, 1, 1),
                                       step=.01,
                                       offset=(1/math.pi) * -1, # start at 0
-                                      delay=1000,
-                                      duration=500)
+                                      delay=750,
+                                      duration=570)
         self.rosary_throb = throb.Throb(bead_set=self.rosary.set_registry['rosary'],
                                       color=_color.Color(1, 1, 1),
                                       step=.01,
                                       offset=(1/math.pi) * -1, # start at 0
-                                      delay=1000,
-                                      duration=500)
+                                      delay=750,
+                                      duration=570)
+        self.base_throb = throb.Throb(bead_set=self.rosary.set_registry['base'],
+                                      color=_color.Color(1, 1, 1),
+                                      step=.01,
+                                      offset=(1/math.pi) * -1, # start at 0
+                                      delay=750,
+                                      duration=570)
 
         # After the slow fade goes away, let it stay dark again, for dramatic
         # effect, before returning with a beat
         self.cross_beat = throb.Throb(bead_set=self.rosary.set_registry['cross'],
                                       color=_color.Color(1, 1, 1),
-                                      step=.25,
+                                      step=.125,
                                       offset=(1/math.pi) * -1, # start at 0
-                                      duration=300,
-                                      delay=1600)
+                                      duration=120,
+                                      delay=1350)
         self.rosary_beat = throb.Throb(bead_set=self.rosary.set_registry['rosary'],
+                                      color=_color.Color(1, 1, 1),
+                                      step=.125,
+                                      offset=(1/math.pi) * -1, # start at 0
+                                      duration=120,
+                                      delay=1350)
+        self.base_beat = throb.Throb(bead_set=self.rosary.set_registry['base'],
+                                      color=_color.Color(1, 1, 1),
+                                      step=.125,
+                                      offset=(1/math.pi) * -1, # start at 0
+                                      duration=120,
+                                      delay=1350)
+
+        # Speed it up
+        self.cross_beat1 = throb.Throb(bead_set=self.rosary.set_registry['cross'],
                                       color=_color.Color(1, 1, 1),
                                       step=.25,
                                       offset=(1/math.pi) * -1, # start at 0
-                                      duration=300,
-                                      delay=1600)
+                                      duration=240,
+                                      delay=1470)
+        self.rosary_beat1 = throb.Throb(bead_set=self.rosary.set_registry['rosary'],
+                                      color=_color.Color(1, 1, 1),
+                                      step=.25,
+                                      offset=(1/math.pi) * -1, # start at 0
+                                      duration=240,
+                                      delay=1470)
+        self.base_beat1 = throb.Throb(bead_set=self.rosary.set_registry['base'],
+                                      color=_color.Color(1, 1, 1),
+                                      step=.25,
+                                      offset=(1/math.pi) * -1, # start at 0
+                                      duration=240,
+                                      delay=1470)
 
         # Add violet to the cross and cyan to the rosary
         self.cross_beat2 = throb.Throb(bead_set=self.rosary.set_registry['cross'],
                                       color=_color.Color(1, 0, 1),
                                       step=.25,
                                       offset=(1/math.pi) * -1  + math.pi/2,
-                                      delay=1800)
+                                      delay=1590)
         self.rosary_beat2 = throb.Throb(bead_set=self.rosary.set_registry['rosary'],
                                       color=_color.Color(0, 1, 1),
                                       step=.25,
                                       offset=(1/math.pi) * -1  + math.pi/2,
-                                      delay=1800)
-
-        # Now add cyan to the cross and violet to the rosary
-        # ...with retro 80s colors!
-        self.cross_beat3 = throb.Throb(bead_set=self.rosary.set_registry['cross'],
-                                      color=_color.Color(0, 1, 1),
-                                      step=.25,
-                                      offset=(1/math.pi) * -1, # start at 0
-                                      delay=1900)
-        self.rosary_beat3 = throb.Throb(bead_set=self.rosary.set_registry['rosary'],
+                                      delay=1590)
+        self.base_beat2 = throb.Throb(bead_set=self.rosary.set_registry['base'],
                                       color=_color.Color(1, 0, 1),
                                       step=.25,
-                                      offset=(1/math.pi) * -1, # start at 0
-                                      delay=1900)
+                                      offset=(1/math.pi) * -1  + math.pi/2,
+                                      delay=1590)
 
-        # ADD THAT SHIT IN
+        # Now add cyan to the cross and violet to the rosary with
+        # retro 80s colors because...
+        # Oh why am I explaining myself, everybody loves the 80s
+        self.cross_beat3 = throb.Throb(bead_set=self.rosary.set_registry['cross'],
+                                      color=_color.Color(0, 1, 1),
+                                      step=.5,
+                                      offset=(1/math.pi) * -1, # start at 0
+                                      delay=1710)
+        self.rosary_beat3 = throb.Throb(bead_set=self.rosary.set_registry['rosary'],
+                                      color=_color.Color(1, 0, 1),
+                                      step=.5,
+                                      offset=(1/math.pi) * -1, # start at 0
+                                      delay=1710)
+        self.base_beat3 = throb.Throb(bead_set=self.rosary.set_registry['base'],
+                                      color=_color.Color(0, 1, 1),
+                                      step=.5,
+                                      offset=(1/math.pi) * -1, # start at 0
+                                      delay=1710)
+
+        # It seems important that they're grouped like this
+        # Otherwise the timing looks off, at least on the sim
         self.bin.add_effect_object(self.cross_reveal)
         self.bin.add_effect_object(self.cross_throb)
         self.bin.add_effect_object(self.cross_beat)
+        self.bin.add_effect_object(self.cross_beat1)
         self.bin.add_effect_object(self.cross_beat2)
         self.bin.add_effect_object(self.cross_beat3)
 
         self.bin.add_effect_object(self.rosary_reveal)
         self.bin.add_effect_object(self.rosary_throb)
         self.bin.add_effect_object(self.rosary_beat)
+        self.bin.add_effect_object(self.rosary_beat1)
         self.bin.add_effect_object(self.rosary_beat2)
         self.bin.add_effect_object(self.rosary_beat3)
+
+        self.bin.add_effect_object(self.base_reveal)
+        self.bin.add_effect_object(self.base_throb)
+        self.bin.add_effect_object(self.base_beat)
+        self.bin.add_effect_object(self.base_beat1)
+        self.bin.add_effect_object(self.base_beat2)
+        self.bin.add_effect_object(self.base_beat3)
 
     def next(self):
         self.bin.next()
