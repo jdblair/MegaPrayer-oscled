@@ -33,5 +33,6 @@ __all__ = [
     'stigmata',
     'soft_edges_glow',
     'test',
-    'america'
+    'america',
+    'revelation'
 ]
