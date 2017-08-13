@@ -166,7 +166,7 @@ class Rosary:
             'spots': frozenset(self.dmx[0:2]),
             'dmx': frozenset(self.dmx[0:2]),
             'spot0': frozenset([self.dmx[0]]),
-            'spot1': frozenset([self.dmx[1]])
+            'spot1': frozenset([self.dmx[1]]),
             'cross_left': frozenset(self.cross[0:258]),
             'cross_right': frozenset(self.cross[258:448])
         }
