@@ -1,6 +1,7 @@
 import copy
 from mp import color as _color
-from mp.effects import effect, bin, set_color, sine_wave, sparkle
+from mp.effects import effect, bin, set_color, sine_wave, sparkle, firework
+import random
 
 class America(effect.Effect):
     """
@@ -76,3 +77,24 @@ class America(effect.Effect):
     # AND THE HOME OF THE BRAVE
     def next(self):
         self.bin.next()
+
+        # I RAN OUT OF LYRICS, BUT HOW 'BOUT SOME FIREWORKS
+        if random.random() > .99:
+
+            if random.random() > .5:
+                direction = "cw"
+            else:
+                direction = "ccw"
+
+            firework_color = random.choice([
+                                _color.Color(1, 0, 0, .7),
+                                _color.Color(1, 1, 1, .7),
+                                _color.Color(0, 0, 1, .7)
+                             ])
+
+            fw = firework.Firework(bead_set=self.rosary.\
+                                            set_registry['rosary'],
+                                   color=firework_color,
+                                   rosary=self.rosary,
+                                   direction=direction)
+            self.bin.add_effect_object(fw)

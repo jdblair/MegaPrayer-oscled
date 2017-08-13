@@ -34,5 +34,7 @@ __all__ = [
     'soft_edges_glow',
     'test',
     'america',
-    'revelation'
+    'revelation',
+    'firework',
+    'risefall'
 ]
