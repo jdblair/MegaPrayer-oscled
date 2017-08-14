@@ -36,5 +36,7 @@ __all__ = [
     'america',
     'revelation',
     'firework',
-    'risefall'
+    'risefall',
+    'fire_spreading',
+    'burn_it_all'
 ]
