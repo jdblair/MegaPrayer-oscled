@@ -38,8 +38,13 @@ if __name__ == "__main__":
     #r.add_effect(name='set_color', color='fire', bead_set='all')
     #r.add_effect(name='random_fill', bead_set='cross')
     #r.add_effect(name='throb', bead_set='cross')
-    r.add_effect(name='cross_idle', bead_set='cross')
+    #r.add_effect(name='cross_idle', bead_set='cross')
     #r.add_effect(name='stigmata', bead_set='cross')
+    #r.add_effect(name='revelation')
+    #r.add_effect(name='burn_it_all')
+    #r.add_effect(name='america')
+    #r.add_effect(name='risefall')
+    r.add_effect(name='fire_spreading')
 
     r.start()
     

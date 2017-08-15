@@ -33,14 +33,11 @@ __all__ = [
     'stigmata',
     'soft_edges_glow',
     'test',
-<<<<<<< HEAD
-    'cross_idle'
-=======
+    'cross_idle',
     'america',
     'revelation',
     'firework',
     'risefall',
     'fire_spreading',
     'burn_it_all'
->>>>>>> e968801144750510794a850bd5267031debbcf7e
 ]
