@@ -22,4 +22,6 @@ class LowPowerMode(trigger.Trigger):
         self.low_power_mode = enable_low_power_mode > 0
 
     def inner_fire(self):
-        self.rosary.low_power_mode = self.low_power_mode
+        # Directly update the PowerModeUpdater object
+        self.rosary.power_mode_updater.low_power_mode = self.low_power_mode
+        self.rosary.power_mode_updater.write_to_disk()

@@ -101,10 +101,7 @@ class PowerModeUpdater:
             fp.write(power_mode_jsonified)
 
 
-    def update(self, low_power_mode=False):
-
-        # We could possibly only call this
-        self.low_power_mode = low_power_mode
+    def update(self):
 
         msg = osc_message_builder.OscMessageBuilder(address = "/led/xform")
         msg.add_arg("power")                    # I don't know
@@ -112,14 +109,12 @@ class PowerModeUpdater:
         msg.add_arg(float(3.0))                 # But I get this one!
 
         for i in range(3):
-            if low_power_mode:
+            if self.low_power_mode:
                 msg.add_arg(1.0)
             else:
                 msg.add_arg(.75)
 
         self.osc_client.send(msg.build())
-
-        self.write_to_disk()
 
 
 class Rosary:
@@ -171,9 +166,6 @@ class Rosary:
         self.osc_client = udp_client.UDPClient(self.osc_ip, self.osc_port)
 
         self.power_mode_updater = PowerModeUpdater(self.osc_client)
-        # Putting this here just so it's easier to set power mode from
-        # elsewhere in the code, i.e. a trigger
-        self.low_power_mode = self.power_mode_updater.low_power_mode
 
         # create the three classes of LED "beads"
         for i in range(self.BEAD_COUNT):
@@ -314,8 +306,7 @@ class Rosary:
     def power_mode_loop(self):
         print("Starting loop to update + backup power mode state")
         while True:
-            from datetime import datetime
-            self.power_mode_updater.update(self.low_power_mode)
+            self.power_mode_updater.update()
             time.sleep(10)
     
 
