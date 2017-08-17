@@ -29,7 +29,7 @@
                 $('#submit').click(function() {
                     $.ajax({
                         type: 'POST',
-                        url: 'http://localhost:8080/set_time',
+                        url: 'set_time',
                         data: JSON.stringify({
                             "timestamp": $('#timestamp').val()
                         }),
