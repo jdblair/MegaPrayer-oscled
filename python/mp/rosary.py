@@ -104,7 +104,6 @@ class PowerModeUpdater:
     def update(self):
 
         msg = osc_message_builder.OscMessageBuilder(address = "/led/xform")
-        msg.add_arg(float(3.0))
 
         for i in range(3):
             if self.low_power_mode:
