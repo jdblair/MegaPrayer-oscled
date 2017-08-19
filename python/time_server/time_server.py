@@ -1,5 +1,6 @@
 from bottle import Bottle, route, run, request, response, static_file
 from datetime import datetime
+import argparse
 import os
 import json
 
@@ -44,4 +45,14 @@ def set_time():
 
         return "Set time to {} (timezone-naive)".format(datetime.fromtimestamp(timestamp))
 
-run(app, host='localhost', port=8080, debug=True)
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--listen-ip",
+        default="127.0.0.1", help="The ip to listen on")
+    parser.add_argument("--listen-port",
+        type=int, default=8080, help="The port to listen on")
+    args = parser.parse_args()
+
+    run(app, host=args.listen_ip, port=args.listen_port, debug=True)
