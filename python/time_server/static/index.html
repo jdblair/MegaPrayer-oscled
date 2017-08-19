@@ -1,0 +1,80 @@
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="static/bootstrap.min.css"></link>
+        <style>
+            body {
+                margin: 10px;
+                padding: 10px;
+            }
+            form {
+                max-width: 480px;
+                margin: auto;
+            }
+            #server_response {
+                display: none;
+            }
+        </style>
+
+        <script type="text/javascript" src="static/jquery-3.2.1.min.js"></script>
+        <script type="text/javascript">
+
+            function setDate() {
+                var now = new Date();
+                $('#your_time').text("Browser time: " + now.toTimeString());
+                $('#timestamp').val(now.getTime());
+            }
+
+            function init() {
+
+                $('#submit').click(function() {
+                    $.ajax({
+                        type: 'POST',
+                        url: 'set_time',
+                        data: JSON.stringify({
+                            "timestamp": $('#timestamp').val()
+                        }),
+                        processData: false,
+                        contentType: "application/json",
+                        success: function(data, status){
+                            // On success, show what the server said in a box
+                            $('#server_response_text').text(data);
+                            $('#server_response').show();
+                        }
+                    });
+                });
+
+                // Call it once just to populate
+                setDate();
+
+                // Update the input in real time
+                var timer = setInterval(setDate, 1000);
+            }
+
+
+        </script>
+    </head>
+    <body onload="init();">
+
+        <form>
+                <div>
+                    <p id="your_time"></p>
+                </div>
+
+                <div class="form-group">
+                    <label for="timestamp" class="control-label">Current Epoch</label>
+                    <input id="timestamp" name="timestamp" class="form-control"></input>
+                </div>
+
+                <div class="form-group">
+                    <button type="button" id="submit" class="btn btn-primary">Update Rosary Clock</button>
+                </div>
+
+                <div id="server_response" class="form-group">
+                    <h4>Server Response:</h4>
+                    <blockquote id="server_response_text"></blockquote>
+                </div>
+
+        </form>
+
+    </body>
+</html>
