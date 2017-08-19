@@ -8,6 +8,8 @@ import math
 import inspect
 import random
 import struct
+import os
+import json
 
 from pythonosc import udp_client
 from pythonosc import osc_bundle_builder
@@ -16,6 +18,7 @@ from pythonosc import osc_server
 
 from mp import color, effects, triggers
 from mp.dispatcher_mapper import DispatcherMapper
+
 
 class Bead:
     """Bead represents a single rosary bead."""
@@ -49,6 +52,64 @@ class Updater:
             ))
 
         msg.add_arg(bytes(payload))
+
+        self.osc_client.send(msg.build())
+
+
+class PowerModeUpdater:
+    """
+    Create this in a separate thread to read from file on init,
+    and every 10 seconds both send an OSC message out, and rewrite to file
+    """
+
+    def __init__(self, osc_client=None):
+
+        self.osc_client = osc_client
+        # The file will live in the same directory as this file
+        self.backup_file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                             "low_power_mode.json")
+        self.low_power_mode = self.read_from_disk()
+
+
+    def read_from_disk(self):
+
+        low_power_mode = False
+
+        try:
+            with open(self.backup_file_path, "r") as fp:
+                power_mode_parsed = json.loads(fp.read())
+                low_power_mode = power_mode_parsed.get("low_power_mode", False)
+                print("Loaded power mode from file, low power mode is: {}".format("ON" if low_power_mode else "OFF"))
+
+        # Whether the file was not found, mis-formatted, or corrupted,
+        # just continue to assume normal power mode
+        except Exception as e:
+            print("Failed to load power mode file, caught: {}".format(e))
+
+        return low_power_mode
+
+
+    def write_to_disk(self):
+
+        power_mode_jsonified = json.dumps({
+            "low_power_mode": self.low_power_mode,
+            "note": "If you're editing this, make sure 'true' / 'false' is lowercased, no quotes!"
+        })
+
+        # When all's said and done, write the value to disk
+        with open(self.backup_file_path, "w") as fp:
+            fp.write(power_mode_jsonified)
+
+
+    def update(self):
+
+        msg = osc_message_builder.OscMessageBuilder(address = "/led/xform")
+
+        for i in range(3):
+            if self.low_power_mode:
+                msg.add_arg(1.0)
+            else:
+                msg.add_arg(.75)
 
         self.osc_client.send(msg.build())
 
@@ -100,6 +161,8 @@ class Rosary:
         self.osc_server_port=server_port
 
         self.osc_client = udp_client.UDPClient(self.osc_ip, self.osc_port)
+
+        self.power_mode_updater = PowerModeUpdater(self.osc_client)
 
         # create the three classes of LED "beads"
         for i in range(self.BEAD_COUNT):
@@ -238,6 +301,12 @@ class Rosary:
     def osc_server_main(self):
         print("Serving on {}".format(self.osc_server.server_address))
         self.osc_server.serve_forever()
+
+    def power_mode_loop(self):
+        print("Starting loop to update + backup power mode state")
+        while True:
+            self.power_mode_updater.update()
+            time.sleep(10)
     
 
     ##########################################################################
@@ -467,6 +536,9 @@ class Rosary:
             self.t_osc_server = threading.Thread(name='osc_server', target=self.osc_server_main)
             self.t_osc_server.start()
 
+            self.t_power_mode_loop = threading.Thread(name='power_mode_loop', target=self.power_mode_loop)
+            self.t_power_mode_loop.start()
+
             if interactive:
                 code.interact(local=locals())
 
@@ -646,13 +718,19 @@ class Rosary:
             if requested_trigger is not None and \
                trigger_name not in running_trigger_names:
 
-                # Kill all existing triggers
-                self.clear_triggers()
+                # For the low power mode trigger, treat unlike others
+                # in that we shouldn't touch running effects
+                if trigger_name == "low_power_mode":
+                    kwargs['enable_low_power_mode'] = v
 
-                # Start fading out all existing effects
-                self.clear_effects_fade()
+                else:
+                    # Kill all existing triggers
+                    self.clear_triggers()
 
-                self.add_trigger_object(requested_trigger(*args, **kwargs))
+                    # Start fading out all existing effects
+                    self.clear_effects_fade()
+
+                self.add_trigger_object(requested_trigger(**kwargs))
 
 
     def turn_knob(self, knob_name, *args, **kwargs):
