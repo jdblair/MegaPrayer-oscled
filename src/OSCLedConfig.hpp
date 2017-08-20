@@ -24,7 +24,6 @@ public:
         std::string config_file;
         bool config_file_set;
         int id;
-        bool id_set;
         bool daemonize;
         bool daemonize_set;
         bool startup_test;
@@ -51,10 +50,12 @@ public:
         int brightness;
         struct linear_xform xform;
         std::string iface_class;
+        float white_boost;
     };
 
     struct station_config {
         int id;
+        std::string iface_class;
         std::string ip;
         std::string port;
         int leds_per_bead;
@@ -65,6 +66,7 @@ public:
         std::string byte_order;
         std::string led_type;
         int brightness;
+        float white_boost;
         std::vector<std::shared_ptr<struct interface_config>> interface;
         struct linear_xform xform;
     };
@@ -81,6 +83,7 @@ public:
     Json::Value json_station;
     Json::Value json_defaults;
 
+    int m_station_id;
     struct station_config m_default;
     struct station_config m_config;
     struct cmd_line_config m_cmd_line_config;
@@ -112,6 +115,7 @@ public:
     static const std::string KEY_IFACE_XFORM_G;
     static const std::string KEY_IFACE_XFORM_B;
     static const std::string KEY_IFACE_CLASS;
+    static const std::string KEY_IFACE_WHITE_BOOST;
     
 private:
     OSCLedConfig();

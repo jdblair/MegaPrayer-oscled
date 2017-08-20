@@ -9,6 +9,7 @@
 #include <atomic>
 #include <iostream>
 #include <string>
+#include <algorithm>
 
 #include "IPlatformSerial.h"
 #include "OSCServer.h"
@@ -480,7 +481,7 @@ void OSCServer::LEDFormat_IanDMX::update(std::vector<led_t> const &leds) {
         buf[i + 0] = it->r;
         buf[i + 1] = it->g;
         buf[i + 2] = it->b;
-        buf[i + 3] = 0;
+        buf[i + 3] = min(min(it->r, it->g), it->b) * m_cfg.white_boost;  // boost white level by white component of rgb value
         buf[i + 4] = 0;
 
         i += IAN_DMX_BUF_LEN_PER_LIGHT;
