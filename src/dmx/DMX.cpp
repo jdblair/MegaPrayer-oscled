@@ -58,7 +58,7 @@ void dump_buf(unsigned char const *buf, size_t const buf_len) {
 void DMXSerial::send(unsigned char const *buf, size_t const buf_len) {
     //std::cout << "DMX: send()" << std::endl;
     // Maximum number of lights in a DMX universe is 512
-    unsigned long MAX_DMX_CHANNELS = 512;
+    unsigned int MAX_DMX_CHANNELS = 512;
 
     const size_t OSC_VALUES_USED = 5; // red green blue white strobe
     
