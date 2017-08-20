@@ -19,13 +19,15 @@ class Test(effect.Effect):
         self.supply_effect = {}
         self.all_effect = None;
         self.cross_effect = {}
+        self.spot_effect = {}
         
         # define the trigger functions
         self.trigger_hijacks = {
             'test_supply': self.test_supply,
             'test_color': self.test_color,
             'test_all': self.test_all,
-            'test_cross': self.test_cross
+            'test_cross': self.test_cross,
+            'test_spots': self.test_spots
         }
         self.hijack_triggers()
 
@@ -56,18 +58,20 @@ class Test(effect.Effect):
         """
         Turn on/off all the beads connected to a particular supply
         """
+
+        # touchosc numbering is 1 indexed
         supply_beads = {
-            0: frozenset(self.rosary.beads[0:10]),
-            1: frozenset(self.rosary.beads[10:20]),
-            2: frozenset(self.rosary.beads[20:30]),
-            3: frozenset(self.rosary.beads[30:40]),
-            4: frozenset(self.rosary.beads[40:50]),
-            5: frozenset(self.rosary.beads[50:60])
+            1: frozenset(self.rosary.beads[0:10]),
+            2: frozenset(self.rosary.beads[10:20]),
+            3: frozenset(self.rosary.beads[20:30]),
+            4: frozenset(self.rosary.beads[30:40]),
+            5: frozenset(self.rosary.beads[40:50]),
+            6: frozenset(self.rosary.beads[50:60])
         }
 
         if (v == 0):
             try:
-                self.rosary.del_effect(self.supply_effect[x])
+                self.bin.del_effect(self.supply_effect[x])
             except KeyError:
                 pass
             self.supply_effect[x] = None
@@ -81,10 +85,34 @@ class Test(effect.Effect):
         """
         if (v == 0):
             if (self.all_effect != None):
-                self.rosary.del_effect(self.all_effect)
+                self.bin.del_effect(self.all_effect)
             self.all_effect = None
         else:
             self.all_effect = self.bin.add_effect_object(set_color.SetColor(self.rosary.set_registry['all'], color=self.color))
+
+
+    def test_spots(self, v, x, y):
+        """
+        Test the spots. The trigger is a 1 x 2 multitoggle.
+        """
+
+        print("test_spots", v, x, y)
+
+        spot_beads = {
+            1: self.rosary.set_registry['spot0'],
+            2: self.rosary.set_registry['spot1']
+        }
+
+        if (v == 0):
+            try:
+                print("delete ", self.spot_effect[x])
+                self.bin.del_effect(self.spot_effect[x])
+            except KeyError:
+                pass
+            self.spot_effect[x] = None
+        else:
+            self.spot_effect[x] = self.bin.add_effect_object(set_color.SetColor(spot_beads[x], color=self.color))
+            print("add effect", self.spot_effect[x])
 
 
     def test_cross(self, v, x, y):
@@ -98,7 +126,7 @@ class Test(effect.Effect):
 
         if (v == 0):
             try:
-                self.rosary.del_effect(self.cross_effect[x])
+                self.bin.del_effect(self.cross_effect[x])
             except KeyError:
                 pass
             self.cross_effect[x] = None
