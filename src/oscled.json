@@ -74,27 +74,9 @@
                     "reversed" : false
                 }
             ]
-<<<<<<< HEAD
-=======
         },
         {
-            "id": 6,
-            "bead_base": 0,
-            "leds_per_bead": 1,
-            "interface": [
-                {
-                    "id": 0,
-                    "led_type": "apa102",
-                    "xform": { "r": 1.0, "g": 1.0, "b": 1.0 },
-                    "class": "cross",
-                    "led_base" : 0,
-                    "led_count" : 480,
-                    "reversed" : false
-                }
-            ]
-        },
-        {
-            "id": 7,
+            "id": 10,
             "bead_base": 0,
             "leds_per_bead": 1,
             "interface": [
@@ -105,10 +87,10 @@
                     "class": "dmx",
                     "led_base" : 0,
                     "led_count" : 2,
-                    "reversed" : false
+                    "reversed" : false,
+                    "white_boost" : 0.9
                 }
             ]
->>>>>>> 56aa44e151f282fbbe09d501c3cb2cf50b477e8f
         }
     ]
 }

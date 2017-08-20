@@ -43,11 +43,13 @@ const string OSCLedConfig::KEY_IFACE_XFORM_R = "r";
 const string OSCLedConfig::KEY_IFACE_XFORM_G = "g";
 const string OSCLedConfig::KEY_IFACE_XFORM_B = "b";
 const string OSCLedConfig::KEY_IFACE_CLASS = "class";
+const string OSCLedConfig::KEY_IFACE_WHITE_BOOST = "white_boost";
 
 OSCLedConfig::OSCLedConfig()
 {
     // set all configuration defaults
     // this can be over-ridden by the "defaults" section of the config file
+    m_default.iface_class = string("rosary");
     m_default.id = 0;
     m_default.ip = string("127.0.0.1");
     m_default.port = string("5005");
@@ -60,6 +62,7 @@ OSCLedConfig::OSCLedConfig()
     m_default.xform.r = 1.0;
     m_default.xform.g = 1.0;
     m_default.xform.b = 1.0;
+    m_default.white_boost = 1.0;
 
     m_config.ip = string("127.0.0.1");
     m_config.port = string("5005");
@@ -68,9 +71,9 @@ OSCLedConfig::OSCLedConfig()
     m_cmd_line_config.id = 0;
     m_cmd_line_config.daemonize = false;
     m_cmd_line_config.startup_test = false;
+    m_cmd_line_config.ip = string("127.0.0.1");
     m_cmd_line_config.port = string("5005");
     m_cmd_line_config.config_file_set = false;
-    m_cmd_line_config.id_set = false;
     m_cmd_line_config.daemonize_set = false;
     m_cmd_line_config.startup_test_set = false;
     m_cmd_line_config.ip_set = false;
@@ -179,6 +182,7 @@ bool OSCLedConfig::json_parse_station_values(Json::Value s, OSCLedConfig::statio
             config.interface.push_back(iface_ptr);
 
             iface_ptr->id = i->get(KEY_IFACE_ID, 0).asInt();
+            iface_ptr->iface_class = i->get(KEY_IFACE_CLASS, m_default.iface_class).asString();
             iface_ptr->led_base = i->get(KEY_IFACE_LED_BASE, 0).asInt();
             iface_ptr->led_count = i->get(KEY_IFACE_LED_COUNT, 10).asInt();
             iface_ptr->reversed = i->get(KEY_IFACE_REVERSED, false).asBool();
@@ -195,6 +199,7 @@ bool OSCLedConfig::json_parse_station_values(Json::Value s, OSCLedConfig::statio
             iface_ptr->byte_order = i->get(KEY_IFACE_BYTE_ORDER, "rgb").asString();
             iface_ptr->brightness = i->get(KEY_IFACE_BRIGHTNESS, 31).asInt();
             iface_ptr->iface_class = i->get(KEY_IFACE_CLASS, "bead").asString();
+            iface_ptr->white_boost = i->get(KEY_IFACE_WHITE_BOOST, m_default.white_boost).asFloat();
 
             // cout << "iface_class: " << iface_ptr->iface_class << endl;
 
@@ -226,7 +231,7 @@ bool OSCLedConfig::json_parse_station()
     if (json_root.isMember(KEY_STATION)) {
         json_station = json_root[KEY_STATION];
         for (auto i = json_station.begin(); i != json_station.end(); i++) {
-            if (i->get(KEY_ID, 0).asInt() == m_config.id) {
+            if (i->get(KEY_ID, 0).asInt() == m_station_id) {
                 json_parse_station_values(*i, m_config);
                 return true;
             }
@@ -290,7 +295,7 @@ bool OSCLedConfig::getopt(int argc, char * const argv[])
                 err(1, "can't parse --id/-i argument");
                 return false;  // err() doesn't return
             }
-            m_cmd_line_config.id_set = true;
+            m_station_id = m_cmd_line_config.id;
             break;
         
         case 'd':
@@ -326,7 +331,7 @@ bool OSCLedConfig::getopt(int argc, char * const argv[])
                  << "usage: " << string(argv[0]) << " -v -c <config.json> -i <ip address> -p <port> -d -h: " << endl
                  << "   --version    version string" << endl
                  << "   --config     json configuration file (" << m_cmd_line_config.config_file << ")" << endl
-                 << "   --id         station id (" << m_config.id << ")" << endl
+                 << "   --id         station id (" << m_cmd_line_config.id << ")" << endl
                  << "   --daemonize  detach process from terminal (" << (m_config.daemonize ? "true" : "false") << ")" << endl
                  << "   --ip         ip address to bind to (" << m_config.ip << ")" << endl
                  << "   --port       port to bind to (" << m_config.port << ")" << endl
