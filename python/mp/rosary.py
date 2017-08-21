@@ -171,12 +171,6 @@ class Rosary:
                                          bead_list=self.beads,
                                          osc_client=self.osc_client))
 
-        for i in range(self.BASE_COUNT):
-            self.bases.append(Bead(i))
-        self.updater_list.append(Updater(name='base',
-                                         bead_list=self.bases,
-                                         osc_client=self.osc_client))
-
         for i in range(self.CROSS_LED_COUNT):
             self.cross.append(Bead(i))
         self.updater_list.append(Updater(name='cross',
