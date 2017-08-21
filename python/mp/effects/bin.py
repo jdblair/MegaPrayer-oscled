@@ -66,14 +66,17 @@ class Bin(effect.Effect):
 
             self.effects.remove(effect)
 
-    def clear_effects(self):
+    def clear_effects(self, full=False):
         """Remove all active effects. This stops all activity on the rosary."""
-        # There's some weird race condition where del_effect's call to
-        # self.effects.remove doesn't reorder the list in time if we use
-        # a for loop, so do this instead
-        while self.effects:
-            effect = self.effects[0]
-            self.del_effect(effect.id)
+
+        # My previous issue with using a for loop instead of a while loop
+        # could just be solved by iterating over the list backwards
+        for eff in reversed(self.effects):
+            # Require an extra flag to remove the "idle" and "test" effects
+            if not full and eff.name in ("idle", "test"):
+                continue
+            else:
+                self.del_effect(eff.id)
 
     def clear_effects_fade(self):
         """
