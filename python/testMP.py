@@ -44,7 +44,8 @@ if __name__ == "__main__":
     #r.add_effect(name='burn_it_all')
     #r.add_effect(name='america')
     #r.add_effect(name='risefall')
-    r.add_effect(name='fire_spreading')
+    #r.add_effect(name='fire_spreading')
+    r.add_effect(name='cross_idle', bead_set='cross')
 
     r.start()
     
