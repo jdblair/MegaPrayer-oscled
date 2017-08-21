@@ -304,7 +304,7 @@ class Rosary:
 
     def power_mode_loop(self):
         print("Starting loop to update + backup power mode state")
-        while True:
+        while (self.run_mainloop):
             self.power_mode_updater.update()
             time.sleep(10)
     
