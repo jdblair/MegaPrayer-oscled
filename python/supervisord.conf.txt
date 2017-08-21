@@ -1,0 +1,45 @@
+
+; My own supervisord.conf tells me it'll look in /etc/supervisor/conf.d/*.conf
+; so if your install says that, maybe you can just put this file in that
+; directory wholesale. Otherwise, the following ought to do:
+;
+; sudo apt-get install supervisord
+; sudo tee /etc/supervisord.conf < supervisord.conf.txt
+; sudo service supervisord restart
+;
+; Most of the values I'm including are the default ones and can be omitted,
+; but I figured they might be interesting. I'm leaving the logging lines
+; for you to uncomment, if desired.
+
+[program:dmx_lighting]
+command=/home/orangepi/start-ola.sh
+autostart=true
+startretries=1000
+autorestart=true
+user=orangepi
+;redirect_stderr=true
+;stdout_logfile=/tmp/dmx_lighting.log
+;stdout_logfile_maxbytes=5MB
+;stdout_logfile_backups=0
+
+[program:rosary_server]
+command=python3 server.py --listen-ip 192.168.1.110 --ip=239.0.0.1
+directory=/root/src/MegaPrayer-oscled/python
+autostart=true
+startretries=1000
+autorestart=true
+;redirect_stderr=true
+;stdout_logfile=/tmp/rosary_server.log
+;stdout_logfile_maxbytes=5MB
+;stdout_logfile_backups=0
+
+[program:time_server]
+command=python3 time_server.py --listen-ip 192.168.1.110
+directory=/root/src/MegaPrayer-oscled/python/time_server
+autostart=true
+startretries=1000
+autorestart=true
+;redirect_stderr=true
+;stdout_logfile=/tmp/time_server.log
+;stdout_logfile_maxbytes=5MB
+;stdout_logfile_backups=0
