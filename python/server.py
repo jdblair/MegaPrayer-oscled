@@ -30,6 +30,8 @@ def print_dispatcher_paths(unused_addr, args):
     print("* EFFECT KNOB PATHS *")
     for k in r.knobs.keys():
         print("/effect/{}".format(k))
+    print("*** RUNNING EFFECTS ***")
+    print(r.bin.effects)
 
 
 if __name__ == "__main__":

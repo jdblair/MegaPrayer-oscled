@@ -502,8 +502,8 @@ class Rosary:
         self.bin.del_effect(id)
 
     @dm.expose()
-    def clear_effects(self):
-        self.bin.clear_effects()
+    def clear_effects(self, full=False):
+        self.bin.clear_effects(full)
         
     @dm.expose()
     def clear_effects_fade(self):
