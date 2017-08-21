@@ -320,7 +320,7 @@ void OSCServer::test_sequence()
                               test_color[color].b * brightness));
         }
 
-        usleep(20000);
+        //usleep(20000);
 
         // fade out
         for (int brightness = 255; brightness > 0; brightness--) {
@@ -329,7 +329,7 @@ void OSCServer::test_sequence()
                               test_color[color].b * brightness));
         }
 
-        usleep(20000);
+        //usleep(20000);
 
         // break out if m_running is false
         // this is to support SIGTERM handler during test sequence
@@ -458,7 +458,7 @@ void OSCServer::LEDFormat_APA102::update(vector<led_t> const &leds)
         buf[i + 3] = it->r;
         i += 4;
 
-        printf("%d %d %d %d\n", buf[i + 0], buf[i + 1], buf[i + 2], buf[i + 3]);
+        //printf("%d %d %d %d\n", buf[i + 0], buf[i + 1], buf[i + 2], buf[i + 3]);
     }
 }
 

@@ -4,8 +4,7 @@
         "port": 5005,
         "leds_per_bead": 8,
         "bead_count": 20,
-        "byte_order": "brg",
-        "brightness": 30,
+        "byte_order": "rgb",
         "led_type": "WS2801"
     },
     "station": [
@@ -32,7 +31,7 @@
             ]
         },
         {
-            "id": 1,
+            "id": 2,
             "bead_base": 20,
             "interface": [
                 {
@@ -54,7 +53,7 @@
             ]
         },
         {
-            "id": 2,
+            "id": 4,
             "bead_base": 40,
             "interface": [
                 {
@@ -72,6 +71,36 @@
                     "led_base" : 400,
                     "led_count" : 80,
                     "reversed" : false
+                }
+            ]
+        },
+        {
+            "id": 6,
+            "bead_base": 0,
+            "leds_per_bead": 1,
+            "bead_count": 514,
+            "interface": [
+                {
+                    "id": 0,
+                    "xform": { "r": 1.0, "g": 1.0, "b": 1.0 },
+                    "class": "cross",
+                    "led_base" : 0,
+                    "brightness": 28,
+                    "byte_order": "bgr",
+                    "led_type": "apa102",
+                    "led_count" : 257,
+                    "reversed" : false
+                },
+                {
+                    "id": 1,
+                    "xform": { "r": 1.0, "g": 1.0, "b": 1.0 },
+                    "class": "cross",
+                    "brightness": 28,
+                    "byte_order": "bgr",
+                    "led_type": "apa102",
+                    "led_base" : 257,
+                    "led_count" : 257,
+                    "reversed" : true
                 }
             ]
         },
