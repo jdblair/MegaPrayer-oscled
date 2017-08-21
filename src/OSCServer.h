@@ -53,7 +53,7 @@ class OSCServer {
     void show_value(int value, int total_bits, int bead_offset, led_t color_0, led_t color_1);
     void test_sequence();
     void set_xform(float r, float g, float b);
-    void set_led(std::string const &iface_class, int n, led_t led);
+    bool set_led(std::string const &iface_class, int n, led_t led);
     void set_all_led(led_t led);
 
     int osc_method_bead_rosary(lo_arg **argv);

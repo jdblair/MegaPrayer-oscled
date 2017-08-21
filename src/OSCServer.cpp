@@ -4,6 +4,7 @@
 #include <err.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <sys/time.h>
 
 #include <vector>
 #include <atomic>
@@ -73,7 +74,7 @@ OSCServer::OSCServer(atomic<bool> *running, string ip, string port) : m_running(
 
 
 
-void OSCServer::set_led(string const &iface_class, int n, led_t led)
+bool OSCServer::set_led(string const &iface_class, int n, led_t led)
 {
     // cout << "set_led(" << iface_class << ", " << n <<
     //     ", [" << int(led.r) <<
@@ -81,6 +82,9 @@ void OSCServer::set_led(string const &iface_class, int n, led_t led)
     //     ", " << int(led.b) <<
     //     "])" << endl;
     // search for correct led_interface, set leds
+
+    bool found_led = false;
+    
     for (auto it = m_led_ifaces.begin(); it != m_led_ifaces.end(); ++it) {
         auto iface = *it;
         if ((iface_class == iface->m_iface_class) &&
@@ -90,8 +94,11 @@ void OSCServer::set_led(string const &iface_class, int n, led_t led)
                 n = iface->m_len - 1 - n;  // reverse
             }
             iface->set_led(n, led);
+            found_led = true;
         }
     }
+
+    return found_led;
 }
 
 
@@ -147,7 +154,7 @@ int OSCServer::osc_method_bead_float(lo_arg **argv)
     //      << argv[2]->f << ", "
     //      << argv[3]->f << ", "
     //      << argv[4]->f << endl;
-    
+
     auto n = argv[1]->i * m_leds_per_bead;
     for (int offset = 0; offset < m_leds_per_bead; offset++) {
         set_led(&(argv[0]->s), n + offset, led_t(argv[2]->f * 255, argv[3]->f * 255, argv[4]->f * 255));
@@ -180,6 +187,16 @@ int OSCServer::osc_method_bead(lo_arg **argv)
     int count = argv[2]->i;
     char *data = &argv[3]->blob.data;
     int size = argv[3]->blob.size;
+    bool do_update = false;
+
+    static long last_time = 0;
+    long now_time = 0;
+    
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    now_time = (tv.tv_sec * 1000000) + tv.tv_usec;
+    cout << "/bead: " << iface_class << " " << now_time - last_time << endl;
+    last_time = now_time;
 
     struct __attribute__ ((__packed__)) packed_led {
         uint16_t r;
@@ -216,17 +233,26 @@ int OSCServer::osc_method_bead(lo_arg **argv)
             // this is another opportunity for future optimization
             // all the LEDs in a blob are in the same interface class, so it makes sense
             // to find a way to avoid matching the class name for every LED
-            set_led(iface_class,
-                    ((bead + base) * m_leds_per_bead) + led_offset,
-                    led_t(packed_led->r,
-                          packed_led->g,
-                          packed_led->b,
-                          packed_led->brightness));
+
+            bool is_set = set_led(iface_class,
+                                  ((bead + base) * m_leds_per_bead) + led_offset,
+                                  led_t(packed_led->r,
+                                        packed_led->g,
+                                        packed_led->b,
+                                        packed_led->brightness));
+
+            // in C I would just "is_set++"
+            if (do_update == false &&
+                is_set == true) {
+                do_update = true;
+            }
         }
     }
 
     // actually transmit the data to the LEDs
-    update_led_interfaces();
+    if (do_update) {
+        update_led_interfaces();
+    }
 }
 
 
@@ -314,7 +340,7 @@ void OSCServer::test_sequence()
     for (int color = 0; color < test_color_len; color++) {
 
         // fade in
-        for (int brightness = 0; brightness < 255; brightness++) {
+        for (int brightness = 0; brightness < 255; brightness += 5) {
             set_all_led(led_t(test_color[color].r * brightness,
                               test_color[color].g * brightness,
                               test_color[color].b * brightness));
@@ -323,7 +349,7 @@ void OSCServer::test_sequence()
         //usleep(20000);
 
         // fade out
-        for (int brightness = 255; brightness > 0; brightness--) {
+        for (int brightness = 255; brightness > 0; brightness -= 5) {
             set_all_led(led_t(test_color[color].r * brightness,
                               test_color[color].g * brightness,
                               test_color[color].b * brightness));
@@ -548,7 +574,18 @@ void OSCServer::led_interface::update_led_buf()
         lock_guard<mutex> lock(leds_mutex);
         m_fmt->update(leds);
     }
+    
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    long start_time = (tv.tv_sec * 1000000) + tv.tv_usec;
+    
     m_ser->send(m_fmt->buf, m_fmt->buf_len);
+
+    gettimeofday(&tv, NULL);
+    long end_time = (tv.tv_sec * 1000000) + tv.tv_usec;
+
+    cout << "send(): " << end_time - start_time << endl;
+    
 }
 
 

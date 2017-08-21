@@ -111,7 +111,7 @@
             "interface": [
                 {
                     "id": 0,
-                    "led_type": "dmx",
+                    "led_type": "iandmx",
                     "xform": { "r": 1.0, "g": 1.0, "b": 1.0 },
                     "class": "dmx",
                     "led_base" : 0,
