@@ -14,14 +14,20 @@ if __name__ == "__main__":
   parser = argparse.ArgumentParser()
   parser.add_argument("--ip", default="127.0.0.1",
       help="The ip of the OSC server")
-  parser.add_argument("--port", type=int, default=5005,
+  parser.add_argument("--port", type=int, default=5006,
       help="The port the OSC server is listening on")
   args = parser.parse_args()
 
   client = udp_client.SimpleUDPClient(args.ip, args.port)
 
-  for x in range(10):
-    #client.send_message("/trigger/left_nail", 1.0)
-    #client.send_message("/trigger/left_nail i 1.0", 1.0)
-    client.send_message("/trigger/left_nail i 1", 1.0)
-    time.sleep(1)
+  #client.send_message("/trigger/left_nail", 1.0)
+  #client.send_message("/trigger/left_nail i 1.0", 1.0)
+  #client.send_message("/trigger/left_nail i 1", 1.0)
+  #time.sleep(10)
+  #client.send_message("/trigger/left_nail i 0", 0.0)
+
+  client.send_message("/trigger/left_nail", 1.0)
+  client.send_message("/trigger/right_nail", 1.0)
+  time.sleep(20)
+  client.send_message("/trigger/left_nail", 0.0)
+  client.send_message("/trigger/right_nail", 0.0)

@@ -145,7 +145,7 @@ class Rosary:
         self.CROSS_LED_COUNT=448
         self.DMX_COUNT=2
         self.run_mainloop = False
-        self.frame_time = 1 / 15   # reciprocal of fps
+        self.frame_time = 1 / 5   # reciprocal of fps
         self.effect_registry = {}
         self.trigger_registry = {}
         # Allow effects to take over triggers
