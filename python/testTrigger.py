@@ -28,6 +28,6 @@ if __name__ == "__main__":
 
   client.send_message("/trigger/left_nail", 1.0)
   client.send_message("/trigger/right_nail", 1.0)
-  time.sleep(20)
+  time.sleep(10)
   client.send_message("/trigger/left_nail", 0.0)
   client.send_message("/trigger/right_nail", 0.0)

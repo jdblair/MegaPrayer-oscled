@@ -47,7 +47,7 @@ if __name__ == "__main__":
     #r.add_effect(name='fire_spreading')
     #r.add_effect(name='cross_idle', bead_set='cross')
     #r.add_effect(name='idle', bead_set='all')
-    r.add_effect(name='throb', bead_set='all', offset='.5')
+    r.add_effect(name='level', bead_set='all')
 
     r.start()
     
