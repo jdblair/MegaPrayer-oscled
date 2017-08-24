@@ -38,6 +38,7 @@ __all__ = [
     'revelation',
     'firework',
     'risefall',
+    'sweep',
     'fire_spreading',
     'burn_it_all'
 ]
