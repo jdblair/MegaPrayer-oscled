@@ -145,7 +145,7 @@ class Rosary:
         self.CROSS_LED_COUNT=448
         self.DMX_COUNT=2
         self.run_mainloop = False
-        self.frame_time = 1 / 5   # reciprocal of fps
+        self.frame_time = 1 / 10   # reciprocal of fps
         self.effect_registry = {}
         self.trigger_registry = {}
         # Allow effects to take over triggers
@@ -171,11 +171,11 @@ class Rosary:
                                          bead_list=self.beads,
                                          osc_client=self.osc_client))
 
-        for i in range(self.BASE_COUNT):
-            self.bases.append(Bead(i))
-        self.updater_list.append(Updater(name='base',
-                                         bead_list=self.bases,
-                                         osc_client=self.osc_client))
+        # for i in range(self.BASE_COUNT):
+        #     self.bases.append(Bead(i))
+        # self.updater_list.append(Updater(name='base',
+        #                                  bead_list=self.bases,
+        #                                  osc_client=self.osc_client))
 
         for i in range(self.CROSS_LED_COUNT):
             self.cross.append(Bead(i))
@@ -643,13 +643,24 @@ class Rosary:
         # for i in range(60):
         #     data.append(0)
 
+        update_cross = True;
+
         while (self.run_mainloop):
             next_frame_time += self.frame_time
 
             bead_list = kwargs.get('bead_list')
 
             for updater in self.updater_list:
-                self.beads_set_bgcolor(updater.bead_list)
+                # HACK! skip cross update every other time since
+                # it can't update as quickly
+                if (updater.name == 'cross'):
+                    if (update_cross == False):
+                        update_cross = True
+                    else:
+                        self.beads_set_bgcolor(updater.bead_list)
+                        update_cross = False
+                else:
+                    self.beads_set_bgcolor(updater.bead_list)
 
             # advance the state of all the effects
             self.bin.next()
