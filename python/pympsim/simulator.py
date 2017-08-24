@@ -31,7 +31,8 @@ class App:
         lords_gap_ratio = 0.2
         self.beads = []
         self.bases = []
-        self.cross = [] 
+        self.cross = []
+        self.spots = []
         # make the stem
         x = (x_offset - radius - stem_length) + (stem_spacing * i)
         for i in range(0, 5):
@@ -130,7 +131,13 @@ class App:
                     self.cross.append(
                         self.canvas.create_oval(x_position, y_position, 
                                                 x_position + blip_diameter, y_position + blip_diameter, 
-                                                fill="white", width=0))
+                                                fill="#128192200", width=0))
+
+
+
+        # make the DMX / spotlights
+        self.spots.append(self.canvas.create_polygon(190, 650, 205, 450, 290, 500, fill="white"))   
+        self.spots.append(self.canvas.create_polygon(490, 650, 390, 500, 475, 450, fill="white"))
 
 
         ##########################################################
@@ -155,6 +162,8 @@ class App:
                     self.canvas.itemconfig(self.bases[num], fill=tk_rgb)
                 if (iface_class == 'cross'):
                     self.canvas.itemconfig(self.cross[num], fill=tk_rgb)
+                if (iface_class == 'dmx'):
+                    self.canvas.itemconfig(self.spots[num], fill=tk_rgb)
                 num += 1
 
 
