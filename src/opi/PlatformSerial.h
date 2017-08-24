@@ -3,7 +3,7 @@
 #ifndef PLATFORMSERIAL_H
 #define PLATFORMSERIAL_H
 
-#define CLK_WIDTH 600
+#define CLK_WIDTH 500
 
 #include <IPlatformSerial.h>
 
