@@ -192,11 +192,11 @@ int OSCServer::osc_method_bead(lo_arg **argv)
     static long last_time = 0;
     long now_time = 0;
     
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    now_time = (tv.tv_sec * 1000000) + tv.tv_usec;
-    cout << "/bead: " << iface_class << " " << now_time - last_time << endl;
-    last_time = now_time;
+    // struct timeval tv;
+    // gettimeofday(&tv, NULL);
+    // now_time = (tv.tv_sec * 1000000) + tv.tv_usec;
+    // cout << "/bead: " << iface_class << " " << now_time - last_time << endl;
+    // last_time = now_time;
 
     struct __attribute__ ((__packed__)) packed_led {
         uint16_t r;
@@ -575,16 +575,16 @@ void OSCServer::led_interface::update_led_buf()
         m_fmt->update(leds);
     }
     
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    long start_time = (tv.tv_sec * 1000000) + tv.tv_usec;
+    // struct timeval tv;
+    // gettimeofday(&tv, NULL);
+    // long start_time = (tv.tv_sec * 1000000) + tv.tv_usec;
     
     m_ser->send(m_fmt->buf, m_fmt->buf_len);
 
-    gettimeofday(&tv, NULL);
-    long end_time = (tv.tv_sec * 1000000) + tv.tv_usec;
+    // gettimeofday(&tv, NULL);
+    // long end_time = (tv.tv_sec * 1000000) + tv.tv_usec;
 
-    cout << "send(): " << end_time - start_time << endl;
+    // cout << "send(): " << end_time - start_time << endl;
     
 }
 
