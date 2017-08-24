@@ -34,7 +34,7 @@ if __name__ == "__main__":
     #r.add_effect(name='soft_edges_glow', color='red', bead_set='stigmata_right_foot')
 
     # add an effect for the bases
-    #r.add_effect(name='set_color', color='fire', bead_set='cross')
+    r.add_effect(name='set_color', color='fire', bead_set='cross')
     #r.add_effect(name='set_color', color='fire', bead_set='all')
     #r.add_effect(name='random_fill', bead_set='cross')
     #r.add_effect(name='throb', bead_set='cross')
@@ -47,7 +47,7 @@ if __name__ == "__main__":
     #r.add_effect(name='fire_spreading')
     #r.add_effect(name='cross_idle', bead_set='cross')
     #r.add_effect(name='idle', bead_set='all')
-    r.add_effect(name='level', bead_set='all')
+    r.add_effect(name='throb', color='white', bead_set='dmx')
 
     r.start()
     
